@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blueprint – Digital Marketing</title>
+    <meta name="description" content="Strategic marketing solutions including social media, SEO, and digital advertising campaigns. Blueprint's digital marketing service.">
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="font.css">
+    <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/neue" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/identidad" rel="stylesheet">
+    <style>
+        body { background-color: #415a77; color: #f4f1e8; }
+
+        .service-hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 8rem 4rem 4rem;
+            position: relative;
+            overflow: hidden;
+            background-color: #415a77;
+        }
+
+        .service-hero-bg {
+            position: absolute;
+            inset: 0;
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            opacity: 0.18;
+            filter: grayscale(30%);
+        }
+
+        .service-hero-content { position: relative; z-index: 2; max-width: 900px; }
+
+        .service-eyebrow {
+            font-family: 'CabinetGrotesk-regular', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(244,241,232,0.5);
+            margin-bottom: 2rem;
+        }
+
+        .service-hero-title {
+            font-family: 'CabinetGrotesk-bold', sans-serif;
+            font-size: clamp(3.5rem, 8vw, 8rem);
+            line-height: 1;
+            margin-bottom: 2.5rem;
+        }
+
+        .service-hero-desc {
+            font-family: 'CabinetGrotesk-light', sans-serif;
+            font-size: clamp(1.1rem, 2vw, 1.5rem);
+            line-height: 1.6;
+            max-width: 560px;
+            color: rgba(244,241,232,0.75);
+        }
+
+        .service-hero-line {
+            border: none;
+            border-top: 1px solid rgba(244,241,232,0.2);
+            margin: 3rem 0;
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+
+        .service-section {
+            padding: 6rem 4rem;
+            background-color: #2e4057;
+        }
+
+        .service-section-label {
+            font-family: 'CabinetGrotesk-regular', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(244,241,232,0.45);
+            margin-bottom: 4rem;
+        }
+
+        .service-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2px;
+        }
+
+        .service-feature {
+            padding: 3rem 2.5rem;
+            background-color: rgba(244,241,232,0.03);
+            border: 1px solid rgba(244,241,232,0.07);
+            transition: background-color 0.3s ease;
+        }
+
+        .service-feature:hover { background-color: rgba(244,241,232,0.07); }
+
+        .service-feature-num {
+            font-family: 'Retro Qesmo', sans-serif;
+            font-size: 0.9rem;
+            color: rgba(244,241,232,0.3);
+            margin-bottom: 1.5rem;
+        }
+
+        .service-feature-title {
+            font-family: 'CabinetGrotesk-bold', sans-serif;
+            font-size: 1.35rem;
+            margin-bottom: 1rem;
+        }
+
+        .service-feature-body {
+            font-family: 'CabinetGrotesk-light', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: rgba(244,241,232,0.6);
+        }
+
+        .service-showcase {
+            position: relative;
+            height: 60vh;
+            min-height: 400px;
+            overflow: hidden;
+        }
+
+        .service-showcase img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            transform: scale(1.05);
+            transition: transform 6s ease;
+        }
+
+        .service-showcase:hover img { transform: scale(1); }
+
+        .service-showcase-label {
+            position: absolute;
+            bottom: 3rem;
+            left: 4rem;
+            font-family: 'Retro Qesmo', sans-serif;
+            font-size: clamp(3rem, 10vw, 9rem);
+            color: rgba(244,241,232,0.08);
+            line-height: 1;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .service-process {
+            padding: 6rem 4rem;
+            background-color: #415a77;
+        }
+
+        .service-process-title {
+            font-family: 'CabinetGrotesk-bold', sans-serif;
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            margin-bottom: 4rem;
+        }
+
+        .service-steps { display: grid; gap: 0; }
+
+        .service-step {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 2rem;
+            padding: 2.5rem 0;
+            border-top: 1px solid rgba(244,241,232,0.1);
+            align-items: start;
+        }
+
+        .service-step:last-child { border-bottom: 1px solid rgba(244,241,232,0.1); }
+
+        .service-step-num {
+            font-family: 'Retro Qesmo', sans-serif;
+            font-size: 1rem;
+            color: rgba(244,241,232,0.3);
+            padding-top: 0.25rem;
+        }
+
+        .service-step-content h3 {
+            font-family: 'CabinetGrotesk-bold', sans-serif;
+            font-size: 1.25rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .service-step-content p {
+            font-family: 'CabinetGrotesk-light', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: rgba(244,241,232,0.6);
+        }
+
+        .service-cta {
+            padding: 8rem 4rem;
+            background-color: #f4f1e8;
+            color: #415a77;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .service-cta-title {
+            font-family: 'CabinetGrotesk-bold', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 6rem);
+            line-height: 1.05;
+            max-width: 700px;
+            margin-bottom: 3rem;
+        }
+
+        .service-cta-btn {
+            font-family: 'CabinetGrotesk-regular', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            background-color: #415a77;
+            color: #f4f1e8;
+            padding: 1.2rem 3rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .service-cta-btn:hover { background-color: #2e4057; transform: translateY(-2px); }
+
+        .page-enter { opacity: 0; transform: translateY(30px); }
+
+        @media (max-width: 760px) {
+            .service-hero, .service-section, .service-process, .service-cta { padding-left: 2rem; padding-right: 2rem; }
+            .service-hero { padding-top: 7rem; }
+            .service-step { grid-template-columns: 50px 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader" class="loader">
+        <div class="loader-content">
+            <div class="loader-logo reveal-text">BLUEPRINT</div>
+            <div class="loader-progress"><div class="loader-progress-bar"></div></div>
+        </div>
+    </div>
+
+    <header class="navbar">
+        <button class="logo-button" type="button" onclick="handlePageTransition(event, 'index.html')" data-label="BLUEPRINT" aria-label="Back to home">BLUEPRINT</button>
+        <button class="menu-button" type="button" aria-label="Open menu">
+            <svg class="menu-icon" fill="none" width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <line class="menu-icon-line menu-icon-line-top" x1="4" y1="9.5" x2="20" y2="9.5" />
+                <line class="menu-icon-line menu-icon-line-bottom" x1="4" y1="14.5" x2="20" y2="14.5" />
+                <g class="menu-icon-white-layer">
+                    <line class="menu-icon-line menu-icon-line-white menu-icon-line-top" x1="4" y1="9.5" x2="20" y2="9.5" />
+                    <line class="menu-icon-line menu-icon-line-white menu-icon-line-bottom" x1="4" y1="14.5" x2="20" y2="14.5" />
+                </g>
+            </svg>
+        </button>
+    </header>
+
+    <div class="menu-overlay" aria-hidden="true">
+        <div class="menu-overlay-content">
+            <div class="menu-overlay-main">
+                <nav class="menu-overlay-links" aria-label="Quick links">
+                    <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'projects.html')"><span>Projects</span></button>
+                    <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'approach.html')"><span>Approach</span></button>
+                    <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'about.html')"><span>About</span></button>
+                    <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'contact.html')"><span>Contact</span></button>
+                </nav>
+                <div class="menu-image-frame" aria-hidden="true">
+                    <img class="menu-image" src="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1200&q=80" alt="">
+                </div>
+                <div class="menu-overlay-info">
+                    <div class="menu-info-group">
+                        <p class="menu-info-label menu-line-reveal"><span>Email</span></p>
+                        <a class="menu-info-link menu-line-reveal" href="mailto:hello@blueprint.studio"><span>hello@blueprint.studio</span></a>
+                    </div>
+                    <div class="menu-info-group">
+                        <p class="menu-info-label menu-line-reveal"><span>Social</span></p>
+                        <a class="menu-info-link menu-line-reveal" href="#"><span>Instagram</span></a>
+                        <a class="menu-info-link menu-line-reveal" href="#"><span>LinkedIn</span></a>
+                        <a class="menu-info-link menu-line-reveal" href="#"><span>Behance</span></a>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-overlay-bottom">
+                <hr class="menu-overlay-divider">
+                <div class="menu-overlay-blueprint">BLUEPRINT</div>
+            </div>
+        </div>
+    </div>
+
+    <section class="service-hero">
+        <img class="service-hero-bg" src="./Gemini_Generated_Image_rrm9fqrrm9fqrrm9.png" alt="">
+        <div class="service-hero-content">
+            <p class="service-eyebrow page-enter">Service — 03</p>
+            <h1 class="service-hero-title page-enter">Digital<br>Marketing</h1>
+            <hr class="service-hero-line">
+            <p class="service-hero-desc page-enter">Strategic marketing solutions including social media, SEO, and digital advertising campaigns built to grow your audience and drive results.</p>
+        </div>
+    </section>
+
+    <section class="service-section">
+        <p class="service-section-label page-enter">What's Included</p>
+        <div class="service-features-grid">
+            <div class="service-feature page-enter">
+                <div class="service-feature-num">01</div>
+                <h3 class="service-feature-title">SEO Strategy</h3>
+                <p class="service-feature-body">Technical and on-page SEO that lifts your search rankings and drives organic traffic.</p>
+            </div>
+            <div class="service-feature page-enter">
+                <div class="service-feature-num">02</div>
+                <h3 class="service-feature-title">Social Media</h3>
+                <p class="service-feature-body">Content calendars, community management, and platform-native creative across key channels.</p>
+            </div>
+            <div class="service-feature page-enter">
+                <div class="service-feature-num">03</div>
+                <h3 class="service-feature-title">Paid Advertising</h3>
+                <p class="service-feature-body">Data-driven campaigns across Google, Meta, and LinkedIn — optimised for cost and conversion.</p>
+            </div>
+            <div class="service-feature page-enter">
+                <div class="service-feature-num">04</div>
+                <h3 class="service-feature-title">Email Marketing</h3>
+                <p class="service-feature-body">Segmented sequences and newsletters designed to nurture leads and retain customers.</p>
+            </div>
+            <div class="service-feature page-enter">
+                <div class="service-feature-num">05</div>
+                <h3 class="service-feature-title">Analytics & Reporting</h3>
+                <p class="service-feature-body">Monthly performance dashboards with insights and clear recommendations on what to do next.</p>
+            </div>
+            <div class="service-feature page-enter">
+                <div class="service-feature-num">06</div>
+                <h3 class="service-feature-title">Content Creation</h3>
+                <p class="service-feature-body">Copy, graphics, and short-form video produced in-house to keep your channels active.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="service-showcase">
+        <img src="https://images.unsplash.com/photo-1599658880436-c61792e70672?auto=format&fit=crop&w=1800&q=80" alt="Digital marketing showcase">
+        <div class="service-showcase-label">GROW</div>
+    </div>
+
+    <section class="service-process">
+        <h2 class="service-process-title page-enter">How it works</h2>
+        <div class="service-steps">
+            <div class="service-step page-enter">
+                <span class="service-step-num">01</span>
+                <div class="service-step-content">
+                    <h3>Market Research</h3>
+                    <p>We analyse your audience, competitors, and current digital footprint to find the highest-leverage opportunities.</p>
+                </div>
+            </div>
+            <div class="service-step page-enter">
+                <span class="service-step-num">02</span>
+                <div class="service-step-content">
+                    <h3>Strategy & Roadmap</h3>
+                    <p>A 90-day plan mapping channels, messaging, budget allocation, and KPIs before anything goes live.</p>
+                </div>
+            </div>
+            <div class="service-step page-enter">
+                <span class="service-step-num">03</span>
+                <div class="service-step-content">
+                    <h3>Execute & Test</h3>
+                    <p>We launch, A/B test, and iterate fast — constantly feeding data back into every decision.</p>
+                </div>
+            </div>
+            <div class="service-step page-enter">
+                <span class="service-step-num">04</span>
+                <div class="service-step-content">
+                    <h3>Report & Scale</h3>
+                    <p>Monthly reviews, transparent reporting, and a clear path to scaling what's working.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="service-cta">
+        <h2 class="service-cta-title page-enter">Ready to grow your audience?</h2>
+        <button class="service-cta-btn" onclick="handlePageTransition(event, 'contact.html')">Start a project</button>
+    </section>
+
+    <script src="https://unpkg.com/split-type"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="script.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            gsap.to('.page-enter', { opacity: 1, y: 0, duration: 0.9, stagger: 0.12, ease: 'power3.out', delay: 0.5 });
+            gsap.to('.service-hero-line', { scaleX: 1, duration: 1.2, ease: 'expo.out', delay: 0.9 });
+        });
+        gsap.utils.toArray('.service-section .page-enter, .service-process .page-enter, .service-cta .page-enter').forEach(el => {
+            gsap.fromTo(el, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%', once: true } });
+        });
+    </script>
+</body>
+</html>

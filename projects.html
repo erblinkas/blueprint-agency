@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blueprint - Projects</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="font.css">
+    <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/neue" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/identidad" rel="stylesheet">
+</head>
+
+<body>
+    <!-- LOADING SCREEN -->
+    <div id="loader" class="loader">
+        <div class="loader-content">
+            <div class="loader-logo reveal-text">BLUEPRINT</div>
+            <div class="loader-progress">
+                <div class="loader-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <header class="navbar">
+        <button class="logo-button" type="button" onclick="handlePageTransition(event, 'index.html')" data-label="BLUEPRINT" aria-label="Back to home">
+            BLUEPRINT
+        </button>
+
+        <button class="menu-button" type="button" aria-label="Open menu">
+            <svg class="menu-icon" fill="none" width="28" height="28" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <line class="menu-icon-line menu-icon-line-top" x1="4" y1="9.5" x2="20" y2="9.5" />
+                <line class="menu-icon-line menu-icon-line-bottom" x1="4" y1="14.5" x2="20" y2="14.5" />
+                <g class="menu-icon-white-layer">
+                    <line class="menu-icon-line menu-icon-line-white menu-icon-line-top" x1="4" y1="9.5" x2="20"
+                        y2="9.5" />
+                    <line class="menu-icon-line menu-icon-line-white menu-icon-line-bottom" x1="4" y1="14.5" x2="20"
+                        y2="14.5" />
+                </g>
+            </svg>
+        </button>
+    </header>
+
+    <div class="menu-overlay" aria-hidden="true">
+        <div class="menu-overlay-content">
+            <div class="menu-overlay-main">
+                <nav class="menu-overlay-links" aria-label="Quick links">
+                    <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'projects.html')"><span>Projects</span></button>
+                    <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'approach.html')"><span>Approach</span></button>
+                    <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'about.html')"><span>About</span></button>
+                    <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'contact.html')"><span>Contact</span></button>
+                </nav>
+
+                <div class="menu-image-frame" aria-hidden="true">
+                    <img class="menu-image" src="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1200&q=80" alt="">
+                </div>
+
+                <div class="menu-overlay-info">
+                    <div class="menu-info-group">
+                        <p class="menu-info-label menu-line-reveal"><span>Email</span></p>
+                        <a class="menu-info-link menu-line-reveal" href="mailto:hello@blueprint.studio"><span>hello@blueprint.studio</span></a>
+                    </div>
+
+                    <div class="menu-info-group">
+                        <p class="menu-info-label menu-line-reveal"><span>Social</span></p>
+                        <a class="menu-info-link menu-line-reveal" href="#"><span>Instagram</span></a>
+                        <a class="menu-info-link menu-line-reveal" href="#"><span>LinkedIn</span></a>
+                        <a class="menu-info-link menu-line-reveal" href="#"><span>Behance</span></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-overlay-bottom">
+                <hr class="menu-overlay-divider">
+                <div class="menu-overlay-blueprint">BLUEPRINT</div>
+            </div>
+        </div>
+    </div>
+
+    <main class="scroll-container">
+        <section class="panel hero-section">
+            <h1 class="hero-title reveal-text">PROJECTS</h1>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/split-type"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

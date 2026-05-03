@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blueprint</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="font.css">
+    <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/neue" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/identidad" rel="stylesheet">
+</head>
+
+<body>
+    <!-- LOADING SCREEN -->
+    <div id="loader" class="loader">
+        <div class="loader-content">
+            <div class="loader-logo reveal-text">BLUEPRINT</div>
+            <div class="loader-progress">
+                <div class="loader-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <header class="navbar">
+        <button class="logo-button" type="button" onclick="handlePageTransition(event, 'index.html')"
+            data-label="BLUEPRINT" aria-label="Back to home">
+            BLUEPRINT
+        </button>
+        <div class="nav-links">
+            <button class="projects reveal-text"
+                onclick="handlePageTransition(event, 'projects.html')">Projects</button>
+            <button class="about reveal-text" onclick="handlePageTransition(event, 'approach.html')">Approach</button>
+            <button class="services reveal-text" onclick="handlePageTransition(event, 'about.html')">About</button>
+            <button class="contact reveal-text" onclick="handlePageTransition(event, 'contact.html')">Contact</button>
+        </div>
+        <button class="menu-button" type="button" aria-label="Open menu">
+            <svg class="menu-icon" fill="none" width="28" height="28" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <line class="menu-icon-line menu-icon-line-top" x1="4" y1="9.5" x2="20" y2="9.5" />
+                <line class="menu-icon-line menu-icon-line-bottom" x1="4" y1="14.5" x2="20" y2="14.5" />
+                <g class="menu-icon-white-layer">
+                    <line class="menu-icon-line menu-icon-line-white menu-icon-line-top" x1="4" y1="9.5" x2="20"
+                        y2="9.5" />
+                    <line class="menu-icon-line menu-icon-line-white menu-icon-line-bottom" x1="4" y1="14.5" x2="20"
+                        y2="14.5" />
+                </g>
+            </svg>
+        </button>
+    </header>
+
+    <div class="menu-overlay" aria-hidden="true">
+        <div class="menu-overlay-content">
+            <div class="menu-overlay-main">
+                <nav class="menu-overlay-links" aria-label="Quick links">
+                    <button class="menu-overlay-link menu-line-reveal" type="button"
+                        onclick="handlePageTransition(event, 'projects.html')"><span>Projects</span></button>
+                    <button class="menu-overlay-link menu-line-reveal" type="button"
+                        onclick="handlePageTransition(event, 'approach.html')"><span>Approach</span></button>
+                    <button class="menu-overlay-link menu-line-reveal" type="button"
+                        onclick="handlePageTransition(event, 'about.html')"><span>About</span></button>
+                    <button class="menu-overlay-link menu-line-reveal" type="button"
+                        onclick="handlePageTransition(event, 'contact.html')"><span>Contact</span></button>
+                </nav>
+
+                <div class="menu-image-frame" aria-hidden="true">
+                    <img class="menu-image"
+                        src="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1200&q=80"
+                        alt="">
+                </div>
+
+                <div class="menu-overlay-info">
+                    <div class="menu-info-group">
+                        <p class="menu-info-label menu-line-reveal"><span>Email</span></p>
+                        <a class="menu-info-link menu-line-reveal"
+                            href="mailto:hello@blueprint.studio"><span>hello@blueprint.studio</span></a>
+                    </div>
+
+                    <div class="menu-info-group">
+                        <p class="menu-info-label menu-line-reveal"><span>Social</span></p>
+                        <a class="menu-info-link menu-line-reveal" href="#"><span>Instagram</span></a>
+                        <a class="menu-info-link menu-line-reveal" href="#"><span>LinkedIn</span></a>
+                        <a class="menu-info-link menu-line-reveal" href="#"><span>Behance</span></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-overlay-bottom">
+                <hr class="menu-overlay-divider">
+                <div class="menu-overlay-blueprint">BLUEPRINT</div>
+            </div>
+        </div>
+    </div>
+
+    <main class="scroll-container">
+        <section class="panel hero-section">
+            <h1 class="hero-title reveal-text">LAUNCH YOUR</h1>
+
+            <div class="highlight-container">
+                <span class="highlight-base reveal-text">BUSINESS</span>
+                <span class="highlight-overlay reveal-text">BUSINESS</span>
+            </div>
+
+            <p class="hero-description reveal-text">The complete starter pack for new businesses</p>
+            <hr class="hero-line">
+            <div class="bottom-logo">
+                BLUEPRINT
+            </div>
+        </section>
+
+        <section class="panel service-card-web-dev">
+            <div class="reveal-content">
+                <img src="./Gemini_Generated_Image_z57vfxz57vfxz57v.png" alt="Web Development Showcase"
+                    class="card-img-unified">
+                <div class="card-info">
+                    <h3 class="card-desc reveal-text">Custom, responsive websites that convert visitors into customers.
+                    </h3>
+                    <hr>
+                    <h1 class="card-title reveal-text">Web development</h1>
+                    <button class="icon-btn" onclick="handlePageTransition(event, 'service-webdev.html')"
+                        aria-label="View Web Development service">
+                        <svg fill="white" width="40px" height="40px" viewBox="0 0 30 30"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M15 0C6.729 0 0 6.729 0 15s6.729 15 15 15 15 -6.729 15 -15 -6.729 -15 -15 -15m0 28.89C7.341 28.89 1.11 22.659 1.11 15S7.341 1.11 15 1.11 28.89 7.341 28.89 15 22.659 28.89 15 28.89" />
+                            <path
+                                d="M12.144 9.444v1.11H18.66L9.393 19.821a0.555 0.555 0 1 0 0.786 0.786L19.443 11.34v6.516h1.11V9.444z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel service-card-branding">
+            <div class="reveal-content">
+                <img src="Gemini_Generated_Image_meug83meug83meug.png" alt="branding showcase" class="card-img-unified">
+                <div class="card-info">
+                    <h3 class="card-desc reveal-text">Memorable logos and complete brand identity packages.</h3>
+                    <hr>
+                    <h1 class="card-title reveal-text">Branding & Identity</h1>
+                    <button class="icon-btn" onclick="handlePageTransition(event, 'service-branding.html')"
+                        aria-label="View Branding & Identity service">
+                        <svg fill="white" width="40px" height="40px" viewBox="0 0 30 30"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M15 0C6.729 0 0 6.729 0 15s6.729 15 15 15 15 -6.729 15 -15 -6.729 -15 -15 -15m0 28.89C7.341 28.89 1.11 22.659 1.11 15S7.341 1.11 15 1.11 28.89 7.341 28.89 15 22.659 28.89 15 28.89" />
+                            <path
+                                d="M12.144 9.444v1.11H18.66L9.393 19.821a0.555 0.555 0 1 0 0.786 0.786L19.443 11.34v6.516h1.11V9.444z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel service-card-marketing">
+            <div class="reveal-content">
+                <img src="Gemini_Generated_Image_rrm9fqrrm9fqrrm9.png" alt="marketing showcase"
+                    class="card-img-unified">
+                <div class="card-info">
+                    <h3 class="card-desc reveal-text">Strategic marketing solutions including social media, SEO, and
+                        digital
+                        advertising campaigns.</h3>
+                    <hr>
+                    <h1 class="card-title reveal-text">Digital Marketing</h1>
+                    <button class="icon-btn" onclick="handlePageTransition(event, 'service-marketing.html')"
+                        aria-label="View Digital Marketing service">
+                        <svg fill="white" width="40px" height="40px" viewBox="0 0 30 30"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M15 0C6.729 0 0 6.729 0 15s6.729 15 15 15 15 -6.729 15 -15 -6.729 -15 -15 -15m0 28.89C7.341 28.89 1.11 22.659 1.11 15S7.341 1.11 15 1.11 28.89 7.341 28.89 15 22.659 28.89 15 28.89" />
+                            <path
+                                d="M12.144 9.444v1.11H18.66L9.393 19.821a0.555 0.555 0 1 0 0.786 0.786L19.443 11.34v6.516h1.11V9.444z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+        <section class="panel service-card-architecture">
+            <div class="reveal-content">
+                <img src="./Gemini_Generated_Image_mtrrzymtrrzymtrr.png" alt="architecture showcase"
+                    class="card-img-unified">
+                <div class="card-info">
+                    <h3 class="card-desc reveal-text">Custom, responsive websites that convert visitors into customers.
+                    </h3>
+                    <hr>
+                    <h1 class="card-title reveal-text">Architecture</h1>
+                    <button class="icon-btn" onclick="handlePageTransition(event, 'service-architecture.html')"
+                        aria-label="View Architecture service">
+                        <svg fill="white" width="40px" height="40px" viewBox="0 0 30 30"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M15 0C6.729 0 0 6.729 0 15s6.729 15 15 15 15 -6.729 15 -15 -6.729 -15 -15 -15m0 28.89C7.341 28.89 1.11 22.659 1.11 15S7.341 1.11 15 1.11 28.89 7.341 28.89 15 22.659 28.89 15 28.89" />
+                            <path
+                                d="M12.144 9.444v1.11H18.66L9.393 19.821a0.555 0.555 0 1 0 0.786 0.786L19.443 11.34v6.516h1.11V9.444z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="masking-overlay-card">
+            <p class="masking-overlay-copy reveal-text">
+                Projects
+            </p>
+            <div>
+                <p class="masking-overlay-description reveal-text">
+                    We bridge the gap between abstract code and concrete form. At Blueprint, we believe that a brand’s
+                    presence should be as enduring as the structures we inhabit. Our approach integrates the precision
+                    of high-end web development with the visionary discipline of architecture, creating a seamless
+                    transition from the screen to the street.
+                </p>
+            </div>
+            <nav class="project-link-list" aria-label="Project links">
+                <section class="project-category" aria-labelledby="web-development-projects">
+                    <h2 class="project-category-title reveal-text" id="web-development-projects">Web development</h2>
+                    <div class="project-category-preview" aria-hidden="true">
+                        <img class="project-preview-image is-active"
+                            src="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1200&q=80"
+                            alt="">
+                    </div>
+                    <div class="project-category-list">
+                        <a class="project-list-link reveal-text" href="#" data-index="(01)"><span>Meridian launch
+                                system</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(02)"><span>Atlas booking
+                                platform</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(03)"><span>Northline service
+                                portal</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(04)"><span>Signal ecommerce
+                                build</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(05)"><span>Forma studio
+                                website</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(06)"><span>Archive content
+                                hub</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(07)"><span>Vector conversion
+                                flow</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(08)"><span>Fieldhouse landing
+                                suite</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(09)"><span>Monolith client
+                                dashboard</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(10)"><span>Blueprint support
+                                system</span></a>
+                    </div>
+                </section>
+
+                <section class="project-category" aria-labelledby="branding-projects">
+                    <h2 class="project-category-title reveal-text" id="branding-projects">Branding & Identity</h2>
+                    <div class="project-category-preview" aria-hidden="true">
+                        <img class="project-preview-image is-active"
+                            src="https://images.unsplash.com/photo-1548094990-c16ca90f1f0d?auto=format&fit=crop&w=1200&q=80"
+                            alt="">
+                    </div>
+                    <div class="project-category-list">
+                        <a class="project-list-link reveal-text" href="#" data-index="(01)"><span>Northline brand
+                                foundation</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(02)"><span>Forma identity
+                                refresh</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(03)"><span>Stonegate visual
+                                system</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(04)"><span>Horizon naming
+                                suite</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(05)"><span>Everwell launch
+                                identity</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(06)"><span>Oakroom brand
+                                manual</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(07)"><span>Lumen logo
+                                system</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(08)"><span>Arcade product
+                                identity</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(09)"><span>Copperline
+                                packaging</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(10)"><span>Vessel tone
+                                direction</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(11)"><span>Summit brand
+                                toolkit</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(12)"><span>Civic mark
+                                refresh</span></a>
+                    </div>
+                </section>
+
+                <section class="project-category" aria-labelledby="marketing-projects">
+                    <h2 class="project-category-title reveal-text" id="marketing-projects">Digital Marketing</h2>
+                    <div class="project-category-preview" aria-hidden="true">
+                        <img class="project-preview-image is-active"
+                            src="https://images.unsplash.com/photo-1599658880436-c61792e70672?auto=format&fit=crop&w=1200&q=80"
+                            alt="">
+                    </div>
+                    <div class="project-category-list">
+                        <a class="project-list-link reveal-text" href="#" data-index="(01)"><span>Signal digital
+                                campaign</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(02)"><span>Atlas launch
+                                sequence</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(03)"><span>Fieldhouse growth
+                                sprint</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(04)"><span>Meridian email
+                                system</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(05)"><span>Northline SEO
+                                campaign</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(06)"><span>Everwell social
+                                rollout</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(07)"><span>Vector funnel
+                                audit</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(08)"><span>Forma content
+                                calendar</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(09)"><span>Stonegate paid
+                                search</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(10)"><span>Lumen creator
+                                campaign</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(11)"><span>Horizon launch
+                                ads</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(12)"><span>Copperline retention
+                                flow</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(13)"><span>Archive editorial
+                                engine</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(14)"><span>Oakroom audience
+                                map</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(15)"><span>Vessel partnership
+                                push</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(16)"><span>Blueprint studio
+                                campaign</span></a>
+                    </div>
+                </section>
+
+                <section class="project-category" aria-labelledby="architecture-projects">
+                    <h2 class="project-category-title reveal-text" id="architecture-projects">Architecture</h2>
+                    <div class="project-category-preview" aria-hidden="true">
+                        <img class="project-preview-image is-active"
+                            src="https://images.unsplash.com/photo-1574848296471-28f79a036f79?auto=format&fit=crop&w=1200&q=80"
+                            alt="">
+                    </div>
+                    <div class="project-category-list">
+                        <a class="project-list-link reveal-text" href="#" data-index="(01)"><span>Monolith architecture
+                                visuals</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(02)"><span>Fieldhouse retail
+                                concept</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(03)"><span>Stonegate interior
+                                study</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(04)"><span>Oakroom spatial
+                                package</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(05)"><span>Horizon facade
+                                direction</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(06)"><span>Vessel showroom
+                                layout</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(07)"><span>Civic wayfinding
+                                system</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(08)"><span>Arcade concept
+                                render</span></a>
+                        <a class="project-list-link reveal-text" href="#" data-index="(09)"><span>Summit plan
+                                presentation</span></a>
+                    </div>
+                </section>
+            </nav>
+        </section>
+
+        <section class="approach-card">
+            <video class="approach-fg-video" src="./Original video.mp4" autoplay loop muted playsinline preload="auto"
+                aria-hidden="true"></video>
+            <div class="approach-copy-block">
+                <h2 class="approach-eyebrow reveal-text">Approach</h2>
+                <p class="approach-kicker reveal-text">We blend strategy, design, tech, and space.</p>
+                <hr>
+                <p class="approach-title reveal-text">A clear process from vision to launch.</p>
+                <p class="approach-copy reveal-text">Complete brands, built with purpose.</p>
+            </div>
+            <h2 class="approach-eyebrow-cover" aria-hidden="true">Approach</h2>
+            <p class="approach-title-cover" aria-hidden="true">A clear process from vision to launch.</p>
+
+            <div class="approach-articles-mask">
+                <div class="approach-steps" aria-label="Approach steps">
+                    <article class="approach-step">
+                        <span>01</span>
+                        <div>
+                            <h3 class="approach-step-title reveal-text">Discover</h3>
+                            <p class="approach-step-copy reveal-text">We learn the business, audience, offer, goals,
+                                constraints, and visual direction so every decision starts from real context.</p>
+                        </div>
+                    </article>
+                    <article class="approach-step">
+                        <span>02</span>
+                        <div>
+                            <h3 class="approach-step-title reveal-text">Strategy</h3>
+                            <p class="approach-step-copy reveal-text">We shape the brand direction, site structure,
+                                marketing priorities, content needs, timeline, and launch path before production begins.
+                            </p>
+                        </div>
+                    </article>
+                    <article class="approach-step">
+                        <span>03</span>
+                        <div>
+                            <h3 class="approach-step-title reveal-text">Design</h3>
+                            <p class="approach-step-copy reveal-text">We translate the strategy into identity systems,
+                                interface layouts, campaign visuals, spatial concepts, and a consistent visual language.
+                            </p>
+                        </div>
+                    </article>
+                    <article class="approach-step">
+                        <span>04</span>
+                        <div>
+                            <h3 class="approach-step-title reveal-text">Build</h3>
+                            <p class="approach-step-copy reveal-text">We build the website, prepare brand assets, refine
+                                campaign materials, test the experience, and package everything for launch.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/split-type"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
