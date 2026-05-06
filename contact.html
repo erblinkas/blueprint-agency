@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blueprint - Contact</title>
+    <script>
+        try {
+            if (sessionStorage.getItem("blueprintUseLinkLoader") === "true") {
+                document.documentElement.classList.add("is-link-transition");
+                document.documentElement.style.backgroundColor = "#000000";
+            }
+        } catch (error) {}
+    </script>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="font.css">
     <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">

@@ -1,6 +1,115 @@
 gsap.registerPlugin(ScrollTrigger);
 
+if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+}
+
+ScrollTrigger.clearScrollMemory("manual");
+
+function resetPageScroll() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+}
+
+resetPageScroll();
+
+window.addEventListener("beforeunload", resetPageScroll);
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+        resetPageScroll();
+    }
+
+    requestAnimationFrame(resetPageScroll);
+});
+
+const scrollbarIndicator = document.createElement("div");
+scrollbarIndicator.className = "scrollbar-indicator";
+scrollbarIndicator.setAttribute("aria-hidden", "true");
+
+const scrollbarIndicatorThumb = document.createElement("span");
+scrollbarIndicatorThumb.className = "scrollbar-indicator-thumb";
+scrollbarIndicator.appendChild(scrollbarIndicatorThumb);
+document.body.appendChild(scrollbarIndicator);
+
+function syncScrollbarIndicator() {
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const progress = gsap.utils.clamp(0, 1, window.scrollY / maxScroll);
+    const travel = scrollbarIndicator.clientHeight - scrollbarIndicatorThumb.clientHeight;
+
+    scrollbarIndicatorThumb.style.transform = `translate3d(0, ${travel * progress}px, 0)`;
+}
+
+window.addEventListener("scroll", syncScrollbarIndicator, { passive: true });
+window.addEventListener("resize", syncScrollbarIndicator, { passive: true });
+requestAnimationFrame(syncScrollbarIndicator);
+
 let pageIsReady = false;
+const currentPageName = window.location.pathname.split("/").pop().toLowerCase();
+const isIndexPage = currentPageName === "" || currentPageName === "index.html";
+const linkLoaderStorageKey = "blueprintUseLinkLoader";
+let shouldUseLinkLoader = false;
+
+try {
+    shouldUseLinkLoader = sessionStorage.getItem(linkLoaderStorageKey) === "true";
+    sessionStorage.removeItem(linkLoaderStorageKey);
+} catch (error) {
+    shouldUseLinkLoader = false;
+}
+
+const loaderElement = document.getElementById('loader');
+
+if (loaderElement && shouldUseLinkLoader) {
+    loaderElement.classList.add("is-link-loader");
+}
+
+function setLinkLoaderFlag() {
+    try {
+        sessionStorage.setItem(linkLoaderStorageKey, "true");
+    } catch (error) {
+        // Storage can be unavailable in private browsing; the outgoing transition still works.
+    }
+}
+
+function navigateWithLinkLoader(url) {
+    const loader = document.getElementById('loader');
+
+    setLinkLoaderFlag();
+    document.documentElement.classList.add("is-link-transition");
+    document.documentElement.style.backgroundColor = "#000000";
+    document.body.style.overflow = "hidden";
+
+    if (!loader) {
+        window.location.href = url;
+        return;
+    }
+
+    loader.classList.add("is-link-loader");
+    loader.style.display = "flex";
+
+    gsap.killTweensOf(".loader, .loader-logo .char, .loader-progress, .loader-progress-bar");
+    gsap.set(".loader", { yPercent: 100, opacity: 1 });
+    gsap.set(".loader-logo .char", { y: "140%" });
+    gsap.set(".loader-progress, .loader-progress-bar", { opacity: 0 });
+
+    gsap.timeline({
+        onComplete: () => {
+            window.location.href = url;
+        }
+    })
+        .to(".loader", {
+            yPercent: 0,
+            duration: 0.65,
+            ease: "expo.inOut"
+        })
+        .to(".loader-logo .char", {
+            y: 0,
+            stagger: 0.035,
+            duration: 0.62,
+            ease: "power4.out"
+        }, "-=0.28")
+        .to({}, { duration: 0.18 });
+}
 
 window.handlePageTransition = function(e, url) {
     e.preventDefault();
@@ -23,11 +132,11 @@ window.handlePageTransition = function(e, url) {
             stagger: 0.05,
             ease: "power2.in",
             onComplete: () => {
-                window.location.href = url;
+                navigateWithLinkLoader(url);
             }
         });
     } else {
-        window.location.href = url;
+        navigateWithLinkLoader(url);
     }
 };
 
@@ -39,6 +148,17 @@ splitTypes.forEach((textElement) => {
         textElement.classList.contains('card-desc') ||
         textElement.classList.contains('masking-overlay-copy') ||
         textElement.classList.contains('masking-overlay-description') ||
+        textElement.classList.contains('masking-overlay-about-copy') ||
+        textElement.classList.contains('about-section-statement') ||
+        textElement.classList.contains('about-section-label') ||
+        textElement.classList.contains('about-section-body') ||
+        textElement.classList.contains('about-section-fact') ||
+        textElement.classList.contains('about-section-link') ||
+        textElement.classList.contains('contact-section-eyebrow') ||
+        textElement.classList.contains('contact-section-statement') ||
+        textElement.classList.contains('contact-section-label') ||
+        textElement.classList.contains('contact-section-link') ||
+        textElement.classList.contains('contact-section-button') ||
         textElement.classList.contains('project-category-title') ||
         textElement.classList.contains('project-list-link') ||
         textElement.classList.contains('approach-eyebrow') ||
@@ -56,17 +176,118 @@ splitTypes.forEach((textElement) => {
             wrapper.classList.add('line-mask');
             wrapper.style.transform = 'translate3d(0, 140%, 0)';
             wrapper.style.display = 'block';
+            wrapper.style.willChange = 'transform';
 
             while (line.firstChild) {
                 wrapper.appendChild(line.firstChild);
             }
             line.appendChild(wrapper);
             line.style.overflow = 'hidden';
-            line.style.paddingBottom = '10px'; // Prevent descender clipping
-            line.style.marginBottom = '-10px';
+            line.style.paddingTop = '0.18em';
+            line.style.paddingBottom = '0.2em';
+            line.style.marginTop = '-0.18em';
+            line.style.marginBottom = '-0.2em';
         });
     }
 });
+
+function createHoverChars(text, useRevealChars = false) {
+    return Array.from(text).map(char => {
+        const span = document.createElement("span");
+        span.className = useRevealChars ? "char link-hover-char" : "link-hover-char";
+        span.textContent = char === " " ? "\u00a0" : char;
+        return span;
+    });
+}
+
+function initRollingLinkHovers() {
+    const hoverTargets = document.querySelectorAll([
+        ".nav-links button",
+        ".menu-overlay-link",
+        ".menu-info-link",
+        ".site-footer-group a",
+        ".site-footer-group button",
+        ".contact-section-link"
+    ].join(","));
+
+    hoverTargets.forEach(target => {
+        const textHost = target.classList.contains("menu-line-reveal")
+            ? target.querySelector(":scope > span")
+            : target;
+
+        if (!textHost || textHost.classList.contains("is-rolling-link")) return;
+
+        const label = textHost.textContent.trim().replace(/\s+/g, " ");
+
+        if (!label) return;
+
+        textHost.textContent = "";
+        textHost.classList.add("is-rolling-link");
+        target.setAttribute("data-hover-label", label);
+
+        const initialWrap = document.createElement("span");
+        initialWrap.className = "rolling-link-wrap rolling-link-initial";
+
+        const hoverWrap = document.createElement("span");
+        hoverWrap.className = "rolling-link-wrap rolling-link-hover";
+        hoverWrap.setAttribute("aria-hidden", "true");
+
+        const shouldUseRevealChars = target.matches(".nav-links button");
+
+        createHoverChars(label, shouldUseRevealChars).forEach(char => initialWrap.appendChild(char));
+        createHoverChars(label).forEach(char => hoverWrap.appendChild(char));
+
+        textHost.append(initialWrap, hoverWrap);
+
+        gsap.set(hoverWrap.querySelectorAll(".link-hover-char"), { yPercent: 100 });
+
+        let hoverTween;
+
+        const playHover = (isEntering) => {
+            if (hoverTween) hoverTween.kill();
+
+            const initialChars = initialWrap.querySelectorAll(".link-hover-char");
+            const hoverChars = hoverWrap.querySelectorAll(".link-hover-char");
+
+            hoverTween = gsap.timeline();
+
+            hoverTween
+                .to(initialChars, {
+                    yPercent: isEntering ? -100 : 0,
+                    duration: 0.38,
+                    stagger: 0.014,
+                    ease: "power3.inOut"
+                }, 0)
+                .to(hoverChars, {
+                    yPercent: isEntering ? 0 : 100,
+                    duration: 0.38,
+                    stagger: 0.014,
+                    ease: "power3.inOut"
+                }, 0.03);
+        };
+
+        target.addEventListener("pointerenter", () => playHover(true));
+        target.addEventListener("pointerleave", () => playHover(false));
+        target.addEventListener("focus", () => playHover(true));
+        target.addEventListener("blur", () => playHover(false));
+    });
+}
+
+initRollingLinkHovers();
+
+if (!isIndexPage) {
+    gsap.set(".logo-button, .menu-button", {
+        opacity: 1,
+        visibility: "visible",
+        pointerEvents: "all"
+    });
+    gsap.set(".logo-button .char", { y: 0 });
+    gsap.set(".menu-button", { scale: 1 });
+}
+
+if (shouldUseLinkLoader) {
+    gsap.set(".loader-logo .char", { y: 0 });
+}
 
 gsap.set(".approach-title .line-mask, .approach-copy .line-mask", { y: "-140%" });
 
@@ -110,8 +331,14 @@ window.addEventListener("resize", scheduleMenuBlueprintFit, { passive: true });
 gsap.set(".panel:not(.hero-section)", { yPercent: -100 });
 
 window.addEventListener('load', () => {
+    resetPageScroll();
+
     // Hide scrollbar during load
     document.body.style.overflow = 'hidden';
+
+    if (loaderElement && shouldUseLinkLoader) {
+        loaderElement.classList.add("is-link-loader");
+    }
 
     const loaderTl = gsap.timeline({
         onComplete: () => {
@@ -120,37 +347,53 @@ window.addEventListener('load', () => {
             pageIsReady = true;
             ScrollTrigger.refresh();
             syncNavState();
+            document.documentElement.classList.remove("is-link-transition");
+            document.documentElement.style.backgroundColor = "";
             document.getElementById('loader').style.display = 'none';
         }
     });
 
-    loaderTl.to(".loader-logo .char", {
-        y: 0,
-        stagger: 0.05,
-        duration: 0.8,
-        ease: "power4.out",
-        delay: 0.2
-    })
-        .to(".loader-progress-bar", {
-            scaleX: 1,
-            duration: 1.5,
-            ease: "power2.inOut"
-        }, "-=0.2")
-        .to(".loader-logo .char", {
-            y: "-140%",
-            stagger: 0.02,
-            duration: 0.5,
-            ease: "power4.in"
-        }, "+=0.5")
-        .to(".loader-progress", {
-            opacity: 0,
-            duration: 0.3
-        }, "<")
-        .to(".loader", {
-            yPercent: -100,
+    if (shouldUseLinkLoader) {
+        loaderTl.set(".loader-logo .char", {
+            y: 0
+        })
+            .to({}, {
+                duration: 0.18
+            })
+            .to(".loader", {
+                yPercent: -100,
+                duration: 0.72,
+                ease: "expo.inOut"
+            });
+    } else {
+        loaderTl.to(".loader-logo .char", {
+            y: 0,
+            stagger: 0.05,
             duration: 0.8,
-            ease: "expo.inOut"
-        }, "-=0.2");
+            ease: "power4.out",
+            delay: 0.2
+        })
+            .to(".loader-progress-bar", {
+                scaleX: 1,
+                duration: 1.5,
+                ease: "power2.inOut"
+            }, "-=0.2")
+            .to(".loader-logo .char", {
+                y: "-140%",
+                stagger: 0.02,
+                duration: 0.5,
+                ease: "power4.in"
+            }, "+=0.5")
+            .to(".loader-progress", {
+                opacity: 0,
+                duration: 0.3
+            }, "<")
+            .to(".loader", {
+                yPercent: -100,
+                duration: 0.8,
+                ease: "expo.inOut"
+            }, "-=0.2");
+    }
 
     function startHeroAnimation() {
         const heroTl = gsap.timeline();
@@ -203,6 +446,11 @@ window.addEventListener('load', () => {
 // 3. MAIN SCROLL LOGIC
 const panels = gsap.utils.toArray(".panel:not(.hero-section)");
 const hero = document.querySelector(".hero-section");
+const phoneBreakpoint = 600;
+
+function isPhoneViewport() {
+    return window.innerWidth <= phoneBreakpoint;
+}
 
 function getOverlayMetrics() {
     const card = document.querySelector(".masking-overlay-card");
@@ -231,6 +479,30 @@ function getOverlayReadDuration() {
     const overflow = getOverlayMetrics().overflow;
 
     return overflow > 1 ? Math.min(5, Math.max(1.5, 1.5 + overflow / window.innerHeight)) : 0;
+}
+
+function getAboutMetrics() {
+    const card = document.querySelector(".masking-overlay-card-about");
+    const inner = document.querySelector(".about-section-inner");
+
+    if (!card || !inner) {
+        return { endY: 0, overflow: 0 };
+    }
+
+    const cardStyles = window.getComputedStyle(card);
+    const paddingTop = parseFloat(cardStyles.paddingTop) || 0;
+    const paddingBottom = parseFloat(cardStyles.paddingBottom) || 0;
+    const availableHeight = card.clientHeight - paddingTop - paddingBottom;
+    const overflow = Math.max(0, inner.scrollHeight - availableHeight);
+    const endY = overflow > 0 ? -overflow : 0;
+
+    return { endY, overflow };
+}
+
+function getAboutReadDuration() {
+    const overflow = getAboutMetrics().overflow;
+
+    return overflow > 1 ? Math.min(2.8, Math.max(0.9, 0.8 + overflow / window.innerHeight)) : 0;
 }
 
 function getApproachPanelMetrics() {
@@ -331,18 +603,27 @@ const approachDeckTotalDuration = approachDeckDuration + (Math.max(0, approachSt
 const approachStepHorizontalDuration = 1;
 const approachStepHorizontalTotalDuration = approachStepCards.length * approachStepHorizontalDuration;
 const approachReadDuration = approachDiscoverPushDuration + approachStepFoldTotalDuration + approachDeckTotalDuration + approachStepHorizontalTotalDuration;
+const aboutTransitionDuration = 1.25;
+const aboutHoldDuration = 0.25;
+const aboutReadDuration = getAboutReadDuration();
+const contactTransitionDuration = 1.25;
+const footerRevealDuration = 1.1;
 const scrollSpeed = 140;
 const approachPushedContentSelector = ".approach-fg-video, .approach-kicker, .approach-copy-block > hr, .approach-title, .approach-copy";
 
 gsap.set(".masking-overlay-card", { y: () => window.innerHeight, yPercent: 0 });
 gsap.set(".masking-overlay-copy", { y: () => getOverlayMetrics().startY });
 gsap.set(".approach-card", { x: () => window.innerWidth, xPercent: 0 });
+gsap.set(".masking-overlay-card-about", { y: () => window.innerHeight, yPercent: 0 });
+gsap.set(".about-section-inner", { y: 0 });
+gsap.set(".contact-card", { x: () => window.innerWidth, xPercent: 0 });
+gsap.set(".site-footer", { y: 0, autoAlpha: 0 });
 gsap.set(".approach-articles-mask", { y: () => getApproachPanelMetrics().startY, yPercent: 0 });
 gsap.set(".approach-steps", { y: 0 });
 gsap.set(approachStepCards, { x: 0, xPercent: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1, zIndex: (index) => index + 1, force3D: true, borderTopLeftRadius: "0px", borderBottomLeftRadius: "0px", transformPerspective: 1200 });
 gsap.set(approachStepCards.slice(1), { y: () => window.innerHeight, yPercent: 0 });
 gsap.set(approachPushedContentSelector, { y: 0 });
-gsap.set(".approach-eyebrow-cover, .approach-title-cover", { y: 0 });
+gsap.set(".approach-eyebrow-cover", { y: 0 });
 
 const overlayTextTl = gsap.timeline({ paused: true });
 overlayTextTl
@@ -360,6 +641,8 @@ overlayTextTl
     }, "-=0.55");
 
 let overlayTextRevealed = false;
+let aboutTextRevealed = false;
+let contactTextRevealed = false;
 
 function getArchitectureCardImageBottomEdge() {
     const architecturePanel = document.querySelector(".service-card-architecture");
@@ -392,6 +675,54 @@ function getArchitectureImageRightEdge() {
 
     return gsap.utils.clamp(0, window.innerWidth, previewRightInsideOverlay);
 }
+
+const aboutTextTl = gsap.timeline({ paused: true });
+aboutTextTl
+    .to(".masking-overlay-about-copy .line-mask", {
+        y: 0,
+        stagger: 0.1,
+        duration: 0.8,
+        ease: "power4.out"
+    })
+    .to(".about-section-statement .line-mask", {
+        y: 0,
+        stagger: 0.08,
+        duration: 0.8,
+        ease: "power4.out"
+    }, "-=0.48")
+    .to(".about-section-label .line-mask, .about-section-body .line-mask", {
+        y: 0,
+        stagger: 0.055,
+        duration: 0.7,
+        ease: "power4.out"
+    }, "-=0.42")
+    .to(".about-section-fact .line-mask, .about-section-link .line-mask", {
+        y: 0,
+        stagger: 0.06,
+        duration: 0.65,
+        ease: "power4.out"
+    }, "-=0.38");
+
+const contactTextTl = gsap.timeline({ paused: true });
+contactTextTl
+    .to(".contact-section-eyebrow .line-mask", {
+        y: 0,
+        stagger: 0.1,
+        duration: 0.8,
+        ease: "power4.out"
+    })
+    .to(".contact-section-statement .line-mask", {
+        y: 0,
+        stagger: 0.08,
+        duration: 0.8,
+        ease: "power4.out"
+    }, "-=0.48")
+    .to(".contact-section-label .line-mask, .contact-section-link .line-mask, .contact-section-button .line-mask", {
+        y: 0,
+        stagger: 0.06,
+        duration: 0.7,
+        ease: "power4.out"
+    }, "-=0.4");
 
 const approachTextTl = gsap.timeline({ paused: true });
 approachTextTl
@@ -442,21 +773,12 @@ let approachTextRevealed = false;
 const approachCard = document.querySelector(".approach-card");
 const approachFgVideo = document.querySelector(".approach-fg-video");
 const approachEyebrowCover = document.querySelector(".approach-eyebrow-cover");
-const approachTitle = document.querySelector(".approach-title");
-const approachTitleCover = document.querySelector(".approach-title-cover");
 
 function setApproachEyebrowMask(top = 0, bottom = 100) {
     if (!approachEyebrowCover) return;
 
     approachEyebrowCover.style.setProperty("--approach-eyebrow-mask-top", `${top}%`);
     approachEyebrowCover.style.setProperty("--approach-eyebrow-mask-bottom", `${bottom}%`);
-}
-
-function setApproachTitleMask(top = 0, bottom = 100) {
-    if (!approachTitleCover) return;
-
-    approachTitleCover.style.setProperty("--approach-title-mask-top", `${top}%`);
-    approachTitleCover.style.setProperty("--approach-title-mask-bottom", `${bottom}%`);
 }
 
 function syncApproachEyebrowMask() {
@@ -479,66 +801,8 @@ function syncApproachEyebrowMask() {
     setApproachEyebrowMask(top, bottom);
 }
 
-function syncApproachTitleMask() {
-    const panel = document.querySelector(".approach-articles-mask");
-    const steps = document.querySelector(".approach-steps");
-    const divider = document.querySelector(".approach-copy-block > hr");
-
-    if (!approachCard || !approachEyebrowCover || !approachTitle || !approachTitleCover || !panel || !divider) return;
-
-    const cardRect = approachCard.getBoundingClientRect();
-    const eyebrowRect = approachEyebrowCover.getBoundingClientRect();
-    const titleRect = approachTitle.getBoundingClientRect();
-    const dividerRect = divider.getBoundingClientRect();
-    const panelRect = panel.getBoundingClientRect();
-    const eyebrowY = parseFloat(gsap.getProperty(approachEyebrowCover, "y")) || 0;
-    const titleY = parseFloat(gsap.getProperty(approachTitle, "y")) || 0;
-    const dividerY = parseFloat(gsap.getProperty(divider, "y")) || 0;
-
-    if (eyebrowRect.height <= 0 || titleRect.width <= 0 || titleRect.height <= 0) {
-        setApproachTitleMask();
-        return;
-    }
-
-    const stickyTop = eyebrowRect.top - cardRect.top - eyebrowY;
-    const titleRestTop = titleRect.top - cardRect.top - titleY;
-    const dividerRestTop = dividerRect.top - cardRect.top - dividerY;
-    const panelTop = panelRect.top - cardRect.top;
-    const movingTop = panelTop + (titleRestTop - dividerRestTop);
-
-    approachTitleCover.style.top = `${Math.max(stickyTop, movingTop)}px`;
-    approachTitleCover.style.left = `${titleRect.left - cardRect.left}px`;
-    approachTitleCover.style.width = `${titleRect.width}px`;
-
-    const coverRect = approachTitleCover.getBoundingClientRect();
-    const creamMaskRect = {
-        left: panelRect.left,
-        right: panelRect.right,
-        top: panelRect.top,
-        bottom: panelRect.bottom
-    };
-
-    if (steps) {
-        const stepsRect = steps.getBoundingClientRect();
-        creamMaskRect.bottom = Math.min(creamMaskRect.bottom, stepsRect.top);
-    }
-
-    const intersection = getIntersectionRect(coverRect, creamMaskRect);
-
-    if (!intersection) {
-        setApproachTitleMask();
-        return;
-    }
-
-    const top = gsap.utils.clamp(0, 100, ((intersection.top - coverRect.top) / coverRect.height) * 100);
-    const bottom = gsap.utils.clamp(0, 100, ((coverRect.bottom - intersection.bottom) / coverRect.height) * 100);
-
-    setApproachTitleMask(top, bottom);
-}
-
 function syncApproachMasks() {
     syncApproachEyebrowMask();
-    syncApproachTitleMask();
 }
 
 if (approachFgVideo) {
@@ -878,8 +1142,8 @@ let masterTl;
 let navIsRevealed = false;
 const navRevealTime = 1;
 const logoButton = document.querySelector(".logo-button");
-const coloredSurfaceSelector = ".service-card-web-dev, .service-card-branding, .service-card-marketing, .service-card-architecture, .approach-card";
-const lightSurfaceSelector = ".hero-section, .masking-overlay-card";
+const coloredSurfaceSelector = ".service-card-web-dev, .service-card-branding, .service-card-marketing, .service-card-architecture, .approach-card, .contact-card";
+const lightSurfaceSelector = ".hero-section, .masking-overlay-card, .masking-overlay-card-about";
 
 function setLogoMask(top = 0, right = 0, bottom = 100, left = 0) {
     if (!logoButton) return;
@@ -1015,6 +1279,21 @@ function hideNav() {
 }
 
 function syncNavState() {
+    if (!isIndexPage) {
+        navTl.pause();
+        navHideTl.pause();
+        gsap.set(".logo-button, .menu-button", {
+            opacity: 1,
+            visibility: "visible",
+            pointerEvents: "all"
+        });
+        gsap.set(".logo-button .char", { y: 0 });
+        gsap.set(".menu-button", { scale: 1 });
+        navIsRevealed = true;
+        syncLogoContrast();
+        return;
+    }
+
     if (!pageIsReady) return;
     if (!masterTl) return;
 
@@ -1033,7 +1312,7 @@ masterTl = gsap.timeline({
     scrollTrigger: {
         trigger: ".scroll-container",
         start: "top top",
-        end: () => `+=${(panels.length + projectTransitionDuration + overlayHoldDuration + overlayReadDuration + approachTransitionDuration + approachHoldDuration + approachMaskDuration + approachReadDuration) * scrollSpeed}%`,
+        end: () => `+=${(panels.length + projectTransitionDuration + overlayHoldDuration + overlayReadDuration + approachTransitionDuration + approachHoldDuration + approachMaskDuration + approachReadDuration + aboutTransitionDuration + aboutHoldDuration + aboutReadDuration + contactTransitionDuration + footerRevealDuration) * scrollSpeed}%`,
         scrub: 1.2,
         pin: true,
         anticipatePin: 1,
@@ -1048,6 +1327,10 @@ masterTl = gsap.timeline({
             gsap.set(".approach-steps", { y: 0 });
             gsap.set(approachStepCards, { x: 0, xPercent: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1, zIndex: (index) => index + 1, force3D: true, borderTopLeftRadius: "0px", borderBottomLeftRadius: "0px", transformPerspective: 1200 });
             gsap.set(approachStepCards.slice(1), { y: window.innerHeight, yPercent: 0 });
+            gsap.set(".masking-overlay-card-about", { y: window.innerHeight, yPercent: 0 });
+            gsap.set(".about-section-inner", { y: 0 });
+            gsap.set(".contact-card", { x: window.innerWidth, xPercent: 0 });
+            gsap.set(".site-footer", { y: 0, autoAlpha: 0 });
             syncNavState();
             syncApproachMasks();
             resetProjectRevealItems();
@@ -1267,7 +1550,7 @@ masterTl.to(".approach-steps", {
     duration: approachDiscoverPushDuration
 }, approachFoldStartTime);
 
-masterTl.to(".approach-eyebrow-cover, .approach-title-cover", {
+masterTl.to(".approach-eyebrow-cover", {
     y: () => -getApproachStepsOffset(),
     ease: "none",
     duration: approachDiscoverPushDuration,
@@ -1294,8 +1577,8 @@ approachStepCards.forEach((step, index) => {
     const deckStartTime = approachDeckStartTime + (index * approachDeckStagger);
 
     masterTl.to(step, {
-        x: () => getApproachDeckX(index),
-        y: 0,
+        x: () => isPhoneViewport() ? 0 : getApproachDeckX(index),
+        y: () => isPhoneViewport() ? 0 : 0,
         yPercent: 0,
         z: 0,
         rotateX: 0,
@@ -1304,8 +1587,8 @@ approachStepCards.forEach((step, index) => {
         scale: 1,
         zIndex: index + 2,
         force3D: true,
-        borderTopLeftRadius: () => getApproachDeckRadius(),
-        borderBottomLeftRadius: () => getApproachDeckRadius(),
+        borderTopLeftRadius: () => isPhoneViewport() ? "0px" : getApproachDeckRadius(),
+        borderBottomLeftRadius: () => isPhoneViewport() ? "0px" : getApproachDeckRadius(),
         ease: "power2.inOut",
         duration: approachDeckDuration
     }, deckStartTime);
@@ -1314,8 +1597,10 @@ approachStepCards.forEach((step, index) => {
 const approachHorizontalStartTime = approachDeckStartTime + approachDeckTotalDuration;
 
 masterTl.to(approachStepCards.slice(1), {
-    x: "100vw",
+    x: () => isPhoneViewport() ? 0 : "100vw",
     xPercent: 0,
+    y: () => isPhoneViewport() ? window.innerHeight : 0,
+    yPercent: 0,
     z: 0,
     rotateX: 0,
     rotateY: 0,
@@ -1332,12 +1617,19 @@ approachStepCards.forEach((step, index) => {
     const cardScrollTime = approachHorizontalStartTime + (index * approachStepHorizontalDuration);
 
     if (index > 0) {
-        masterTl.to(approachStepCards[index - 1], {
-            xPercent: -100,
-            force3D: true,
-            ease: "none",
-            duration: approachStepHorizontalDuration
-        }, cardScrollTime);
+        masterTl.to(approachStepCards[index - 1], isPhoneViewport()
+            ? {
+                yPercent: -100,
+                force3D: true,
+                ease: "none",
+                duration: approachStepHorizontalDuration
+            }
+            : {
+                xPercent: -100,
+                force3D: true,
+                ease: "none",
+                duration: approachStepHorizontalDuration
+            }, cardScrollTime);
     }
 
     masterTl.to(step, {
@@ -1364,6 +1656,76 @@ approachStepCards.forEach((step, index) => {
         duration: 0.42
     }, cardScrollTime + 0.18);
 });
+
+const aboutStartTime = approachHorizontalStartTime + approachStepHorizontalTotalDuration;
+
+masterTl.fromTo(".masking-overlay-card-about", {
+    y: () => window.innerHeight,
+    yPercent: 0
+}, {
+    y: 0,
+    yPercent: 0,
+    ease: "none",
+    duration: aboutTransitionDuration,
+    onUpdate: function () {
+        const progress = this.progress();
+
+        if (progress >= 0.9 && !aboutTextRevealed) {
+            aboutTextTl.play();
+            aboutTextRevealed = true;
+        } else if (progress < 0.45 && aboutTextRevealed) {
+            aboutTextTl.reverse();
+            aboutTextRevealed = false;
+        }
+    }
+}, aboutStartTime);
+
+if (aboutHoldDuration > 0) {
+    masterTl.to({}, {
+        duration: aboutHoldDuration
+    }, aboutStartTime + aboutTransitionDuration);
+}
+
+if (aboutReadDuration > 0) {
+    masterTl.to(".about-section-inner", {
+        y: () => getAboutMetrics().endY,
+        ease: "none",
+        duration: aboutReadDuration
+    }, aboutStartTime + aboutTransitionDuration + aboutHoldDuration);
+}
+
+const contactStartTime = aboutStartTime + aboutTransitionDuration + aboutHoldDuration + aboutReadDuration;
+
+masterTl.fromTo(".contact-card", {
+    x: () => window.innerWidth,
+    xPercent: 0
+}, {
+    x: 0,
+    xPercent: 0,
+    ease: "none",
+    duration: contactTransitionDuration,
+    onUpdate: function () {
+        const progress = this.progress();
+
+        if (progress >= 0.86 && !contactTextRevealed) {
+            contactTextTl.play();
+            contactTextRevealed = true;
+        } else if (progress < 0.45 && contactTextRevealed) {
+            contactTextTl.reverse();
+            contactTextRevealed = false;
+        }
+    }
+}, contactStartTime);
+
+masterTl.set(".site-footer", {
+    autoAlpha: 1
+}, contactStartTime + contactTransitionDuration);
+
+masterTl.to(".contact-card", {
+    y: () => -(window.innerHeight * 0.78),
+    ease: "none",
+    duration: footerRevealDuration
+}, contactStartTime + contactTransitionDuration);
 
 // 5. FULL-SCREEN MENU
 const menuOverlay = document.querySelector(".menu-overlay");
@@ -1575,7 +1937,7 @@ if (menuOverlay && menuButton) {
     renderMenuIcon();
 
     menuTl
-        .to(".menu-line-reveal span", {
+        .to(".menu-line-reveal > span", {
             y: 0,
             stagger: 0.08,
             duration: 0.8,
@@ -1619,7 +1981,7 @@ if (menuOverlay && menuButton) {
         animateMenuIcon(true);
         animateNavMask(true);
         startMenuCarousel();
-        gsap.set(".menu-line-reveal span", { y: "140%" });
+        gsap.set(".menu-line-reveal > span", { y: "140%" });
         gsap.set(".menu-image-frame", { opacity: 0, y: 24, clipPath: "inset(100% 0% 0% 0%)" });
         gsap.set(".menu-overlay-divider", { scaleX: 0 });
         gsap.set(".menu-overlay-blueprint .char", { y: "-140%" });
@@ -1643,7 +2005,7 @@ if (menuOverlay && menuButton) {
 
         menuCloseTimer = setTimeout(() => {
             menuTl.pause(0);
-            gsap.set(".menu-line-reveal span", { y: "140%" });
+            gsap.set(".menu-line-reveal > span", { y: "140%" });
             gsap.set(".menu-image-frame", { opacity: 0, y: 24, clipPath: "inset(100% 0% 0% 0%)" });
             gsap.set(".menu-overlay-divider", { scaleX: 0 });
             gsap.set(".menu-overlay-blueprint .char", { y: "-140%" });
