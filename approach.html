@@ -87,15 +87,106 @@
         </div>
     </div>
 
-    <main class="scroll-container">
-        <section class="panel hero-section">
-            <h1 class="hero-title reveal-text">APPROACH</h1>
-        </section>
+    <main class="link-page-main">
+        <div class="link-page-card">
+            <section class="link-page-hero link-page-hero-approach">
+                <div class="approach-hero-circles" aria-hidden="true">
+                    <span class="approach-hero-circle approach-hero-circle-secondary"></span>
+                    <span class="approach-hero-circle approach-hero-circle-primary"></span>
+                </div>
+                <div>
+                    <h1 class="link-page-title reveal-text">Approach</h1>
+                </div>
+                <span class="approach-hero-rule" aria-hidden="true"></span>
+                <div class="link-page-hero-copy">
+                    <p class="link-page-intro reveal-text">A calm, structured process for turning a loose idea into a complete business presence.</p>
+                    <button class="link-page-cta" type="button" onclick="handlePageTransition(event, 'contact.html')"><span>Start a project</span></button>
+                </div>
+            </section>
+
+            <section class="link-page-section link-process-grid" aria-label="Blueprint process">
+                <article>
+                    <span>01</span>
+                    <h2><span class="process-text-mask">Discover</span></h2>
+                    <p>
+                        <span class="process-text-mask">We map the offer, audience, goals,</span>
+                        <span class="process-text-mask">constraints, references, and launch pressure</span>
+                        <span class="process-text-mask">before designing anything.</span>
+                    </p>
+                </article>
+                <article>
+                    <span>02</span>
+                    <h2><span class="process-text-mask">Strategy</span></h2>
+                    <p>
+                        <span class="process-text-mask">We define the positioning, page structure,</span>
+                        <span class="process-text-mask">identity direction, content priorities,</span>
+                        <span class="process-text-mask">and practical timeline.</span>
+                    </p>
+                </article>
+                <article>
+                    <span>03</span>
+                    <h2><span class="process-text-mask">Design</span></h2>
+                    <p>
+                        <span class="process-text-mask">We shape visual systems, layouts,</span>
+                        <span class="process-text-mask">campaigns, and spatial concepts</span>
+                        <span class="process-text-mask">as one connected language.</span>
+                    </p>
+                </article>
+                <article>
+                    <span>04</span>
+                    <h2><span class="process-text-mask">Build</span></h2>
+                    <p>
+                        <span class="process-text-mask">We produce the website, assets,</span>
+                        <span class="process-text-mask">launch details, and handoff structure</span>
+                        <span class="process-text-mask">so the business can move.</span>
+                    </p>
+                </article>
+            </section>
+
+            <section class="link-page-band">
+                <h2>Built to reduce noise.</h2>
+                <p>Every decision is connected to what the business needs next: visibility, trust, clarity, and a launch that feels complete.</p>
+            </section>
+        </div>
+
+        <footer class="site-footer link-page-reveal-footer">
+            <div class="site-footer-inner">
+                <nav class="site-footer-links" aria-label="Footer links">
+                    <div class="site-footer-group">
+                        <p class="site-footer-label">Quick links</p>
+                        <button type="button" onclick="handlePageTransition(event, 'projects.html')">Projects</button>
+                        <button type="button" onclick="handlePageTransition(event, 'approach.html')">Approach</button>
+                        <button type="button" onclick="handlePageTransition(event, 'about.html')">About</button>
+                        <button type="button" onclick="handlePageTransition(event, 'contact.html')">Contact</button>
+                    </div>
+
+                    <div class="site-footer-group">
+                        <p class="site-footer-label">Social</p>
+                        <a href="#">Instagram</a>
+                        <a href="#">Facebook</a>
+                        <a href="#">LinkedIn</a>
+                    </div>
+
+                    <div class="site-footer-group">
+                        <p class="site-footer-label">Email</p>
+                        <a href="mailto:hello@blueprint.studio">hello@blueprint.studio</a>
+                    </div>
+                </nav>
+
+                <p class="site-footer-title">BLUEPRINT</p>
+
+                <div class="site-footer-meta">
+                    <p>Creative systems for new businesses.</p>
+                    <p>Blueprint Studio</p>
+                </div>
+            </div>
+        </footer>
     </main>
 
     <script src="https://unpkg.com/split-type"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

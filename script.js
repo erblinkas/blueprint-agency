@@ -1,5 +1,8 @@
 gsap.registerPlugin(ScrollTrigger);
 
+let viewportRefreshTimer = null;
+let lenis = null;
+
 if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
 }
@@ -7,6 +10,10 @@ if ("scrollRestoration" in history) {
 ScrollTrigger.clearScrollMemory("manual");
 
 function resetPageScroll() {
+    if (lenis) {
+        lenis.scrollTo(0, { immediate: true, force: true });
+    }
+
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
@@ -42,7 +49,70 @@ function syncScrollbarIndicator() {
 
 window.addEventListener("scroll", syncScrollbarIndicator, { passive: true });
 window.addEventListener("resize", syncScrollbarIndicator, { passive: true });
+window.addEventListener("resize", scheduleViewportDrivenLayoutRefresh, { passive: true });
+window.addEventListener("orientationchange", scheduleViewportDrivenLayoutRefresh, { passive: true });
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleViewportDrivenLayoutRefresh, { passive: true });
+}
+
 requestAnimationFrame(syncScrollbarIndicator);
+
+const shouldUseLenis = window.Lenis &&
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+if (shouldUseLenis) {
+    lenis = new Lenis({
+        duration: 1.15,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        smoothTouch: false,
+        wheelMultiplier: 1,
+        prevent: (node) => Boolean(node.closest && node.closest(".approach-card.is-scrollable, .menu-overlay, .contact-thank-modal"))
+    });
+
+    lenis.stop();
+    lenis.on("scroll", () => {
+        syncScrollbarIndicator();
+        ScrollTrigger.update();
+    });
+
+    gsap.ticker.add((time) => {
+        lenis.raf(time * 1000);
+    });
+    gsap.ticker.lagSmoothing(0);
+}
+
+function refreshLenis() {
+    if (!lenis) return;
+
+    lenis.resize();
+
+    if (!pageIsReady) {
+        lenis.scrollTo(window.scrollY, { immediate: true, force: true });
+    }
+}
+
+function refreshViewportDrivenLayout() {
+    refreshLenis();
+
+    if (!pageIsReady) return;
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            ScrollTrigger.refresh();
+            ScrollTrigger.update();
+            syncScrollbarIndicator();
+            syncApproachMasks();
+        });
+    });
+}
+
+function scheduleViewportDrivenLayoutRefresh() {
+    window.clearTimeout(viewportRefreshTimer);
+    viewportRefreshTimer = window.setTimeout(refreshViewportDrivenLayout, 120);
+}
 
 let pageIsReady = false;
 const currentPageName = window.location.pathname.split("/").pop().toLowerCase();
@@ -78,6 +148,9 @@ function navigateWithLinkLoader(url) {
     document.documentElement.classList.add("is-link-transition");
     document.documentElement.style.backgroundColor = "#000000";
     document.body.style.overflow = "hidden";
+    if (lenis) {
+        lenis.stop();
+    }
 
     if (!loader) {
         window.location.href = url;
@@ -161,6 +234,16 @@ splitTypes.forEach((textElement) => {
         textElement.classList.contains('contact-section-button') ||
         textElement.classList.contains('project-category-title') ||
         textElement.classList.contains('project-list-link') ||
+        textElement.classList.contains('link-page-kicker') ||
+        textElement.classList.contains('link-page-title') ||
+        textElement.classList.contains('link-page-subline') ||
+        textElement.classList.contains('link-page-intro') ||
+        textElement.classList.contains('link-project-service-title') ||
+        textElement.classList.contains('link-project-item') ||
+        textElement.classList.contains('projects-bridge-copy') ||
+        textElement.classList.contains('site-footer-label') ||
+        textElement.classList.contains('site-footer-title') ||
+        textElement.classList.contains('site-footer-meta-text') ||
         textElement.classList.contains('approach-eyebrow') ||
         textElement.classList.contains('approach-kicker') ||
         textElement.classList.contains('approach-title') ||
@@ -171,6 +254,10 @@ splitTypes.forEach((textElement) => {
     const split = new SplitType(textElement, { types: usesLineMask ? 'lines' : 'lines,words,chars' });
 
     if (usesLineMask) {
+        const usesRoomyLineMask = Boolean(textElement.closest && textElement.closest(".link-page-hero-approach"));
+        const maskPadTop = usesRoomyLineMask ? '0.32em' : '0.18em';
+        const maskPadBottom = usesRoomyLineMask ? '0.34em' : '0.2em';
+
         split.lines.forEach(line => {
             const wrapper = document.createElement('div');
             wrapper.classList.add('line-mask');
@@ -183,10 +270,10 @@ splitTypes.forEach((textElement) => {
             }
             line.appendChild(wrapper);
             line.style.overflow = 'hidden';
-            line.style.paddingTop = '0.18em';
-            line.style.paddingBottom = '0.2em';
-            line.style.marginTop = '-0.18em';
-            line.style.marginBottom = '-0.2em';
+            line.style.paddingTop = maskPadTop;
+            line.style.paddingBottom = maskPadBottom;
+            line.style.marginTop = `-${maskPadTop}`;
+            line.style.marginBottom = `-${maskPadBottom}`;
         });
     }
 });
@@ -202,6 +289,7 @@ function createHoverChars(text, useRevealChars = false) {
 
 function initRollingLinkHovers() {
     const hoverTargets = document.querySelectorAll([
+        ".logo-button",
         ".nav-links button",
         ".menu-overlay-link",
         ".menu-info-link",
@@ -232,7 +320,7 @@ function initRollingLinkHovers() {
         hoverWrap.className = "rolling-link-wrap rolling-link-hover";
         hoverWrap.setAttribute("aria-hidden", "true");
 
-        const shouldUseRevealChars = target.matches(".nav-links button");
+        const shouldUseRevealChars = target.matches(".nav-links button, .logo-button");
 
         createHoverChars(label, shouldUseRevealChars).forEach(char => initialWrap.appendChild(char));
         createHoverChars(label).forEach(char => hoverWrap.appendChild(char));
@@ -291,6 +379,905 @@ if (shouldUseLinkLoader) {
 
 gsap.set(".approach-title .line-mask, .approach-copy .line-mask", { y: "-140%" });
 
+function initProjectsShowcaseAnimation() {
+    const projectsShowcase = document.querySelector(".projects-showcase-hero");
+
+    if (!projectsShowcase) return null;
+
+    const projectServices = [
+        {
+            label: "Web development",
+            projects: [
+                { name: "Meridian launch system", year: "2026", image: "./web_img/web_1.png" },
+                { name: "Atlas platform rebuild", year: "2025", image: "./web_img/web_2.png" },
+                { name: "Northline commerce flow", year: "2025", image: "./web_img/web_3.png" },
+                { name: "Forma booking portal", year: "2024", image: "./web_img/web_4.png" },
+                { name: "Signal dashboard suite", year: "2024", image: "./web_img/web_5.png" },
+                { name: "Cobalt product site", year: "2023", image: "./web_img/web_6.png" },
+                { name: "Arc web experience", year: "2023", image: "./web_img/web_7.png" }
+            ]
+        },
+        {
+            label: "Branding",
+            projects: [
+                { name: "Northline identity", year: "2026", image: "./branding_img/branding_1.png" },
+                { name: "Forma brand system", year: "2025", image: "./branding_img/branding_2.png" },
+                { name: "Civic mark refresh", year: "2025", image: "./branding_img/branding_3.png" },
+                { name: "Vessel packaging set", year: "2024", image: "./branding_img/branding_4.png" },
+                { name: "Oakroom visual language", year: "2024", image: "./branding_img/branding_5.png" },
+                { name: "Arcade identity kit", year: "2023", image: "./branding_img/branding_6.png" },
+                { name: "Summit launch identity", year: "2023", image: "./branding_img/branding_7.png" }
+            ]
+        },
+        {
+            label: "Digital marketing",
+            projects: [
+                { name: "Signal campaign rollout", year: "2026", image: "./marketing_img/marketing_1.png" },
+                { name: "Horizon paid media", year: "2025", image: "./marketing_img/marketing_2.png" },
+                { name: "Meridian launch ads", year: "2025", image: "./marketing_img/marketing_3.png" },
+                { name: "Northline content system", year: "2024", image: "./marketing_img/marketing_4.png" },
+                { name: "Atlas growth funnel", year: "2024", image: "./marketing_img/marketing_5.png" },
+                { name: "Forma social direction", year: "2023", image: "./marketing_img/marketing_6.png" },
+                { name: "Cobalt email series", year: "2023", image: "./marketing_img/marketing_7.png" }
+            ]
+        },
+        {
+            label: "Architecture",
+            projects: [
+                { name: "Monolith architecture visuals", year: "2026", image: "./architecture_img/architecture_1.png" },
+                { name: "Fieldhouse retail concept", year: "2025", image: "./architecture_img/architecture_2.png" },
+                { name: "Stonegate interior study", year: "2025", image: "./architecture_img/architecture_3.png" },
+                { name: "Oakroom spatial package", year: "2024", image: "./architecture_img/architecture_4.png" },
+                { name: "Horizon facade direction", year: "2024", image: "./architecture_img/architecture_5.png" },
+                { name: "Vessel showroom layout", year: "2023", image: "./architecture_img/architecture_6.png" },
+                { name: "Civic wayfinding system", year: "2023", image: "./architecture_img/architecture_7.png" }
+            ]
+        }
+    ];
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const showcaseContainer = projectsShowcase.querySelector(".projects-template-container");
+    const showcaseCards = gsap.utils.toArray(projectsShowcase.querySelectorAll(".projects-showcase-item"));
+    const prevButton = projectsShowcase.querySelector(".projects-showcase-prev");
+    const nextButton = projectsShowcase.querySelector(".projects-showcase-next");
+    const serviceTabs = gsap.utils.toArray(projectsShowcase.querySelectorAll(".projects-service-tab"));
+    const showcaseLetters = projectsShowcase.querySelectorAll(".projects-showcase-word > span > span");
+    const showcaseCopy = projectsShowcase.querySelectorAll(".projects-showcase-copy > span > span");
+    const mainImage = projectsShowcase.querySelector(".projects-showcase-item-main .projects-showcase-img img");
+    const sideImages = projectsShowcase.querySelectorAll(".projects-showcase-item-side .projects-showcase-img");
+    const showcaseTitle = projectsShowcase.querySelector(".projects-showcase-title");
+    const showcaseControls = projectsShowcase.querySelector(".projects-showcase-controls");
+    const serviceNav = projectsShowcase.querySelector(".projects-service-nav");
+    const leftWord = projectsShowcase.querySelector(".projects-showcase-word-left");
+    const rightWord = projectsShowcase.querySelector(".projects-showcase-word-right");
+    const navbar = document.querySelector(".navbar");
+
+    if (!showcaseLetters.length || !mainImage || !showcaseTitle || !leftWord || !rightWord) return null;
+
+    gsap.killTweensOf([showcaseLetters, showcaseCopy, mainImage, sideImages, showcaseTitle, showcaseControls, serviceNav, leftWord, rightWord]);
+
+    let projectOffset = 0;
+    let activeServiceIndex = 0;
+    let isProjectSwapAnimating = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+
+    function getActiveProjects() {
+        return projectServices[activeServiceIndex].projects;
+    }
+
+    function getCurrentProject(index) {
+        const projects = getActiveProjects();
+        return projects[gsap.utils.wrap(0, projects.length, index)];
+    }
+
+    function setActiveServiceTab() {
+        serviceTabs.forEach((tab, index) => {
+            tab.classList.toggle("is-active", index === activeServiceIndex);
+        });
+    }
+
+    function setShowcaseCard(card, project) {
+        const textLines = card.querySelectorAll(".projects-showcase-copy > span > span");
+        const image = card.querySelector(".projects-showcase-img img");
+
+        if (textLines[0]) textLines[0].textContent = project.name;
+        if (textLines[1]) textLines[1].textContent = project.year;
+
+        if (image) {
+            image.src = project.image;
+            image.alt = `${project.name} preview`;
+        }
+    }
+
+    function getMainTitleMasks() {
+        return projectsShowcase.querySelectorAll(".projects-showcase-item-main .projects-showcase-copy > span");
+    }
+
+    function getMainTitleCopy() {
+        return projectsShowcase.querySelector(".projects-showcase-item-main .projects-showcase-copy");
+    }
+
+    function getMainTitleText() {
+        return projectsShowcase.querySelectorAll(".projects-showcase-item-main .projects-showcase-copy > span > span");
+    }
+
+    function hideMainTitleMasks() {
+        gsap.set(getMainTitleCopy(), { autoAlpha: 1, x: 0, y: 0 });
+        gsap.set(getMainTitleText(), { autoAlpha: 0 });
+        gsap.set(getMainTitleMasks(), {
+            "--project-title-cover-x": "0%",
+            "--project-title-cover-scale": 0
+        });
+    }
+
+    function revealMainTitleMasks(delay = 0) {
+        const titleCopy = getMainTitleCopy();
+        const titleMasks = getMainTitleMasks();
+        const titleText = getMainTitleText();
+
+        gsap.timeline({ delay })
+            .set(titleCopy, { autoAlpha: 1, x: 0, y: 0 })
+            .set(titleText, { autoAlpha: 0 })
+            .set(titleMasks, {
+                "--project-title-cover-x": "0%",
+                "--project-title-cover-scale": 0
+            })
+            .to(titleMasks, {
+                "--project-title-cover-scale": 1,
+                duration: 0.48,
+                stagger: 0.06,
+                ease: "power3.inOut"
+            }, 0)
+            .set(titleText, { autoAlpha: 1 })
+            .to(titleMasks, {
+                "--project-title-cover-x": "101%",
+                duration: 0.82,
+                stagger: 0.06,
+                ease: "power3.inOut"
+            }, ">");
+    }
+
+    function populateShowcaseCards() {
+        showcaseCards.forEach((card, index) => {
+            setShowcaseCard(card, getCurrentProject(projectOffset + index));
+        });
+    }
+
+    function revealServiceImages(onComplete) {
+        const imageWraps = gsap.utils.toArray(projectsShowcase.querySelectorAll(".projects-showcase-img"));
+
+        if (!imageWraps.length) {
+            if (onComplete) onComplete();
+            return;
+        }
+
+        if (reduceMotion) {
+            gsap.set(imageWraps, {
+                autoAlpha: 1,
+                y: 0,
+                clipPath: "inset(0% 0% 0% 0%)"
+            });
+            if (onComplete) onComplete();
+            return;
+        }
+
+        gsap.killTweensOf(imageWraps);
+        gsap.fromTo(imageWraps, {
+            autoAlpha: 0,
+            y: 18,
+            clipPath: "inset(0% 0% 100% 0%)"
+        }, {
+            autoAlpha: 1,
+            y: 0,
+            clipPath: "inset(0% 0% 0% 0%)",
+            duration: 0.64,
+            stagger: 0.055,
+            ease: "power3.out",
+            onComplete
+        });
+    }
+
+    function updateShowcaseControlPosition() {
+        if (!showcaseContainer || !showcaseControls || !showcaseTitle) return;
+
+        const containerRect = showcaseContainer.getBoundingClientRect();
+        const imageRects = gsap.utils.toArray(projectsShowcase.querySelectorAll(".projects-showcase-img"))
+            .map((imageWrap) => imageWrap.getBoundingClientRect())
+            .filter((rect) => rect.width > 0 && rect.height > 0);
+
+        if (!imageRects.length) return;
+
+        const imageBottom = Math.max(...imageRects.map((rect) => rect.bottom));
+        const titleTop = showcaseTitle.getBoundingClientRect().top;
+        const controlsHeight = showcaseControls.getBoundingClientRect().height;
+        const controlsCenter = imageBottom + ((titleTop - imageBottom) / 2);
+
+        showcaseContainer.style.setProperty("--projects-controls-y", `${controlsCenter - containerRect.top - (controlsHeight / 2) - 28}px`);
+    }
+
+    function changeShowcaseProject(delta) {
+        if (isProjectSwapAnimating || !showcaseCards.length || delta === 0) return;
+
+        isProjectSwapAnimating = true;
+        const sign = Math.sign(delta);
+
+        const cardRects = showcaseCards.map(card => card.getBoundingClientRect());
+        const cardClones = showcaseCards.map((card, index) => {
+            const rect = cardRects[index];
+            const clone = card.cloneNode(true);
+            clone.classList.add("projects-showcase-item-clone");
+            gsap.set(clone, { position: "fixed", left: rect.left, top: rect.top, width: rect.width, height: rect.height, margin: 0, zIndex: 18, pointerEvents: "none" });
+            document.body.appendChild(clone);
+            return { clone, oldIndex: index };
+        });
+
+        gsap.set(showcaseCards, { autoAlpha: 0 });
+
+        projectOffset = gsap.utils.wrap(0, getActiveProjects().length, projectOffset + delta);
+        populateShowcaseCards();
+
+        const incomingClones = [];
+        showcaseCards.forEach((card, newIndex) => {
+            const oldIndex = newIndex + delta;
+            if (oldIndex < 0 || oldIndex >= showcaseCards.length) {
+                const incomingRect = cardRects[newIndex];
+                const clone = card.cloneNode(true);
+                clone.classList.add("projects-showcase-item-clone");
+                
+                const startX = sign > 0 ? window.innerWidth + (newIndex * 50) : -incomingRect.width - ((showcaseCards.length - newIndex) * 50);
+                
+                gsap.set(clone, { position: "fixed", left: startX, top: incomingRect.top, width: incomingRect.width, height: incomingRect.height, autoAlpha: 1, margin: 0, zIndex: 18, pointerEvents: "none" });
+                document.body.appendChild(clone);
+                incomingClones.push({ clone, newIndex });
+            }
+        });
+
+        const allClones = [...cardClones.map(c => c.clone), ...incomingClones.map(c => c.clone)];
+
+        gsap.timeline({
+            defaults: { duration: 0.72, ease: "power4.inOut" },
+            onComplete: () => {
+                allClones.forEach(clone => clone.remove());
+                gsap.set(showcaseCards, { autoAlpha: 1 });
+                updateShowcaseControlPosition();
+                revealMainTitleMasks();
+                isProjectSwapAnimating = false;
+            }
+        })
+        .to(cardClones.map(c => c.clone), {
+            left: (i) => {
+                const oldIndex = cardClones[i].oldIndex;
+                const newIndex = oldIndex - delta;
+                if (newIndex >= 0 && newIndex < showcaseCards.length) return cardRects[newIndex].left;
+                return sign > 0 ? -cardRects[0].width * 2 : window.innerWidth + cardRects[0].width;
+            },
+            top: (i) => {
+                const oldIndex = cardClones[i].oldIndex;
+                const newIndex = oldIndex - delta;
+                if (newIndex >= 0 && newIndex < showcaseCards.length) return cardRects[newIndex].top;
+                return cardRects[oldIndex].top;
+            },
+            width: (i) => {
+                const oldIndex = cardClones[i].oldIndex;
+                const newIndex = oldIndex - delta;
+                if (newIndex >= 0 && newIndex < showcaseCards.length) return cardRects[newIndex].width;
+                return cardRects[oldIndex].width;
+            },
+            height: (i) => {
+                const oldIndex = cardClones[i].oldIndex;
+                const newIndex = oldIndex - delta;
+                if (newIndex >= 0 && newIndex < showcaseCards.length) return cardRects[newIndex].height;
+                return cardRects[oldIndex].height;
+            },
+            autoAlpha: (i) => {
+                const oldIndex = cardClones[i].oldIndex;
+                const newIndex = oldIndex - delta;
+                return (newIndex >= 0 && newIndex < showcaseCards.length) ? 1 : 0;
+            }
+        }, 0)
+        .to(incomingClones.map(c => c.clone), {
+            left: (i) => cardRects[incomingClones[i].newIndex].left,
+            top: (i) => cardRects[incomingClones[i].newIndex].top,
+            width: (i) => cardRects[incomingClones[i].newIndex].width,
+            height: (i) => cardRects[incomingClones[i].newIndex].height,
+            autoAlpha: 1
+        }, 0);
+    }
+
+    populateShowcaseCards();
+    setActiveServiceTab();
+
+    if (prevButton) {
+        prevButton.addEventListener("click", () => changeShowcaseProject(-1));
+    }
+
+    if (nextButton) {
+        nextButton.addEventListener("click", () => changeShowcaseProject(1));
+    }
+
+    const columns = projectsShowcase.querySelectorAll(".projects-showcase-col:not(.projects-showcase-col-main)");
+    if (columns.length >= 2) {
+        // Remove the old column listeners
+    }
+
+    showcaseCards.forEach((card, index) => {
+        card.addEventListener("click", () => {
+            const centerIndex = Math.floor(showcaseCards.length / 2);
+            const delta = index - centerIndex;
+            if (delta !== 0) changeShowcaseProject(delta);
+        });
+    });
+
+    serviceTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+            const nextServiceIndex = Number(tab.dataset.serviceIndex);
+
+            if (Number.isNaN(nextServiceIndex) || nextServiceIndex === activeServiceIndex || isProjectSwapAnimating) return;
+
+            isProjectSwapAnimating = true;
+            activeServiceIndex = nextServiceIndex;
+            projectOffset = 0;
+            setActiveServiceTab();
+            hideMainTitleMasks();
+            populateShowcaseCards();
+            updateShowcaseControlPosition();
+            revealMainTitleMasks(0.08);
+            revealServiceImages(() => {
+                updateShowcaseControlPosition();
+                isProjectSwapAnimating = false;
+            });
+        });
+    });
+
+    window.addEventListener("resize", () => {
+        updateShowcaseControlPosition();
+    });
+
+    if (showcaseContainer) {
+        showcaseContainer.addEventListener("pointerdown", (event) => {
+            if (event.target.closest("button, a")) return;
+
+            dragStartX = event.clientX;
+            dragStartY = event.clientY;
+            showcaseContainer.classList.add("is-dragging");
+        });
+
+        showcaseContainer.addEventListener("touchstart", (event) => {
+            if (event.target.closest("button, a")) return;
+
+            dragStartX = event.touches[0].clientX;
+            dragStartY = event.touches[0].clientY;
+            showcaseContainer.classList.add("is-dragging");
+        }, { passive: true });
+
+        const finishProjectDrag = (event) => {
+            if (!showcaseContainer.classList.contains("is-dragging")) return;
+
+            const endX = event.changedTouches ? event.changedTouches[0].clientX : event.clientX;
+            const endY = event.changedTouches ? event.changedTouches[0].clientY : event.clientY;
+
+            const deltaX = endX - dragStartX;
+            const deltaY = endY - dragStartY;
+
+            showcaseContainer.classList.remove("is-dragging");
+
+            if (Math.abs(deltaX) < 45 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+
+            changeShowcaseProject(deltaX < 0 ? 1 : -1);
+        };
+
+        showcaseContainer.addEventListener("pointerup", finishProjectDrag);
+        window.addEventListener("pointerup", finishProjectDrag);
+        showcaseContainer.addEventListener("touchend", finishProjectDrag);
+
+        showcaseContainer.addEventListener("pointercancel", () => {
+            showcaseContainer.classList.remove("is-dragging");
+        });
+        showcaseContainer.addEventListener("touchcancel", () => {
+            showcaseContainer.classList.remove("is-dragging");
+        });
+    }
+
+    if (reduceMotion) {
+        gsap.set(showcaseLetters, { y: 0 });
+        gsap.set(showcaseCopy, { y: 0 });
+        gsap.set(getMainTitleCopy(), { autoAlpha: 1 });
+        gsap.set(getMainTitleText(), { autoAlpha: 1 });
+        gsap.set(getMainTitleMasks(), {
+            "--project-title-cover-x": "101%",
+            "--project-title-cover-scale": 1
+        });
+        gsap.set(showcaseControls, { autoAlpha: 1, y: 0 });
+        gsap.set(serviceNav, { autoAlpha: 1, y: 0 });
+        gsap.set(mainImage, {
+            scale: 1,
+            clipPath: "polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)"
+        });
+        gsap.set(sideImages, {
+            clipPath: "polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)"
+        });
+        gsap.set([leftWord, rightWord], { left: 0, right: 0, scale: 1 });
+        gsap.set(showcaseTitle, { bottom: "0.1em" });
+        updateShowcaseControlPosition();
+        return null;
+    }
+
+    gsap.set(showcaseLetters, { y: 400 });
+    gsap.set(showcaseCopy, { y: 50 });
+    hideMainTitleMasks();
+    gsap.set(showcaseControls, { autoAlpha: 0, y: 14 });
+    gsap.set(serviceNav, { autoAlpha: 0, y: 14 });
+    gsap.set(showcaseTitle, { bottom: "50%" });
+    gsap.set(leftWord, { left: "18vw", scale: 0.25 });
+    gsap.set(rightWord, { right: "18vw", scale: 0.25 });
+    gsap.set(mainImage, {
+        scale: 0.5,
+        clipPath: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)"
+    });
+    gsap.set(sideImages, {
+        clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)"
+    });
+    if (navbar) {
+        gsap.set(navbar, { y: -100 });
+    }
+
+    return gsap.timeline({
+        paused: true,
+        defaults: {
+            duration: 1,
+            ease: "power3.out"
+        }
+    })
+        .to(showcaseLetters, {
+            y: 0,
+            stagger: 0.1
+        })
+        .to(leftWord, {
+            left: "12vw"
+        })
+        .to(rightWord, {
+            right: "8vw"
+        }, "<")
+        .to(mainImage, {
+            clipPath: "polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)"
+        }, "<")
+        .to(leftWord, {
+            left: 0,
+            scale: 1
+        })
+        .to(rightWord, {
+            right: 0,
+            scale: 1
+        }, "<")
+        .to(mainImage, {
+            scale: 1
+        }, "<")
+        .to(sideImages, {
+            clipPath: "polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)",
+            stagger: 0.1
+        }, "<")
+        .to(showcaseTitle, {
+            bottom: "0.1em"
+        }, "<")
+        .call(updateShowcaseControlPosition)
+        .to(showcaseCopy, {
+            y: 0,
+            stagger: 0.05
+        }, "<")
+        .to(navbar || [], {
+            y: 0
+        }, "<")
+        .to(showcaseControls, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.28,
+            ease: "power3.out"
+        }, "<0.18")
+        .to(serviceNav, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.28,
+            ease: "power3.out"
+        }, "<")
+        .set(getMainTitleCopy(), {
+            autoAlpha: 1,
+            x: 0
+        }, ">")
+        .set(getMainTitleText(), {
+            autoAlpha: 0
+        }, "<")
+        .set(getMainTitleMasks(), {
+            "--project-title-cover-x": "0%",
+            "--project-title-cover-scale": 0
+        }, "<")
+        .to(getMainTitleMasks(), {
+            "--project-title-cover-scale": 1,
+            duration: 0.48,
+            stagger: 0.06,
+            ease: "power3.inOut"
+        }, ">")
+        .set(getMainTitleText(), {
+            autoAlpha: 1
+        })
+        .to(getMainTitleMasks(), {
+            "--project-title-cover-x": "101%",
+            duration: 0.82,
+            stagger: 0.06,
+            ease: "power3.inOut"
+        }, ">")
+        .call(updateShowcaseControlPosition);
+}
+
+const projectsShowcaseTl = initProjectsShowcaseAnimation();
+
+function startStandalonePageAnimation() {
+    const linkPage = document.querySelector(".link-page-main");
+
+    if (!linkPage) return;
+
+    const pageTl = gsap.timeline();
+    const approachHero = document.querySelector(".link-page-hero-approach");
+
+    if (projectsShowcaseTl) {
+        projectsShowcaseTl.pause(0);
+        gsap.delayedCall(0.5, () => {
+            projectsShowcaseTl.restart();
+        });
+    }
+
+    if (approachHero) {
+        gsap.killTweensOf(".approach-hero-circle");
+        gsap.set(".approach-hero-circle-primary", {
+            x: "46vw",
+            y: "-18vh",
+            autoAlpha: 1
+        });
+        gsap.set(".approach-hero-circle-secondary", {
+            x: "38vw",
+            y: "22vh",
+            autoAlpha: 1
+        });
+        gsap.set(".link-page-hero-approach > div, .link-page-hero-approach .link-page-hero-copy", {
+            y: 34,
+            autoAlpha: 0
+        });
+        gsap.set(".approach-hero-rule", {
+            scaleX: 0,
+            transformOrigin: "center"
+        });
+        gsap.set(".link-page-hero-approach .link-page-cta", {
+            y: 18,
+            autoAlpha: 0
+        });
+    }
+
+    const heroRevealTargets = document.querySelectorAll(".link-page-hero .char, .link-page-hero .line-mask");
+
+    if (approachHero) {
+        pageTl.to(".approach-hero-circle", {
+            x: 0,
+            y: 0,
+            stagger: 0.12,
+            duration: 1.18,
+            ease: "power3.out"
+        });
+
+        pageTl.to(".approach-hero-rule", {
+            scaleX: 1,
+            duration: 1.2,
+            ease: "expo.inOut"
+        }, "-=0.72");
+
+        pageTl.to(".link-page-hero-approach > div, .link-page-hero-approach .link-page-hero-copy", {
+            y: 0,
+            autoAlpha: 1,
+            stagger: 0.12,
+            duration: 0.72,
+            ease: "power3.out"
+        }, "-=0.44");
+    }
+
+    if (heroRevealTargets.length) {
+        pageTl.to(heroRevealTargets, {
+            y: 0,
+            stagger: approachHero ? 0.04 : 0.025,
+            duration: approachHero ? 1.02 : 0.82,
+            ease: "power4.out"
+        }, approachHero ? "-=0.5" : undefined);
+    }
+
+    if (approachHero) {
+        pageTl.to(".link-page-hero-approach .link-page-cta", {
+            y: 0,
+            autoAlpha: 1,
+            duration: 0.6,
+            ease: "power3.out"
+        }, "-=0.38");
+
+        pageTl.call(() => {
+            gsap.to(".approach-hero-circle-primary", {
+                x: -10,
+                y: 8,
+                duration: 18,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            gsap.to(".approach-hero-circle-secondary", {
+                x: 12,
+                y: -8,
+                duration: 20,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+        });
+    }
+
+    const projectRevealTargets = gsap.utils.toArray(".link-project-service-title .line-mask, .link-project-item .line-mask");
+
+    if (projectRevealTargets.length) {
+        ScrollTrigger.batch(projectRevealTargets, {
+            start: "top 88%",
+            once: true,
+            onEnter: (batch) => {
+                gsap.to(batch, {
+                    y: 0,
+                    stagger: 0.035,
+                    duration: 0.72,
+                    ease: "power4.out"
+                });
+            }
+        });
+    }
+
+    const projectsBridgeLines = gsap.utils.toArray(".projects-bridge-copy .line-mask");
+
+    if (projectsBridgeLines.length) {
+        gsap.set(projectsBridgeLines, { y: "140%" });
+
+        ScrollTrigger.create({
+            trigger: ".projects-bridge-section",
+            start: "top 78%",
+            once: true,
+            onEnter: () => {
+                gsap.to(projectsBridgeLines, {
+                    y: 0,
+                    stagger: 0.09,
+                    duration: 0.86,
+                    ease: "power4.out"
+                });
+            }
+        });
+    }
+
+    const processCards = gsap.utils.toArray(".link-process-grid article");
+
+    if (processCards.length) {
+        gsap.set(processCards, {
+            yPercent: 0,
+            y: 0,
+            scale: 1,
+            autoAlpha: 1,
+            clipPath: "inset(0% 0% 0% 0%)",
+            clearProps: "rotate,rotateX,rotateY"
+        });
+
+        processCards.forEach((card, index) => {
+            gsap.set(card, {
+                zIndex: index + 1,
+                "--process-index-scale": 0
+            });
+            const textMasks = card.querySelectorAll(".process-text-mask");
+            const titleMask = card.querySelector("h2 .process-text-mask");
+            const paragraphMasks = card.querySelectorAll("p .process-text-mask");
+
+            gsap.set(textMasks, { "--process-text-cover": "0%" });
+            gsap.timeline({
+                scrollTrigger: {
+                    trigger: card,
+                    start: "top 62%",
+                    once: true
+                }
+            })
+                .to(titleMask, {
+                    "--process-text-cover": "101%",
+                    duration: 1.15,
+                    ease: "power4.inOut"
+                }, 0)
+                .to(paragraphMasks, {
+                    "--process-text-cover": "101%",
+                    stagger: 0.12,
+                    duration: 0.95,
+                    ease: "power4.inOut"
+                }, 0.28)
+                .to(card, {
+                    "--process-index-scale": 1,
+                    duration: 0.55,
+                    ease: "power3.out"
+                }, 0.18);
+        });
+    }
+
+    const footer = document.querySelector(".link-page-reveal-footer");
+
+    if (footer) {
+        gsap.set(footer, { y: 0, autoAlpha: 1 });
+    }
+
+    initPremiumAboutPage();
+}
+
+function initPremiumAboutPage() {
+    const aboutPage = document.querySelector(".about-premium-page");
+
+    if (!aboutPage) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const revealItems = gsap.utils.toArray(".about-premium-reveal");
+
+    gsap.set(revealItems, { y: reduceMotion ? 0 : 54, autoAlpha: reduceMotion ? 1 : 0 });
+
+    if (!reduceMotion && revealItems.length) {
+        ScrollTrigger.batch(revealItems, {
+            start: "top 84%",
+            once: true,
+            onEnter: (batch) => {
+                gsap.to(batch, {
+                    y: 0,
+                    autoAlpha: 1,
+                    duration: 0.95,
+                    stagger: 0.08,
+                    ease: "power4.out"
+                });
+            }
+        });
+    }
+
+    if (!reduceMotion) {
+        gsap.to(".about-hero-orbit span", {
+            yPercent: (index) => [-24, 18, -12][index] || 0,
+            rotate: (index) => [18, -12, 24][index] || 0,
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".about-premium-hero",
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+
+        gsap.set(".about-hero-meta p", { x: -18, autoAlpha: 0 });
+        gsap.to(".about-hero-meta p", {
+            x: 0,
+            autoAlpha: 1,
+            stagger: 0.08,
+            duration: 0.8,
+            ease: "power3.out",
+            delay: 0.35
+        });
+
+        gsap.utils.toArray(".about-service-panel").forEach((panel) => {
+            gsap.fromTo(panel, {
+                "--service-orb-scale": 0.72
+            }, {
+                "--service-orb-scale": 1.08,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: panel,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true
+                }
+            });
+
+            gsap.fromTo(panel.querySelectorAll("h2, p, li, .about-case-preview"), {
+                y: 44,
+                autoAlpha: 0
+            }, {
+                y: 0,
+                autoAlpha: 1,
+                duration: 0.9,
+                stagger: 0.07,
+                ease: "power4.out",
+                scrollTrigger: {
+                    trigger: panel,
+                    start: "top 62%",
+                    once: true
+                }
+            });
+        });
+
+        const proofMarquee = document.querySelector(".about-proof-marquee");
+
+        if (proofMarquee) {
+            const marqueeState = {
+                x: 0,
+                baseSpeed: -84,
+                idleSpeed: -84,
+                speed: -84,
+                targetSpeed: -84,
+                lastScrollTime: 0
+            };
+
+            const getMarqueeLoopWidth = () => {
+                const firstItem = proofMarquee.querySelector("span");
+                return firstItem ? firstItem.offsetWidth : proofMarquee.scrollWidth / 2;
+            };
+
+            gsap.set(proofMarquee, { x: 0, willChange: "transform" });
+
+            gsap.ticker.add((time, deltaTime) => {
+                const loopWidth = getMarqueeLoopWidth();
+
+                if (!loopWidth) return;
+
+                if (performance.now() - marqueeState.lastScrollTime > 70) {
+                    marqueeState.targetSpeed = marqueeState.idleSpeed;
+                }
+
+                marqueeState.speed += (marqueeState.targetSpeed - marqueeState.speed) * 0.22;
+                marqueeState.x += marqueeState.speed * (deltaTime / 1000);
+                marqueeState.x = gsap.utils.wrap(-loopWidth, 0, marqueeState.x);
+
+                gsap.set(proofMarquee, { x: marqueeState.x });
+            });
+
+            ScrollTrigger.create({
+                trigger: ".about-proof-section",
+                start: "top bottom",
+                end: "bottom top",
+                onUpdate: (self) => {
+                    const scrollSpeed = Math.abs(self.getVelocity()) * 0.44;
+                    const boostedSpeed = gsap.utils.clamp(320, 1800, scrollSpeed);
+
+                    marqueeState.lastScrollTime = performance.now();
+                    marqueeState.idleSpeed = self.direction === -1
+                        ? Math.abs(marqueeState.baseSpeed)
+                        : -Math.abs(marqueeState.baseSpeed);
+                    marqueeState.targetSpeed = self.direction === -1 ? boostedSpeed : -boostedSpeed;
+                }
+            });
+        }
+    }
+
+    const magneticItems = gsap.utils.toArray(".about-magnetic");
+
+    magneticItems.forEach((item) => {
+        let activeTween;
+
+        item.addEventListener("pointermove", (event) => {
+            if (reduceMotion) return;
+
+            const rect = item.getBoundingClientRect();
+            const x = event.clientX - rect.left - rect.width / 2;
+            const y = event.clientY - rect.top - rect.height / 2;
+
+            if (activeTween) activeTween.kill();
+
+            activeTween = gsap.to(item, {
+                x: x * 0.08,
+                y: y * 0.08,
+                rotate: x * 0.012,
+                duration: 0.45,
+                ease: "power3.out"
+            });
+        });
+
+        item.addEventListener("pointerleave", () => {
+            if (activeTween) activeTween.kill();
+
+            activeTween = gsap.to(item, {
+                x: 0,
+                y: 0,
+                rotate: 0,
+                duration: 0.7,
+                ease: "elastic.out(1, 0.55)"
+            });
+        });
+    });
+}
+
 function fitMenuBlueprintToDivider() {
     const menuBlueprint = document.querySelector(".menu-overlay-blueprint");
     const menuBottom = document.querySelector(".menu-overlay-bottom");
@@ -343,7 +1330,17 @@ window.addEventListener('load', () => {
     const loaderTl = gsap.timeline({
         onComplete: () => {
             document.body.style.overflow = '';
-            startHeroAnimation();
+            if (lenis) {
+                lenis.resize();
+                lenis.scrollTo(0, { immediate: true, force: true });
+                lenis.start();
+            }
+
+            if (isIndexPage) {
+                startHeroAnimation();
+            } else {
+                startStandalonePageAnimation();
+            }
             pageIsReady = true;
             ScrollTrigger.refresh();
             syncNavState();
@@ -449,7 +1446,15 @@ const hero = document.querySelector(".hero-section");
 const phoneBreakpoint = 600;
 
 function isPhoneViewport() {
-    return window.innerWidth <= phoneBreakpoint;
+    return getViewportWidth() <= phoneBreakpoint;
+}
+
+function getViewportWidth() {
+    return document.documentElement.clientWidth || window.innerWidth;
+}
+
+function getViewportHeight() {
+    return document.documentElement.clientHeight || window.innerHeight;
 }
 
 function getOverlayMetrics() {
@@ -550,11 +1555,11 @@ function getApproachReadDuration() {
 }
 
 function getApproachStepFoldOffset() {
-    return window.innerHeight / 4;
+    return getViewportHeight() / 4;
 }
 
 function getApproachDeckPeek(index) {
-    if (window.innerWidth <= 760) {
+    if (getViewportWidth() <= 760) {
         return [112, 84, 56, 28][index] || 28;
     }
 
@@ -562,11 +1567,11 @@ function getApproachDeckPeek(index) {
 }
 
 function getApproachDeckX(index) {
-    return window.innerWidth - getApproachDeckPeek(index);
+    return getViewportWidth() - getApproachDeckPeek(index);
 }
 
 function getApproachDeckRadius() {
-    return window.innerWidth <= 760 ? "34px" : "60px";
+    return getViewportWidth() <= 760 ? "34px" : "60px";
 }
 
 function getApproachStepsOffset() {
@@ -582,7 +1587,7 @@ function getApproachStepsOffset() {
 }
 
 const overlayReadDuration = getOverlayReadDuration();
-const overlayHoldDuration = overlayReadDuration > 0 ? 0.75 : 0;
+const overlayHoldDuration = 0;
 const projectMeetDuration = 0.7;
 const projectPushDuration = 0.95;
 const projectTransitionDuration = projectMeetDuration + projectPushDuration;
@@ -594,6 +1599,7 @@ const approachHoldDuration = 0.35;
 const approachMaskMeetDuration = 0.46;
 const approachMaskPushDuration = 0.44;
 const approachMaskDuration = approachMaskMeetDuration + approachMaskPushDuration;
+const approachIntroFadeDuration = 0.12;
 const approachDiscoverPushDuration = 0.9;
 const approachStepFoldDuration = 0.9;
 const approachStepFoldTotalDuration = Math.max(0, approachStepCards.length - 1) * approachStepFoldDuration;
@@ -601,6 +1607,7 @@ const approachDeckDuration = 0.86;
 const approachDeckStagger = 0.14;
 const approachDeckTotalDuration = approachDeckDuration + (Math.max(0, approachStepCards.length - 1) * approachDeckStagger);
 const approachStepHorizontalDuration = 1;
+const approachStepOverlap = 24;
 const approachStepHorizontalTotalDuration = approachStepCards.length * approachStepHorizontalDuration;
 const approachReadDuration = approachDiscoverPushDuration + approachStepFoldTotalDuration + approachDeckTotalDuration + approachStepHorizontalTotalDuration;
 const aboutTransitionDuration = 1.25;
@@ -610,19 +1617,21 @@ const contactTransitionDuration = 1.25;
 const footerRevealDuration = 1.1;
 const scrollSpeed = 140;
 const approachPushedContentSelector = ".approach-fg-video, .approach-kicker, .approach-copy-block > hr, .approach-title, .approach-copy";
+const approachIntroLayerSelector = ".approach-fg-video, .approach-copy-block, .approach-eyebrow-cover";
 
-gsap.set(".masking-overlay-card", { y: () => window.innerHeight, yPercent: 0 });
+gsap.set(".masking-overlay-card", { y: () => getViewportHeight(), yPercent: 0 });
 gsap.set(".masking-overlay-copy", { y: () => getOverlayMetrics().startY });
-gsap.set(".approach-card", { x: () => window.innerWidth, xPercent: 0 });
-gsap.set(".masking-overlay-card-about", { y: () => window.innerHeight, yPercent: 0 });
+gsap.set(".approach-card", { x: () => getViewportWidth(), xPercent: 0 });
+gsap.set(".masking-overlay-card-about", { y: () => getViewportHeight(), yPercent: 0 });
 gsap.set(".about-section-inner", { y: 0 });
-gsap.set(".contact-card", { x: () => window.innerWidth, xPercent: 0 });
-gsap.set(".site-footer", { y: 0, autoAlpha: 0 });
+gsap.set(".contact-card", { x: () => getViewportWidth(), xPercent: 0 });
+gsap.set(".site-footer", { y: 0, autoAlpha: isIndexPage ? 0 : 1 });
 gsap.set(".approach-articles-mask", { y: () => getApproachPanelMetrics().startY, yPercent: 0 });
 gsap.set(".approach-steps", { y: 0 });
 gsap.set(approachStepCards, { x: 0, xPercent: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1, zIndex: (index) => index + 1, force3D: true, borderTopLeftRadius: "0px", borderBottomLeftRadius: "0px", transformPerspective: 1200 });
-gsap.set(approachStepCards.slice(1), { y: () => window.innerHeight, yPercent: 0 });
+gsap.set(approachStepCards.slice(1), { y: () => getViewportHeight(), yPercent: 0 });
 gsap.set(approachPushedContentSelector, { y: 0 });
+gsap.set(approachIntroLayerSelector, { autoAlpha: 1 });
 gsap.set(".approach-eyebrow-cover", { y: 0 });
 
 const overlayTextTl = gsap.timeline({ paused: true });
@@ -805,7 +1814,7 @@ function syncApproachMasks() {
     syncApproachEyebrowMask();
 }
 
-if (approachFgVideo) {
+if (approachFgVideo && typeof approachFgVideo.play === "function") {
     approachFgVideo.play().catch(() => {
         // Muted autoplay can still be delayed until the browser is ready.
     });
@@ -830,28 +1839,59 @@ let projectHoverCheckQueued = false;
 const getUnsplashImage = (photoId) => `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=1200&q=80`;
 const projectPreviewImageSets = [
     [
-        getUnsplashImage("photo-1547658719-da2b51169166"),
-        getUnsplashImage("photo-1498050108023-c5249f4df085"),
-        getUnsplashImage("photo-1457305237443-44c3d5a30b89"),
-        getUnsplashImage("photo-1499951360447-b19be8fe80f5")
+        "./web_img/web_1.png",
+        "./web_img/web_2.png",
+        "./web_img/web_3.png",
+        "./web_img/web_4.png",
+        "./web_img/web_5.png",
+        "./web_img/web_6.png",
+        "./web_img/web_7.png",
+        "./web_img/web_8.png",
+        "./web_img/web_9.png",
+        "./web_img/web_10.png"
     ],
     [
-        getUnsplashImage("photo-1548094990-c16ca90f1f0d"),
-        getUnsplashImage("photo-1658863025658-4a259cc68fc9"),
-        getUnsplashImage("photo-1561070791-2526d30994b5"),
-        getUnsplashImage("photo-1561070791-36c11767b26a")
+        "./branding_img/branding_1.png",
+        "./branding_img/branding_2.png",
+        "./branding_img/branding_3.png",
+        "./branding_img/branding_4.png",
+        "./branding_img/branding_5.png",
+        "./branding_img/branding_6.png",
+        "./branding_img/branding_7.png",
+        "./branding_img/branding_8.png",
+        "./branding_img/branding_9.png",
+        "./branding_img/branding_10.png",
+        "./branding_img/branding_elements_1.png",
+        "./branding_img/branding_elements_2.png"
     ],
     [
-        getUnsplashImage("photo-1599658880436-c61792e70672"),
-        getUnsplashImage("photo-1686061592689-312bbfb5c055"),
-        getUnsplashImage("photo-1759215524600-7971d6a4dac0"),
-        getUnsplashImage("photo-1759661966728-4a02e3c6ed91")
+        "./marketing_img/marketing_1.png",
+        "./marketing_img/marketing_2.png",
+        "./marketing_img/marketing_3.png",
+        "./marketing_img/marketing_4.png",
+        "./marketing_img/marketing_5.png",
+        "./marketing_img/marketing_6.png",
+        "./marketing_img/marketing_7.png",
+        "./marketing_img/marketing_8.png",
+        "./marketing_img/marketing_9.png",
+        "./marketing_img/marketing_10.png",
+        "./marketing_img/marketing_elements_1.png",
+        "./marketing_img/marketing_elements_2.png",
+        "./marketing_img/marketing_elements_3.png",
+        "./marketing_img/marketing_elements_4.png",
+        "./marketing_img/marketing_elements_5.png",
+        "./marketing_img/marketing_elements_6.png"
     ],
     [
-        getUnsplashImage("photo-1574848296471-28f79a036f79"),
-        getUnsplashImage("photo-1519662978799-2f05096d3636"),
-        getUnsplashImage("photo-1615406020658-6c4b805f1f30"),
-        getUnsplashImage("photo-1614595737683-1740e41bfaac")
+        "./architecture_img/architecture_1.png",
+        "./architecture_img/architecture_2.png",
+        "./architecture_img/architecture_3.png",
+        "./architecture_img/architecture_4.png",
+        "./architecture_img/architecture_5.png",
+        "./architecture_img/architecture_6.png",
+        "./architecture_img/architecture_7.png",
+        "./architecture_img/architecture_8.png",
+        "./architecture_img/architecture_9.png"
     ]
 ];
 const projectPreviewPositions = [
@@ -1089,6 +2129,80 @@ function initProjectPreviewImages() {
 
 initProjectPreviewImages();
 
+function initStandaloneProjectCursorPreview() {
+    const preview = document.querySelector(".link-project-cursor-preview");
+    const previewImage = preview ? preview.querySelector("img") : null;
+    const links = gsap.utils.toArray(".link-project-item");
+
+    if (!preview || !previewImage || !links.length) return;
+
+    let targetX = window.innerWidth / 2;
+    let targetY = window.innerHeight / 2;
+    let currentX = targetX;
+    let currentY = targetY;
+    let frame;
+
+    function renderPreview() {
+        currentX += (targetX - currentX) * 0.22;
+        currentY += (targetY - currentY) * 0.22;
+
+        preview.style.left = `${currentX}px`;
+        preview.style.top = `${currentY}px`;
+
+        if (preview.classList.contains("is-visible")) {
+            frame = requestAnimationFrame(renderPreview);
+            return;
+        }
+
+        frame = null;
+    }
+
+    function startPreview(event, link) {
+        const src = link.dataset.previewImage;
+
+        if (src && previewImage.src !== src) {
+            previewImage.src = src;
+        }
+
+        targetX = event.clientX + 28;
+        targetY = event.clientY;
+        currentX = targetX;
+        currentY = targetY;
+        preview.style.left = `${currentX}px`;
+        preview.style.top = `${currentY}px`;
+        preview.classList.add("is-visible");
+
+        if (!frame) {
+            frame = requestAnimationFrame(renderPreview);
+        }
+    }
+
+    function movePreview(event) {
+        targetX = event.clientX + 28;
+        targetY = event.clientY;
+    }
+
+    function stopPreview() {
+        preview.classList.remove("is-visible");
+    }
+
+    links.forEach((link) => {
+        link.addEventListener("pointerenter", (event) => startPreview(event, link));
+        link.addEventListener("pointermove", movePreview);
+        link.addEventListener("pointerleave", stopPreview);
+        link.addEventListener("focus", (event) => {
+            const rect = link.getBoundingClientRect();
+            startPreview({
+                clientX: rect.right,
+                clientY: rect.top + rect.height / 2
+            }, link);
+        });
+        link.addEventListener("blur", stopPreview);
+    });
+}
+
+initStandaloneProjectCursorPreview();
+
 // 4. AUTOMATIC NAVBAR SWAP LOGIC
 const navTl = gsap.timeline({ paused: true });
 const navHideTl = gsap.timeline({ paused: true });
@@ -1313,7 +2427,7 @@ masterTl = gsap.timeline({
         trigger: ".scroll-container",
         start: "top top",
         end: () => `+=${(panels.length + projectTransitionDuration + overlayHoldDuration + overlayReadDuration + approachTransitionDuration + approachHoldDuration + approachMaskDuration + approachReadDuration + aboutTransitionDuration + aboutHoldDuration + aboutReadDuration + contactTransitionDuration + footerRevealDuration) * scrollSpeed}%`,
-        scrub: 1.2,
+        scrub: 1,
         pin: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
@@ -1326,11 +2440,11 @@ masterTl = gsap.timeline({
         onRefresh: () => {
             gsap.set(".approach-steps", { y: 0 });
             gsap.set(approachStepCards, { x: 0, xPercent: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1, zIndex: (index) => index + 1, force3D: true, borderTopLeftRadius: "0px", borderBottomLeftRadius: "0px", transformPerspective: 1200 });
-            gsap.set(approachStepCards.slice(1), { y: window.innerHeight, yPercent: 0 });
-            gsap.set(".masking-overlay-card-about", { y: window.innerHeight, yPercent: 0 });
+            gsap.set(approachStepCards.slice(1), { y: getViewportHeight(), yPercent: 0 });
+            gsap.set(".masking-overlay-card-about", { y: getViewportHeight(), yPercent: 0 });
             gsap.set(".about-section-inner", { y: 0 });
-            gsap.set(".contact-card", { x: window.innerWidth, xPercent: 0 });
-            gsap.set(".site-footer", { y: 0, autoAlpha: 0 });
+            gsap.set(".contact-card", { x: getViewportWidth(), xPercent: 0 });
+            gsap.set(".site-footer", { y: 0, autoAlpha: isIndexPage ? 0 : 1 });
             syncNavState();
             syncApproachMasks();
             resetProjectRevealItems();
@@ -1403,7 +2517,7 @@ panels.forEach((panel, i) => {
 });
 
 masterTl.fromTo(".masking-overlay-card", {
-    y: () => window.innerHeight,
+    y: () => getViewportHeight(),
     yPercent: 0
 }, {
     y: () => getArchitectureCardImageBottomEdge(),
@@ -1462,7 +2576,7 @@ if (overlayReadDuration > 0) {
 const approachStartTime = panels.length + projectTransitionDuration + overlayHoldDuration + overlayReadDuration;
 
 masterTl.fromTo(".approach-card", {
-    x: () => window.innerWidth,
+    x: () => getViewportWidth(),
     xPercent: 0
 }, {
     x: () => getArchitectureImageRightEdge(),
@@ -1544,24 +2658,24 @@ masterTl.to(approachPushedContentSelector, {
 
 const approachFoldStartTime = approachMaskStartTime + approachMaskDuration;
 
-masterTl.to(".approach-steps", {
-    y: () => -getApproachStepsOffset(),
+masterTl.to(approachIntroLayerSelector, {
+    autoAlpha: 0,
+    duration: approachIntroFadeDuration,
     ease: "none",
-    duration: approachDiscoverPushDuration
+    onUpdate: syncApproachMasks
 }, approachFoldStartTime);
 
-masterTl.to(".approach-eyebrow-cover", {
-    y: () => -getApproachStepsOffset(),
+masterTl.to(".approach-steps", {
+    y: 0,
     ease: "none",
-    duration: approachDiscoverPushDuration,
-    onUpdate: syncApproachMasks
+    duration: approachDiscoverPushDuration
 }, approachFoldStartTime);
 
 approachStepCards.slice(1).forEach((step, index) => {
     const stepIndex = index + 1;
 
     masterTl.fromTo(step, {
-        y: () => window.innerHeight,
+        y: () => getViewportHeight(),
         yPercent: 0
     }, {
         y: () => stepIndex * getApproachStepFoldOffset(),
@@ -1597,9 +2711,9 @@ approachStepCards.forEach((step, index) => {
 const approachHorizontalStartTime = approachDeckStartTime + approachDeckTotalDuration;
 
 masterTl.to(approachStepCards.slice(1), {
-    x: () => isPhoneViewport() ? 0 : "100vw",
-    xPercent: 0,
-    y: () => isPhoneViewport() ? window.innerHeight : 0,
+    x: 0,
+    xPercent: () => isPhoneViewport() ? 0 : 100,
+    y: () => isPhoneViewport() ? getViewportHeight() : 0,
     yPercent: 0,
     z: 0,
     rotateX: 0,
@@ -1620,12 +2734,14 @@ approachStepCards.forEach((step, index) => {
         masterTl.to(approachStepCards[index - 1], isPhoneViewport()
             ? {
                 yPercent: -100,
+                y: approachStepOverlap,
                 force3D: true,
                 ease: "none",
                 duration: approachStepHorizontalDuration
             }
             : {
                 xPercent: -100,
+                x: approachStepOverlap,
                 force3D: true,
                 ease: "none",
                 duration: approachStepHorizontalDuration
@@ -1660,7 +2776,7 @@ approachStepCards.forEach((step, index) => {
 const aboutStartTime = approachHorizontalStartTime + approachStepHorizontalTotalDuration;
 
 masterTl.fromTo(".masking-overlay-card-about", {
-    y: () => window.innerHeight,
+    y: () => getViewportHeight(),
     yPercent: 0
 }, {
     y: 0,
@@ -1697,7 +2813,7 @@ if (aboutReadDuration > 0) {
 const contactStartTime = aboutStartTime + aboutTransitionDuration + aboutHoldDuration + aboutReadDuration;
 
 masterTl.fromTo(".contact-card", {
-    x: () => window.innerWidth,
+    x: () => getViewportWidth(),
     xPercent: 0
 }, {
     x: 0,
@@ -1722,7 +2838,7 @@ masterTl.set(".site-footer", {
 }, contactStartTime + contactTransitionDuration);
 
 masterTl.to(".contact-card", {
-    y: () => -(window.innerHeight * 0.78),
+    y: () => -(getViewportHeight() * 0.78),
     ease: "none",
     duration: footerRevealDuration
 }, contactStartTime + contactTransitionDuration);
@@ -1732,6 +2848,40 @@ const menuOverlay = document.querySelector(".menu-overlay");
 const menuButton = document.querySelector(".menu-button");
 const menuOverlayLinks = document.querySelectorAll(".menu-overlay-link");
 const menuPlaceholderLinks = document.querySelectorAll('.menu-info-link[href="#"]');
+const contactForm = document.querySelector(".contact-section-form");
+const contactThankModal = document.querySelector(".contact-thank-modal");
+const contactThankClose = document.querySelector(".contact-thank-close");
+
+function openContactThankModal() {
+    if (!contactThankModal) return;
+
+    contactThankModal.classList.add("is-open");
+    contactThankModal.setAttribute("aria-hidden", "false");
+    contactThankClose?.focus();
+}
+
+function closeContactThankModal() {
+    if (!contactThankModal) return;
+
+    contactThankModal.classList.remove("is-open");
+    contactThankModal.setAttribute("aria-hidden", "true");
+}
+
+if (contactForm && contactThankModal) {
+    contactForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        openContactThankModal();
+        contactForm.reset();
+    });
+
+    contactThankClose?.addEventListener("click", closeContactThankModal);
+
+    contactThankModal.addEventListener("click", (event) => {
+        if (event.target === contactThankModal) {
+            closeContactThankModal();
+        }
+    });
+}
 
 if (menuOverlay && menuButton) {
     let menuIsOpen = false;
@@ -2042,7 +3192,14 @@ if (menuOverlay && menuButton) {
 
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
+            closeContactThankModal();
             closeMenu();
         }
     });
 }
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeContactThankModal();
+    }
+});
