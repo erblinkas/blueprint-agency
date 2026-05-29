@@ -22,7 +22,7 @@
     <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/neue" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/identidad" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="./favicon.png">
+    <link rel="icon" type="image/x-icon" href="./favicon_2.png">
 </head>
 
 <body>
@@ -122,10 +122,12 @@
             </div>
         </section>
 
-        <section class="panel service-card-web-dev">
+        <section class="panel service-card-web-dev" id="webdev-card">
             <div class="reveal-content">
-                <img src="./web_img/web_main.png" alt="Web Development Showcase"
-                    class="card-img-unified">
+                <button class="card-image-button" type="button" onclick="handlePageTransition(event, 'service-webdev.html')" aria-label="View Web Development service">
+                    <img src="./web_img/web_main.png" alt="Web Development Showcase"
+                        class="card-img-unified">
+                </button>
                 <div class="card-info">
                     <h3 class="card-desc reveal-text">Custom, responsive websites that convert visitors into customers.
                     </h3>
@@ -331,7 +333,7 @@
                 <section class="project-category" aria-labelledby="architecture-projects">
                     <h2 class="project-category-title reveal-text" id="architecture-projects">Architecture</h2>
                     <div class="project-category-preview" aria-hidden="true">
-                        <img class="project-preview-image is-active" src="./architecture_img/architecture_1.png" alt="">
+                        <img class="project-preview-image is-active" src="./architecture_img/webp-output/architecture_1.webp" alt="">
                     </div>
                     <div class="project-category-list">
                         <a class="project-list-link reveal-text" href="#" data-index="(01)"><span>Monolith architecture
@@ -407,16 +409,11 @@
         </section>
 
         <section class="masking-overlay-card-about">
-            <div class="about-section-media" aria-hidden="true">
-                <img src="https://bloomedit.fr/wp-content/uploads/2026/04/aesthetic-desk-setup-amazon-finds-2-1.webp" alt="">
-            </div>
-
             <div class="about-section-inner">
                 <p class="masking-overlay-about-copy reveal-text">About</p>
 
                 <p class="about-section-statement reveal-text">
-                    Blueprint is a compact creative studio for new businesses that need a complete presence: strategy,
-                    identity, websites, marketing systems, and spatial direction shaped as one clear launch.
+                    Blueprint is a compact creative studio helping new businesses launch with clear strategy, identity, websites, marketing, and spatial direction.
                 </p>
 
                 <div class="about-section-grid" aria-label="About Blueprint">
@@ -457,10 +454,6 @@
                 <p class="contact-section-statement reveal-text">
                     Bring the idea, the deadline, or the messy first sketch. We will help turn it into a clear launch.
                 </p>
-
-                <div class="contact-video-frame" aria-label="Blueprint video">
-                    <img src="./approach_background_img.png" alt="">
-                </div>
 
                 <form class="contact-section-form">
                     <label class="contact-form-field">

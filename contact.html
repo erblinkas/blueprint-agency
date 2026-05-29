@@ -18,6 +18,7 @@
     <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/neue" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/identidad" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="./favicon_2.png">
 </head>
 
 <body>
@@ -89,30 +90,24 @@
 
     <main class="link-page-main link-contact-page">
         <div class="link-page-card contact-premium-page">
-        <section class="link-page-hero link-page-hero-contact contact-premium-hero">
-            <div>
-                <p class="link-page-kicker reveal-text">Start a project</p>
-                <h1 class="link-page-title reveal-text">Contact</h1>
-            </div>
-            <p class="link-page-intro reveal-text">Tell us what you are building, what feels urgent, and what needs to be ready for launch.</p>
-            <div class="contact-background-lines" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </section>
-
         <section class="link-page-section link-contact-layout contact-premium-layout">
-            <div class="link-contact-details">
-                <p><span>Social</span><a class="contact-soft-link" href="#">Instagram</a><a class="contact-soft-link" href="#">LinkedIn</a></p>
-                <p><span>Email</span><a class="contact-soft-link" href="mailto:hello@blueprint.studio">hello@blueprint.studio</a></p>
-            </div>
             <form class="link-contact-form">
                 <label><span>Name</span><input type="text" name="name" required></label>
                 <label><span>Email</span><input type="email" name="email" required></label>
                 <label><span>What does your business need?</span><textarea name="project" rows="6" required></textarea></label>
                 <button type="submit"><span>Send</span></button>
             </form>
+            <div class="contact-thank-modal" role="dialog" aria-modal="true" aria-hidden="true"
+                aria-labelledby="contact-thank-title">
+                <div class="contact-thank-modal-panel">
+                    <p class="contact-thank-kicker">Message received</p>
+                    <h2 id="contact-thank-title">Thank you.</h2>
+                    <p>We will review your project details and get back to you soon.</p>
+                    <button class="contact-thank-close" type="button">
+                        <span>Close</span>
+                    </button>
+                </div>
+            </div>
         </section>
         </div>
 

@@ -58,6 +58,57 @@ if (window.visualViewport) {
 
 requestAnimationFrame(syncScrollbarIndicator);
 
+const aboutClientsWrapX = gsap.utils.wrap(-50, 0);
+const aboutClientsRows = gsap.utils.toArray(".about-clients-track").map((track, index) => {
+    const isReverseRow = track.classList.contains("about-clients-track-reverse");
+    const row = {
+        track,
+        x: isReverseRow ? -50 : 0,
+        direction: isReverseRow ? 1 : -1,
+        baseDirection: isReverseRow ? 1 : -1,
+        speed: 50 / (index === 1 ? 48 : 58)
+    };
+
+    gsap.set(track, { xPercent: row.x });
+
+    return row;
+});
+let lastAboutClientsScrollY = window.scrollY;
+
+function syncAboutClientsScrollDirection(scrollY = window.scrollY) {
+    if (!aboutClientsRows.length) return;
+
+    const delta = scrollY - lastAboutClientsScrollY;
+
+    if (Math.abs(delta) < 1) return;
+
+    const scrollDirection = delta < 0 ? -1 : 1;
+
+    aboutClientsRows.forEach((row) => {
+        gsap.to(row, {
+            direction: row.baseDirection * scrollDirection,
+            duration: 0.6,
+            ease: "power2.out",
+            overwrite: true
+        });
+    });
+
+    lastAboutClientsScrollY = scrollY;
+}
+
+window.addEventListener("scroll", () => syncAboutClientsScrollDirection(), { passive: true });
+
+if (aboutClientsRows.length) {
+    gsap.ticker.add(() => {
+        const deltaSeconds = gsap.ticker.deltaRatio(60) / 60;
+
+        aboutClientsRows.forEach((row) => {
+            row.x = aboutClientsWrapX(row.x + (row.direction * row.speed * deltaSeconds));
+            gsap.set(row.track, { xPercent: row.x });
+        });
+    });
+}
+
 const shouldUseLenis = window.Lenis &&
     window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
     !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -73,8 +124,9 @@ if (shouldUseLenis) {
     });
 
     lenis.stop();
-    lenis.on("scroll", () => {
+    lenis.on("scroll", ({ scroll }) => {
         syncScrollbarIndicator();
+        syncAboutClientsScrollDirection(scroll);
         ScrollTrigger.update();
     });
 
@@ -117,19 +169,29 @@ function scheduleViewportDrivenLayoutRefresh() {
 let pageIsReady = false;
 const currentPageName = window.location.pathname.split("/").pop().toLowerCase();
 const isIndexPage = currentPageName === "" || currentPageName === "index.html";
+const shouldLandOnWebDevCard = isIndexPage && window.location.hash === "#webdev-card";
 const linkLoaderStorageKey = "blueprintUseLinkLoader";
+const serviceDirectNavigationStorageKey = "blueprintServiceDirectNavigation";
 let shouldUseLinkLoader = false;
+let shouldSkipIncomingLoader = false;
 
 try {
     shouldUseLinkLoader = sessionStorage.getItem(linkLoaderStorageKey) === "true";
+    shouldSkipIncomingLoader = sessionStorage.getItem(serviceDirectNavigationStorageKey) === "true";
     sessionStorage.removeItem(linkLoaderStorageKey);
+    sessionStorage.removeItem(serviceDirectNavigationStorageKey);
 } catch (error) {
     shouldUseLinkLoader = false;
+    shouldSkipIncomingLoader = false;
 }
 
 const loaderElement = document.getElementById('loader');
 
-if (loaderElement && shouldUseLinkLoader) {
+if (loaderElement && shouldSkipIncomingLoader) {
+    loaderElement.style.display = "none";
+}
+
+if (loaderElement && shouldUseLinkLoader && !shouldSkipIncomingLoader) {
     loaderElement.classList.add("is-link-loader");
 }
 
@@ -184,10 +246,116 @@ function navigateWithLinkLoader(url) {
         .to({}, { duration: 0.18 });
 }
 
+function navigateDirectlyToService(url) {
+    try {
+        sessionStorage.setItem(serviceDirectNavigationStorageKey, "true");
+    } catch (error) {
+        // The transition still works when session storage is unavailable.
+    }
+
+    window.location.href = url;
+}
+
+function playServiceCardExit(clickedBtn, url) {
+    const panel = clickedBtn.closest(".panel");
+    const content = panel ? panel.querySelector(".reveal-content") : null;
+    const image = panel ? panel.querySelector(".card-img-unified") : null;
+    const info = panel ? panel.querySelector(".card-info") : null;
+
+    if (!panel || !content || !image || !info) {
+        navigateDirectlyToService(url);
+        return;
+    }
+
+    const rect = panel.getBoundingClientRect();
+    const computedPanelStyle = window.getComputedStyle(panel);
+
+    panel.classList.add("is-service-transitioning");
+    document.body.style.overflow = "hidden";
+    if (lenis) {
+        lenis.stop();
+    }
+
+    gsap.killTweensOf([panel, content, image, info, info.children, clickedBtn]);
+    gsap.set(panel, {
+        position: "fixed",
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        x: 0,
+        y: 0,
+        xPercent: 0,
+        yPercent: 0,
+        margin: 0,
+        borderTopLeftRadius: computedPanelStyle.borderTopLeftRadius,
+        borderTopRightRadius: computedPanelStyle.borderTopRightRadius,
+        borderBottomLeftRadius: computedPanelStyle.borderBottomLeftRadius,
+        borderBottomRightRadius: computedPanelStyle.borderBottomRightRadius
+    });
+
+    gsap.timeline({
+        defaults: { ease: "expo.inOut" },
+        onComplete: () => navigateDirectlyToService(url)
+    })
+        .to(panel, {
+            left: 0,
+            top: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            borderBottomLeftRadius: 0,
+            borderBottomRightRadius: 0,
+            duration: 0.74
+        }, 0)
+        .to(clickedBtn, {
+            scale: 0.92,
+            opacity: 0,
+            duration: 0.28,
+            ease: "power2.in"
+        }, 0.48)
+        .to(info.children, {
+            y: 34,
+            opacity: 0,
+            stagger: 0.035,
+            duration: 0.42,
+            ease: "power3.in"
+        }, 0.5)
+        .to(info, {
+            yPercent: 112,
+            duration: 0.78
+        }, 0.62)
+        .to(content, {
+            gridTemplateRows: "100% 0%",
+            duration: 0.95
+        }, 0.62)
+        .to(image, {
+            scale: 1,
+            duration: 0.95
+        }, 0.62);
+}
+
+function getCurrentServiceCardIndex() {
+    const serviceCardMap = {
+        "service-webdev.html": 0,
+        "service-branding.html": 1,
+        "service-marketing.html": 2,
+        "service-architecture.html": 3
+    };
+
+    return serviceCardMap[currentPageName];
+}
+
 window.handlePageTransition = function(e, url) {
     e.preventDefault();
     const clickedBtn = e.currentTarget;
     let siblingsToHide = [];
+
+    if (isIndexPage && (clickedBtn.classList.contains("icon-btn") || clickedBtn.classList.contains("card-image-button")) && clickedBtn.closest(".panel")) {
+        playServiceCardExit(clickedBtn, url);
+        return;
+    }
 
     if (clickedBtn.classList.contains('logo-button')) {
         siblingsToHide = Array.from(document.querySelectorAll('.nav-links button, .menu-overlay-link'));
@@ -212,6 +380,62 @@ window.handlePageTransition = function(e, url) {
         navigateWithLinkLoader(url);
     }
 };
+
+function initCardImageCursor() {
+    const imageButtons = gsap.utils.toArray(".card-image-button");
+
+    if (!imageButtons.length || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+
+    const cursor = document.createElement("div");
+    cursor.className = "card-image-cursor";
+    cursor.setAttribute("aria-hidden", "true");
+    cursor.innerHTML = `
+        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 0C6.729 0 0 6.729 0 15s6.729 15 15 15 15 -6.729 15 -15S23.271 0 15 0m0 28.89C7.341 28.89 1.11 22.659 1.11 15S7.341 1.11 15 1.11 28.89 7.341 28.89 15 22.659 28.89 15 28.89" />
+            <path d="M12.144 9.444v1.11H18.66L9.393 19.821a0.555 0.555 0 1 0 0.786 0.786L19.443 11.34v6.516h1.11V9.444z" />
+        </svg>
+    `;
+    document.body.appendChild(cursor);
+
+    gsap.set(cursor, {
+        xPercent: -50,
+        yPercent: -50,
+        scale: 0.78
+    });
+
+    const moveX = gsap.quickTo(cursor, "x", { duration: 0.22, ease: "power3.out" });
+    const moveY = gsap.quickTo(cursor, "y", { duration: 0.22, ease: "power3.out" });
+
+    function moveCursor(event) {
+        moveX(event.clientX);
+        moveY(event.clientY);
+    }
+
+    imageButtons.forEach((button) => {
+        button.addEventListener("pointerenter", (event) => {
+            moveCursor(event);
+            gsap.to(cursor, {
+                autoAlpha: 1,
+                scale: 1,
+                duration: 0.28,
+                ease: "back.out(1.7)",
+                overwrite: true
+            });
+        });
+        button.addEventListener("pointermove", moveCursor);
+        button.addEventListener("pointerleave", () => {
+            gsap.to(cursor, {
+                autoAlpha: 0,
+                scale: 0.78,
+                duration: 0.2,
+                ease: "power2.out",
+                overwrite: true
+            });
+        });
+    });
+}
+
+initCardImageCursor();
 
 // 1. SPLIT TYPE
 const splitTypes = document.querySelectorAll('.reveal-text, .bottom-logo, .loader-logo, .logo-button, .menu-overlay-blueprint');
@@ -249,7 +473,9 @@ splitTypes.forEach((textElement) => {
         textElement.classList.contains('approach-title') ||
         textElement.classList.contains('approach-copy') ||
         textElement.classList.contains('approach-step-title') ||
-        textElement.classList.contains('approach-step-copy');
+        textElement.classList.contains('approach-step-copy') ||
+        textElement.closest('.service-hero') ||
+        textElement.closest('.about-story-page');
 
     const split = new SplitType(textElement, { types: usesLineMask ? 'lines' : 'lines,words,chars' });
 
@@ -917,7 +1143,8 @@ function startStandalonePageAnimation() {
 
     const pageTl = gsap.timeline();
     const approachHero = document.querySelector(".link-page-hero-approach");
-
+    const aboutStoryPage = document.querySelector(".about-story-page");
+    let aboutHeroLines = [];
     if (projectsShowcaseTl) {
         projectsShowcaseTl.pause(0);
         gsap.delayedCall(0.5, () => {
@@ -926,17 +1153,6 @@ function startStandalonePageAnimation() {
     }
 
     if (approachHero) {
-        gsap.killTweensOf(".approach-hero-circle");
-        gsap.set(".approach-hero-circle-primary", {
-            x: "46vw",
-            y: "-18vh",
-            autoAlpha: 1
-        });
-        gsap.set(".approach-hero-circle-secondary", {
-            x: "38vw",
-            y: "22vh",
-            autoAlpha: 1
-        });
         gsap.set(".link-page-hero-approach > div, .link-page-hero-approach .link-page-hero-copy", {
             y: 34,
             autoAlpha: 0
@@ -951,17 +1167,119 @@ function startStandalonePageAnimation() {
         });
     }
 
-    const heroRevealTargets = document.querySelectorAll(".link-page-hero .char, .link-page-hero .line-mask");
+    if (aboutStoryPage) {
+        aboutHeroLines = gsap.utils.toArray(".about-story-divider");
+        const aboutPageRule = document.querySelector(".about-page-rule");
+        const aboutHeroRule = document.querySelector(".about-hero-rule");
+        const aboutPageHeroImage = document.querySelector(".about-page-hero-image");
+        const aboutScrollTextItems = gsap.utils.toArray(".about-story-hero .reveal-text, .about-services-showcase .reveal-text, .about-clients-intro .reveal-text, .about-clients-bottom .reveal-text, .about-client-reasons .reveal-text, .about-team-showcase .reveal-text");
+        const aboutScrollMediaItems = gsap.utils.toArray(".about-story-image-frame");
+        const aboutServiceRows = gsap.utils.toArray(".about-services-list article");
+        const aboutTeamCategories = gsap.utils.toArray(".about-team-category");
+        const aboutTeamCardDetails = gsap.utils.toArray(".about-team-card > div");
+
+        gsap.set(aboutHeroLines, { scaleX: 0, transformOrigin: "left" });
+        gsap.set(aboutPageRule, { scaleX: 0, transformOrigin: "left" });
+        gsap.set(aboutHeroRule, {
+            scaleX: 0,
+            transformOrigin: "center"
+        });
+        gsap.set(".about-page-kicker-word-about .line-mask", { y: "140%" });
+        gsap.set(".about-page-kicker-word-blueprint .line-mask", { y: "-140%" });
+        gsap.set(aboutPageHeroImage, { y: 24, autoAlpha: 0 });
+        aboutScrollTextItems.forEach(item => {
+            item.removeAttribute("data-revealed");
+            gsap.set(item.querySelectorAll(".line-mask"), { y: "140%" });
+        });
+        aboutServiceRows.forEach(row => {
+            row.removeAttribute("data-line-revealed");
+        });
+        aboutTeamCategories.forEach(category => {
+            category.removeAttribute("data-line-revealed");
+        });
+        aboutTeamCardDetails.forEach(detail => {
+            detail.removeAttribute("data-line-revealed");
+        });
+        gsap.set(aboutServiceRows, {
+            "--about-line-scale": "0%"
+        });
+        gsap.set(aboutTeamCategories, { "--about-category-line-scale": "0%" });
+        gsap.set(aboutTeamCardDetails, { "--about-team-card-line-scale": "0%" });
+        gsap.set(aboutScrollMediaItems, { y: 24, autoAlpha: 0 });
+
+        if (aboutScrollTextItems.length) {
+            ScrollTrigger.batch(aboutScrollTextItems, {
+                start: "top 88%",
+                once: true,
+                onEnter: (batch) => {
+                    batch.forEach(item => {
+                        if (item.dataset.revealed === "true") return;
+
+                        item.dataset.revealed = "true";
+                        const usesCategoryTiming = item.matches(".about-story-title, .about-services-intro h2, .about-clients-intro h2, .about-client-reasons-heading h2, .about-team-heading h2");
+
+                        gsap.to(item.querySelectorAll(".line-mask"), {
+                            y: 0,
+                            stagger: usesCategoryTiming ? 0.1 : 0.035,
+                            duration: usesCategoryTiming ? 0.8 : 0.65,
+                            ease: "power4.out"
+                        });
+
+                        const serviceRow = item.closest(".about-services-list article");
+                        const teamCategory = item.closest(".about-team-category");
+                        const teamCardDetail = item.closest(".about-team-card > div");
+
+                        if (serviceRow && serviceRow.dataset.lineRevealed !== "true") {
+                            serviceRow.dataset.lineRevealed = "true";
+                            gsap.to(serviceRow, {
+                                "--about-line-scale": "100%",
+                                duration: 0.75,
+                                ease: "expo.out"
+                            });
+                        }
+
+                        if (teamCategory && teamCategory.dataset.lineRevealed !== "true") {
+                            teamCategory.dataset.lineRevealed = "true";
+                            gsap.to(teamCategory, {
+                                "--about-category-line-scale": "100%",
+                                duration: 0.75,
+                                ease: "expo.out"
+                            });
+                        }
+
+                        if (teamCardDetail && teamCardDetail.dataset.lineRevealed !== "true") {
+                            teamCardDetail.dataset.lineRevealed = "true";
+                            gsap.to(teamCardDetail, {
+                                "--about-team-card-line-scale": "100%",
+                                duration: 0.75,
+                                ease: "expo.out"
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        if (aboutScrollMediaItems.length) {
+            ScrollTrigger.batch(aboutScrollMediaItems, {
+                start: "top 88%",
+                once: true,
+                onEnter: (batch) => {
+                    gsap.to(batch, {
+                        y: 0,
+                        autoAlpha: 1,
+                        stagger: 0.06,
+                        duration: 0.72,
+                        ease: "power3.out"
+                    });
+                }
+            });
+        }
+    }
+
+    const heroRevealTargets = document.querySelectorAll(aboutStoryPage ? ".link-page-hero:not(.about-story-hero) .char, .link-page-hero:not(.about-story-hero) .line-mask" : ".link-page-hero .char, .link-page-hero .line-mask");
 
     if (approachHero) {
-        pageTl.to(".approach-hero-circle", {
-            x: 0,
-            y: 0,
-            stagger: 0.12,
-            duration: 1.18,
-            ease: "power3.out"
-        });
-
         pageTl.to(".approach-hero-rule", {
             scaleX: 1,
             duration: 1.2,
@@ -977,13 +1295,49 @@ function startStandalonePageAnimation() {
         }, "-=0.44");
     }
 
+    if (aboutStoryPage) {
+        pageTl.to(".about-hero-rule", {
+            scaleX: 1,
+            duration: 1.2,
+            ease: "expo.inOut"
+        }, "-=0.72");
+    }
+
     if (heroRevealTargets.length) {
         pageTl.to(heroRevealTargets, {
             y: 0,
-            stagger: approachHero ? 0.04 : 0.025,
-            duration: approachHero ? 1.02 : 0.82,
+            stagger: approachHero || aboutStoryPage ? 0.04 : 0.025,
+            duration: approachHero || aboutStoryPage ? 1.02 : 0.82,
             ease: "power4.out"
-        }, approachHero ? "-=0.5" : undefined);
+        }, approachHero || aboutStoryPage ? "-=0.5" : undefined);
+    }
+
+    if (aboutStoryPage) {
+        pageTl.to(".about-page-rule", {
+            scaleX: 1,
+            duration: 0.75,
+            ease: "expo.out"
+        }, "-=0.58")
+            .to(".about-page-hero-image", {
+                y: 0,
+                autoAlpha: 1,
+                duration: 0.9,
+                ease: "power3.out"
+            }, "-=0.55");
+
+        ScrollTrigger.create({
+            trigger: ".about-story-hero",
+            start: "top 78%",
+            once: true,
+            onEnter: () => {
+                gsap.to(aboutHeroLines, {
+                    scaleX: 1,
+                    duration: 0.75,
+                    stagger: 0.12,
+                    ease: "expo.out"
+                });
+            }
+        });
     }
 
     if (approachHero) {
@@ -993,25 +1347,6 @@ function startStandalonePageAnimation() {
             duration: 0.6,
             ease: "power3.out"
         }, "-=0.38");
-
-        pageTl.call(() => {
-            gsap.to(".approach-hero-circle-primary", {
-                x: -10,
-                y: 8,
-                duration: 18,
-                repeat: -1,
-                yoyo: true,
-                ease: "sine.inOut"
-            });
-            gsap.to(".approach-hero-circle-secondary", {
-                x: 12,
-                y: -8,
-                duration: 20,
-                repeat: -1,
-                yoyo: true,
-                ease: "sine.inOut"
-            });
-        });
     }
 
     const projectRevealTargets = gsap.utils.toArray(".link-project-service-title .line-mask, .link-project-item .line-mask");
@@ -1320,11 +1655,68 @@ gsap.set(".panel:not(.hero-section)", { yPercent: -100 });
 window.addEventListener('load', () => {
     resetPageScroll();
 
+    if (shouldLandOnWebDevCard) {
+        document.body.style.overflow = '';
+        if (lenis) {
+            lenis.resize();
+            lenis.scrollTo(0, { immediate: true, force: true });
+            lenis.start();
+        }
+
+        prepareNaturalWebCardHashLanding();
+        pageIsReady = true;
+        ScrollTrigger.refresh();
+        scrollToWebDevCardHashIfRequested();
+        syncNavState();
+        document.documentElement.classList.remove("is-link-transition");
+        document.documentElement.classList.remove("is-service-direct-transition");
+        document.documentElement.style.backgroundColor = "";
+
+        if (loaderElement) {
+            loaderElement.style.display = "none";
+        }
+
+        return;
+    }
+
     // Hide scrollbar during load
     document.body.style.overflow = 'hidden';
 
-    if (loaderElement && shouldUseLinkLoader) {
+    if (loaderElement && shouldUseLinkLoader && !shouldSkipIncomingLoader) {
         loaderElement.classList.add("is-link-loader");
+    }
+
+    if (shouldSkipIncomingLoader) {
+        document.body.style.overflow = '';
+        if (lenis) {
+            lenis.resize();
+            lenis.scrollTo(0, { immediate: true, force: true });
+            lenis.start();
+        }
+
+        if (isIndexPage) {
+            if (shouldLandOnWebDevCard) {
+                prepareNaturalWebCardHashLanding();
+            } else {
+                startHeroAnimation();
+            }
+        } else {
+            startStandalonePageAnimation();
+        }
+
+        pageIsReady = true;
+        ScrollTrigger.refresh();
+        syncNavState();
+        scrollToWebDevCardHashIfRequested();
+        document.documentElement.classList.remove("is-link-transition");
+        document.documentElement.classList.remove("is-service-direct-transition");
+        document.documentElement.style.backgroundColor = "";
+
+        if (loaderElement) {
+            loaderElement.style.display = "none";
+        }
+
+        return;
     }
 
     const loaderTl = gsap.timeline({
@@ -1337,14 +1729,20 @@ window.addEventListener('load', () => {
             }
 
             if (isIndexPage) {
-                startHeroAnimation();
+                if (shouldLandOnWebDevCard) {
+                    prepareNaturalWebCardHashLanding();
+                } else {
+                    startHeroAnimation();
+                }
             } else {
                 startStandalonePageAnimation();
             }
             pageIsReady = true;
             ScrollTrigger.refresh();
             syncNavState();
+            scrollToWebDevCardHashIfRequested();
             document.documentElement.classList.remove("is-link-transition");
+            document.documentElement.classList.remove("is-service-direct-transition");
             document.documentElement.style.backgroundColor = "";
             document.getElementById('loader').style.display = 'none';
         }
@@ -1444,6 +1842,7 @@ window.addEventListener('load', () => {
 const panels = gsap.utils.toArray(".panel:not(.hero-section)");
 const hero = document.querySelector(".hero-section");
 const phoneBreakpoint = 600;
+const serviceCardRevealTimelines = new Map();
 
 function isPhoneViewport() {
     return getViewportWidth() <= phoneBreakpoint;
@@ -1861,8 +2260,8 @@ const projectPreviewImageSets = [
         "./branding_img/branding_8.png",
         "./branding_img/branding_9.png",
         "./branding_img/branding_10.png",
-        "./branding_img/branding_elements_1.png",
-        "./branding_img/branding_elements_2.png"
+        "./branding_img/branding_1.png",
+        "./branding_img/branding_2.png"
     ],
     [
         "./marketing_img/marketing_1.png",
@@ -1875,12 +2274,12 @@ const projectPreviewImageSets = [
         "./marketing_img/marketing_8.png",
         "./marketing_img/marketing_9.png",
         "./marketing_img/marketing_10.png",
-        "./marketing_img/marketing_elements_1.png",
-        "./marketing_img/marketing_elements_2.png",
-        "./marketing_img/marketing_elements_3.png",
-        "./marketing_img/marketing_elements_4.png",
-        "./marketing_img/marketing_elements_5.png",
-        "./marketing_img/marketing_elements_6.png"
+        "./marketing_img/marketing_1.png",
+        "./marketing_img/marketing_2.png",
+        "./marketing_img/marketing_3.png",
+        "./marketing_img/marketing_4.png",
+        "./marketing_img/marketing_5.png",
+        "./marketing_img/marketing_6.png"
     ],
     [
         "./architecture_img/architecture_1.png",
@@ -2467,6 +2866,7 @@ panels.forEach((panel, i) => {
         .to(panel.querySelectorAll('.card-desc .line-mask'), { y: 0, stagger: 0.1, duration: 0.6, ease: "power3.out" }, "-=0.4")
         .to(hrLine, { scaleX: 1, opacity: 1, duration: 0.6, ease: "expo.out" }, "-=0.4")
         .to(svgIcon, { scale: 1, rotate: 0, opacity: 1, duration: 0.5, ease: "back.out(1.7)" }, "-=0.5");
+    serviceCardRevealTimelines.set(panel, cardTl);
 
     if (i === 0) {
         masterTl.to(hero, { xPercent: -100, ease: "none", duration: 1 }, i);
@@ -2843,12 +3243,70 @@ masterTl.to(".contact-card", {
     duration: footerRevealDuration
 }, contactStartTime + contactTransitionDuration);
 
+function prepareNaturalWebCardHashLanding() {
+    const panel = document.querySelector(".service-card-web-dev");
+
+    gsap.set(".panel:not(.hero-section)", { yPercent: 0 });
+    gsap.set(".nav-links .char, .hero-title .char, .highlight-container .char, .bottom-logo .char", { y: 0 });
+    gsap.set(".hero-description .line-mask", { y: 0 });
+    gsap.set(".hero-line", {
+        scaleX: 1,
+        transformOrigin: "left"
+    });
+    document.querySelector(".highlight-container")?.classList.add("active");
+
+    if (!panel) return;
+
+    panel.classList.remove("is-service-transitioning");
+    gsap.set(panel, {
+        clearProps: "position,left,top,width,height,margin,zIndex,pointerEvents,borderTopLeftRadius,borderTopRightRadius,borderBottomLeftRadius,borderBottomRightRadius"
+    });
+}
+
+function scrollToWebDevCardHashIfRequested() {
+    if (!shouldLandOnWebDevCard || !masterTl || !masterTl.scrollTrigger) return;
+
+    ScrollTrigger.refresh();
+
+    const trigger = masterTl.scrollTrigger;
+    const timelineDuration = masterTl.duration();
+    const targetTime = 1;
+
+    if (!timelineDuration) return;
+
+    const targetScroll = trigger.start + ((targetTime / timelineDuration) * (trigger.end - trigger.start));
+
+    if (typeof trigger.scroll === "function") {
+        trigger.scroll(targetScroll);
+    } else if (lenis) {
+        lenis.scrollTo(targetScroll, {
+            immediate: true,
+            force: true
+        });
+    } else {
+        window.scrollTo(0, targetScroll);
+    }
+
+    ScrollTrigger.update();
+    masterTl.time(targetTime, false);
+    ScrollTrigger.update();
+    syncNavState();
+    prepareNaturalWebCardHashLanding();
+
+    const webPanel = document.querySelector(".service-card-web-dev");
+    const webRevealTl = webPanel ? serviceCardRevealTimelines.get(webPanel) : null;
+
+    if (webRevealTl) {
+        webRevealTl.restart();
+    }
+}
+
 // 5. FULL-SCREEN MENU
 const menuOverlay = document.querySelector(".menu-overlay");
 const menuButton = document.querySelector(".menu-button");
 const menuOverlayLinks = document.querySelectorAll(".menu-overlay-link");
 const menuPlaceholderLinks = document.querySelectorAll('.menu-info-link[href="#"]');
-const contactForm = document.querySelector(".contact-section-form");
+const contactForm = document.querySelector(".contact-section-form, .link-contact-form");
 const contactThankModal = document.querySelector(".contact-thank-modal");
 const contactThankClose = document.querySelector(".contact-thank-close");
 

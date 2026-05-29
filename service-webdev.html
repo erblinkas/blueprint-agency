@@ -19,35 +19,54 @@
     <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/neue" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/identidad" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="./favicon_2.png">
     <style>
         /* ── SERVICE PAGE STYLES ── */
         body { background-color: #01161e; color: #f4f1e8; }
 
         .service-hero {
+            width: 100%;
+            height: 100vh;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 8rem 4rem 4rem;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            display: grid;
+            grid-template-columns: minmax(30rem, 0.95fr) minmax(24rem, 0.62fr);
+            grid-template-rows: minmax(0, 1fr);
+            align-items: end;
+            gap: clamp(2rem, 4vw, 4.5rem);
+            padding: clamp(8rem, 14vh, 10.5rem) clamp(2rem, 3.1vw, 3.35rem) clamp(2.4rem, 4.2vh, 3rem);
             position: relative;
             overflow: hidden;
+            box-sizing: border-box;
+            isolation: isolate;
             background-color: #01161e;
+            background-image: none;
         }
 
         .service-hero-bg {
             position: absolute;
             inset: 0;
             object-fit: cover;
+            object-position: center;
             width: 100%;
             height: 100%;
-            opacity: 0.18;
-            filter: grayscale(30%);
         }
 
-        .service-hero-content {
+        .service-hero.about-page-hero::after {
+            display: none;
+        }
+
+        .service-hero .service-hero-content {
             position: relative;
             z-index: 2;
-            max-width: 900px;
+            max-width: none;
+        }
+
+        .service-hero .about-page-title {
+            max-width: 24ch;
         }
 
         .service-eyebrow {
@@ -87,58 +106,103 @@
 
         /* ── WHAT WE DO ── */
         .service-section {
-            padding: 6rem 4rem;
-            background-color: #0a1e28;
+            padding: clamp(7rem, 12vw, 12rem) 4rem clamp(8rem, 13vw, 13rem);
+            background-color: #2c2416;
+            overflow: hidden;
         }
 
         .service-section-label {
-            font-family: 'CabinetGrotesk-regular', sans-serif;
-            font-size: 0.75rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: rgba(244,241,232,0.45);
-            margin-bottom: 4rem;
+            font-family: 'CabinetGrotesk-bold', sans-serif;
+            font-size: clamp(3.6rem, 9vw, 9.5rem);
+            line-height: 0.9;
+            letter-spacing: 0;
+            text-transform: none;
+            color: rgba(244,241,232,0.9);
+            margin: 0 0 clamp(5rem, 10vw, 10rem);
             overflow: hidden;
         }
 
         .service-features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: repeat(6, auto);
+            row-gap: clamp(3.5rem, 7vw, 7rem);
+            column-gap: clamp(3rem, 8vw, 9rem);
+            align-items: start;
         }
 
         .service-feature {
-            padding: 3rem 2.5rem;
-            background-color: rgba(244,241,232,0.03);
-            border: 1px solid rgba(244,241,232,0.07);
-            transition: background-color 0.3s ease;
+            padding: 0;
+            background-color: transparent;
+            border: 0;
+            max-width: 34rem;
+            transition: transform 0.45s ease, color 0.3s ease;
             overflow: hidden;
         }
 
         .service-feature:hover {
-            background-color: rgba(244,241,232,0.07);
+            transform: translateY(-0.7rem);
+        }
+
+        .service-feature:nth-child(1) {
+            grid-column: 1;
+            grid-row: 1;
+            justify-self: start;
+        }
+
+        .service-feature:nth-child(2) {
+            grid-column: 2;
+            grid-row: 2;
+            justify-self: end;
+        }
+
+        .service-feature:nth-child(3) {
+            grid-column: 1;
+            grid-row: 3;
+            justify-self: start;
+        }
+
+        .service-feature:nth-child(4) {
+            grid-column: 2;
+            grid-row: 4;
+            justify-self: end;
+        }
+
+        .service-feature:nth-child(5) {
+            grid-column: 1;
+            grid-row: 5;
+            justify-self: start;
+        }
+
+        .service-feature:nth-child(6) {
+            grid-column: 2;
+            grid-row: 6;
+            justify-self: end;
         }
 
         .service-feature-num {
             font-family: 'Retro Qesmo', sans-serif;
-            font-size: 0.9rem;
-            color: rgba(244,241,232,0.3);
-            margin-bottom: 1.5rem;
+            font-size: clamp(1rem, 1.5vw, 1.35rem);
+            color: rgba(244,241,232,0.38);
+            margin-bottom: clamp(1rem, 2vw, 1.6rem);
             letter-spacing: 0.1em;
         }
 
         .service-feature-title {
             font-family: 'CabinetGrotesk-bold', sans-serif;
-            font-size: 1.35rem;
-            margin-bottom: 1rem;
+            font-size: clamp(2.35rem, 4.4vw, 5.2rem);
+            line-height: 0.94;
+            letter-spacing: 0;
+            margin: 0 0 clamp(1rem, 1.8vw, 1.5rem);
             overflow: hidden;
         }
 
         .service-feature-body {
             font-family: 'CabinetGrotesk-light', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.7;
-            color: rgba(244,241,232,0.6);
+            font-size: clamp(1.08rem, 1.35vw, 1.35rem);
+            line-height: 1.45;
+            color: rgba(244,241,232,0.68);
+            max-width: 28rem;
         }
 
         /* ── SHOWCASE IMAGE ── */
@@ -282,12 +346,82 @@
 
         .service-back-btn:hover { color: #f4f1e8; }
 
+        .service-hero-return {
+            position: fixed;
+            top: 2.5rem;
+            left: 50%;
+            z-index: 1290;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            color: #000000;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 1;
+            transform: translate3d(-50%, -160%, 0);
+            transition: background-color 0.35s ease, color 0.35s ease;
+            will-change: transform, opacity;
+            isolation: isolate;
+        }
+
+        .service-hero-return.is-visible {
+            pointer-events: all;
+        }
+
+        .service-hero-return:hover,
+        .service-hero-return:focus-visible {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .service-hero-return svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            position: relative;
+            z-index: 1;
+        }
+
         /* page-enter animation */
         .page-enter { opacity: 0; transform: translateY(30px); }
 
         @media (max-width: 760px) {
             .service-hero, .service-section, .service-process, .service-cta { padding-left: 2rem; padding-right: 2rem; }
-            .service-hero { padding-top: 7rem; }
+            .service-hero {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                align-content: end;
+                padding-top: 7.5rem;
+            }
+            .service-section {
+                padding-top: 5rem;
+                padding-bottom: 6rem;
+            }
+            .service-section-label {
+                margin-bottom: 3.5rem;
+            }
+            .service-features-grid {
+                grid-template-columns: 1fr;
+                row-gap: 3.5rem;
+            }
+            .service-feature,
+            .service-feature:nth-child(n) {
+                grid-column: 1;
+                transform: none;
+            }
+            .service-feature:hover {
+                transform: translateY(-0.35rem);
+            }
+            .service-hero-return {
+                top: max(1rem, env(safe-area-inset-top));
+                width: 48px;
+                height: 48px;
+            }
             .service-step { grid-template-columns: 50px 1fr; }
         }
     </style>
@@ -319,6 +453,13 @@
             </svg>
         </button>
     </header>
+
+    <button class="service-hero-return" type="button" aria-label="Back to web development hero">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+        </svg>
+    </button>
 
     <div class="menu-overlay" aria-hidden="true">
         <div class="menu-overlay-content">
@@ -353,13 +494,15 @@
     </div>
 
     <!-- HERO -->
-    <section class="service-hero" id="service-hero">
-        <img class="service-hero-bg" src="./Gemini_Generated_Image_z57vfxz57vfxz57v.png" alt="">
-        <div class="service-hero-content">
-            <p class="service-eyebrow page-enter">Service — 01</p>
-            <h1 class="service-hero-title page-enter">Web<br>Development</h1>
-            <hr class="service-hero-line">
-            <p class="service-hero-desc page-enter">Custom, responsive websites that convert visitors into customers. We build fast, accessible, and visually stunning digital experiences from the ground up.</p>
+    <section class="service-hero about-page-hero" id="service-hero" aria-label="Web Development">
+        <img class="service-hero-bg" src="./web_img/web_main.png" alt="">
+        <div class="service-hero-content about-page-hero-copy">
+            <p class="about-page-kicker">
+                <span class="about-page-kicker-word about-page-kicker-word-about reveal-text">Web</span>
+                <span class="about-hero-rule" aria-hidden="true"></span>
+                <span class="about-page-kicker-word about-page-kicker-word-blueprint reveal-text">Development</span>
+            </p>
+            <h1 class="about-page-title reveal-text">Custom, responsive websites that convert visitors into customers. We build fast, accessible, and visually stunning digital experiences from the ground up.</h1>
         </div>
     </section>
 
@@ -453,6 +596,141 @@
     <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
     <script src="script.js"></script>
     <script>
+        const serviceHero = document.querySelector('.service-hero.about-page-hero');
+        if (serviceHero && window.gsap) {
+            const heroRule = serviceHero.querySelector('.about-hero-rule');
+            const heroRevealTargets = serviceHero.querySelectorAll('.char, .line-mask');
+
+            gsap.set(heroRule, {
+                scaleX: 0,
+                transformOrigin: 'center'
+            });
+            gsap.set(serviceHero.querySelectorAll('.about-page-kicker-word-about .line-mask'), { y: '140%' });
+            gsap.set(serviceHero.querySelectorAll('.about-page-kicker-word-blueprint .line-mask'), { y: '-140%' });
+            gsap.set(serviceHero.querySelectorAll('.about-page-title .line-mask'), { y: '140%' });
+
+            window.addEventListener('load', () => {
+                const heroTl = gsap.timeline();
+
+                heroTl.to(heroRule, {
+                    scaleX: 1,
+                    duration: 1.2,
+                    ease: 'expo.inOut'
+                }, 0);
+
+                if (heroRevealTargets.length) {
+                    heroTl.to(heroRevealTargets, {
+                        y: 0,
+                        stagger: 0.04,
+                        duration: 1.02,
+                        ease: 'power4.out'
+                    }, '-=0.5');
+                }
+            });
+        }
+
+        const serviceHeroReturn = document.querySelector('.service-hero-return');
+        if (serviceHeroReturn && serviceHero) {
+            let serviceReturnVisible = false;
+
+            gsap.set(serviceHeroReturn, {
+                x: '-50%',
+                y: -140,
+                autoAlpha: 1
+            });
+
+            const showServiceHeroReturn = () => {
+                if (serviceReturnVisible) return;
+
+                serviceReturnVisible = true;
+                serviceHeroReturn.classList.add('is-visible');
+                gsap.to(serviceHeroReturn, {
+                    x: '-50%',
+                    y: 0,
+                    duration: 0.78,
+                    ease: 'expo.out',
+                    overwrite: true
+                });
+            };
+
+            const hideServiceHeroReturn = () => {
+                if (!serviceReturnVisible) return;
+
+                serviceReturnVisible = false;
+                serviceHeroReturn.classList.remove('is-visible');
+                gsap.to(serviceHeroReturn, {
+                    x: '-50%',
+                    y: -140,
+                    duration: 0.5,
+                    ease: 'power3.inOut',
+                    overwrite: true
+                });
+            };
+
+            const updateServiceHeroReturn = () => {
+                if (window.scrollY > 120) {
+                    showServiceHeroReturn();
+                } else {
+                    hideServiceHeroReturn();
+                }
+            };
+
+            serviceHeroReturn.addEventListener('click', () => {
+                serviceHeroReturn.disabled = true;
+                serviceReturnVisible = false;
+                serviceHeroReturn.classList.remove('is-visible');
+                gsap.to(serviceHeroReturn, {
+                    x: '-50%',
+                    y: -140,
+                    duration: 0.42,
+                    ease: 'power3.inOut',
+                    overwrite: true
+                });
+
+                const startY = window.scrollY;
+                const heroTop = serviceHero.getBoundingClientRect().top + window.scrollY;
+                const scrollDuration = Math.abs(startY - heroTop) > 8 ? 0.92 : 0.08;
+                const scrollState = { y: startY };
+                const heroText = serviceHero.querySelectorAll('.service-hero-content .line-mask');
+                const heroRule = serviceHero.querySelector('.about-hero-rule');
+                const animateHeroTextOut = () => {
+                    const exitTl = gsap.timeline({
+                        defaults: { ease: 'power4.inOut' },
+                        onComplete: () => {
+                            window.location.href = 'index.html#webdev-card';
+                        }
+                    });
+
+                    if (heroRule) {
+                        exitTl.to(heroRule, {
+                            scaleX: 0,
+                            transformOrigin: 'center',
+                            duration: 0.62
+                        }, 0);
+                    }
+
+                    if (heroText.length) {
+                        exitTl.to(heroText, {
+                            y: '-140%',
+                            stagger: 0.035,
+                            duration: 0.72
+                        }, 0.04);
+                    }
+                };
+
+                gsap.to(scrollState, {
+                    y: heroTop,
+                    duration: scrollDuration,
+                    ease: 'power3.inOut',
+                    onUpdate: () => window.scrollTo(0, scrollState.y),
+                    onComplete: animateHeroTextOut
+                });
+            });
+
+            updateServiceHeroReturn();
+            window.addEventListener('scroll', updateServiceHeroReturn, { passive: true });
+        }
+
         // Page-enter staggered reveal
         window.addEventListener('load', () => {
             gsap.to('.page-enter', {
