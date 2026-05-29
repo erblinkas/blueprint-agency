@@ -614,49 +614,49 @@ function initProjectsShowcaseAnimation() {
         {
             label: "Web development",
             projects: [
-                { name: "Meridian launch system", year: "2026", image: "./web_img/web_1.png" },
-                { name: "Atlas platform rebuild", year: "2025", image: "./web_img/web_2.png" },
-                { name: "Northline commerce flow", year: "2025", image: "./web_img/web_3.png" },
-                { name: "Forma booking portal", year: "2024", image: "./web_img/web_4.png" },
-                { name: "Signal dashboard suite", year: "2024", image: "./web_img/web_5.png" },
-                { name: "Cobalt product site", year: "2023", image: "./web_img/web_6.png" },
-                { name: "Arc web experience", year: "2023", image: "./web_img/web_7.png" }
+                { name: "Meridian launch system", year: "2026", image: "./web_img/webp-output/web_1.webp" },
+                { name: "Atlas platform rebuild", year: "2025", image: "./web_img/webp-output/web_2.webp" },
+                { name: "Northline commerce flow", year: "2025", image: "./web_img/webp-output/web_3.webp" },
+                { name: "Forma booking portal", year: "2024", image: "./web_img/webp-output/web_4.webp" },
+                { name: "Signal dashboard suite", year: "2024", image: "./web_img/webp-output/web_5.webp" },
+                { name: "Cobalt product site", year: "2023", image: "./web_img/webp-output/web_6.webp" },
+                { name: "Arc web experience", year: "2023", image: "./web_img/webp-output/web_7.webp" }
             ]
         },
         {
             label: "Branding",
             projects: [
-                { name: "Northline identity", year: "2026", image: "./branding_img/branding_1.png" },
-                { name: "Forma brand system", year: "2025", image: "./branding_img/branding_2.png" },
-                { name: "Civic mark refresh", year: "2025", image: "./branding_img/branding_3.png" },
-                { name: "Vessel packaging set", year: "2024", image: "./branding_img/branding_4.png" },
-                { name: "Oakroom visual language", year: "2024", image: "./branding_img/branding_5.png" },
-                { name: "Arcade identity kit", year: "2023", image: "./branding_img/branding_6.png" },
-                { name: "Summit launch identity", year: "2023", image: "./branding_img/branding_7.png" }
+                { name: "Northline identity", year: "2026", image: "./branding_img/webp-output/branding_1.webp" },
+                { name: "Forma brand system", year: "2025", image: "./branding_img/webp-output/branding_2.webp" },
+                { name: "Civic mark refresh", year: "2025", image: "./branding_img/webp-output/branding_3.webp" },
+                { name: "Vessel packaging set", year: "2024", image: "./branding_img/webp-output/branding_4.webp" },
+                { name: "Oakroom visual language", year: "2024", image: "./branding_img/webp-output/branding_5.webp" },
+                { name: "Arcade identity kit", year: "2023", image: "./branding_img/webp-output/branding_6.webp" },
+                { name: "Summit launch identity", year: "2023", image: "./branding_img/webp-output/branding_7.webp" }
             ]
         },
         {
             label: "Digital marketing",
             projects: [
-                { name: "Signal campaign rollout", year: "2026", image: "./marketing_img/marketing_1.png" },
-                { name: "Horizon paid media", year: "2025", image: "./marketing_img/marketing_2.png" },
-                { name: "Meridian launch ads", year: "2025", image: "./marketing_img/marketing_3.png" },
-                { name: "Northline content system", year: "2024", image: "./marketing_img/marketing_4.png" },
-                { name: "Atlas growth funnel", year: "2024", image: "./marketing_img/marketing_5.png" },
-                { name: "Forma social direction", year: "2023", image: "./marketing_img/marketing_6.png" },
-                { name: "Cobalt email series", year: "2023", image: "./marketing_img/marketing_7.png" }
+                { name: "Signal campaign rollout", year: "2026", image: "./marketing_img/webp-output/marketing_1.webp" },
+                { name: "Horizon paid media", year: "2025", image: "./marketing_img/webp-output/marketing_2.webp" },
+                { name: "Meridian launch ads", year: "2025", image: "./marketing_img/webp-output/marketing_3.webp" },
+                { name: "Northline content system", year: "2024", image: "./marketing_img/webp-output/marketing_4.webp" },
+                { name: "Atlas growth funnel", year: "2024", image: "./marketing_img/webp-output/marketing_5.webp" },
+                { name: "Forma social direction", year: "2023", image: "./marketing_img/webp-output/marketing_6.webp" },
+                { name: "Cobalt email series", year: "2023", image: "./marketing_img/webp-output/marketing_7.webp" }
             ]
         },
         {
             label: "Architecture",
             projects: [
-                { name: "Monolith architecture visuals", year: "2026", image: "./architecture_img/architecture_1.png" },
-                { name: "Fieldhouse retail concept", year: "2025", image: "./architecture_img/architecture_2.png" },
-                { name: "Stonegate interior study", year: "2025", image: "./architecture_img/architecture_3.png" },
-                { name: "Oakroom spatial package", year: "2024", image: "./architecture_img/architecture_4.png" },
-                { name: "Horizon facade direction", year: "2024", image: "./architecture_img/architecture_5.png" },
-                { name: "Vessel showroom layout", year: "2023", image: "./architecture_img/architecture_6.png" },
-                { name: "Civic wayfinding system", year: "2023", image: "./architecture_img/architecture_7.png" }
+                { name: "Monolith architecture visuals", year: "2026", image: "./architecture_img/webp-output/architecture_1.webp" },
+                { name: "Fieldhouse retail concept", year: "2025", image: "./architecture_img/webp-output/architecture_2.webp" },
+                { name: "Stonegate interior study", year: "2025", image: "./architecture_img/webp-output/architecture_3.webp" },
+                { name: "Oakroom spatial package", year: "2024", image: "./architecture_img/webp-output/architecture_4.webp" },
+                { name: "Horizon facade direction", year: "2024", image: "./architecture_img/webp-output/architecture_5.webp" },
+                { name: "Vessel showroom layout", year: "2023", image: "./architecture_img/webp-output/architecture_6.webp" },
+                { name: "Civic wayfinding system", year: "2023", image: "./architecture_img/webp-output/architecture_7.webp" }
             ]
         }
     ];
@@ -2238,59 +2238,59 @@ let projectHoverCheckQueued = false;
 const getUnsplashImage = (photoId) => `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=1200&q=80`;
 const projectPreviewImageSets = [
     [
-        "./web_img/web_1.png",
-        "./web_img/web_2.png",
-        "./web_img/web_3.png",
-        "./web_img/web_4.png",
-        "./web_img/web_5.png",
-        "./web_img/web_6.png",
-        "./web_img/web_7.png",
-        "./web_img/web_8.png",
-        "./web_img/web_9.png",
-        "./web_img/web_10.png"
+        "./web_img/webp-output/web_1.webp",
+        "./web_img/webp-output/web_2.webp",
+        "./web_img/webp-output/web_3.webp",
+        "./web_img/webp-output/web_4.webp",
+        "./web_img/webp-output/web_5.webp",
+        "./web_img/webp-output/web_6.webp",
+        "./web_img/webp-output/web_7.webp",
+        "./web_img/webp-output/web_8.webp",
+        "./web_img/webp-output/web_9.webp",
+        "./web_img/webp-output/web_10.webp"
     ],
     [
-        "./branding_img/branding_1.png",
-        "./branding_img/branding_2.png",
-        "./branding_img/branding_3.png",
-        "./branding_img/branding_4.png",
-        "./branding_img/branding_5.png",
-        "./branding_img/branding_6.png",
-        "./branding_img/branding_7.png",
-        "./branding_img/branding_8.png",
-        "./branding_img/branding_9.png",
-        "./branding_img/branding_10.png",
-        "./branding_img/branding_1.png",
-        "./branding_img/branding_2.png"
+        "./branding_img/webp-output/branding_1.webp",
+        "./branding_img/webp-output/branding_2.webp",
+        "./branding_img/webp-output/branding_3.webp",
+        "./branding_img/webp-output/branding_4.webp",
+        "./branding_img/webp-output/branding_5.webp",
+        "./branding_img/webp-output/branding_6.webp",
+        "./branding_img/webp-output/branding_7.webp",
+        "./branding_img/webp-output/branding_8.webp",
+        "./branding_img/webp-output/branding_9.webp",
+        "./branding_img/webp-output/branding_10.webp",
+        "./branding_img/webp-output/branding_1.webp",
+        "./branding_img/webp-output/branding_2.webp"
     ],
     [
-        "./marketing_img/marketing_1.png",
-        "./marketing_img/marketing_2.png",
-        "./marketing_img/marketing_3.png",
-        "./marketing_img/marketing_4.png",
-        "./marketing_img/marketing_5.png",
-        "./marketing_img/marketing_6.png",
-        "./marketing_img/marketing_7.png",
-        "./marketing_img/marketing_8.png",
-        "./marketing_img/marketing_9.png",
-        "./marketing_img/marketing_10.png",
-        "./marketing_img/marketing_1.png",
-        "./marketing_img/marketing_2.png",
-        "./marketing_img/marketing_3.png",
-        "./marketing_img/marketing_4.png",
-        "./marketing_img/marketing_5.png",
-        "./marketing_img/marketing_6.png"
+        "./marketing_img/webp-output/marketing_1.webp",
+        "./marketing_img/webp-output/marketing_2.webp",
+        "./marketing_img/webp-output/marketing_3.webp",
+        "./marketing_img/webp-output/marketing_4.webp",
+        "./marketing_img/webp-output/marketing_5.webp",
+        "./marketing_img/webp-output/marketing_6.webp",
+        "./marketing_img/webp-output/marketing_7.webp",
+        "./marketing_img/webp-output/marketing_8.webp",
+        "./marketing_img/webp-output/marketing_9.webp",
+        "./marketing_img/webp-output/marketing_10.webp",
+        "./marketing_img/webp-output/marketing_1.webp",
+        "./marketing_img/webp-output/marketing_2.webp",
+        "./marketing_img/webp-output/marketing_3.webp",
+        "./marketing_img/webp-output/marketing_4.webp",
+        "./marketing_img/webp-output/marketing_5.webp",
+        "./marketing_img/webp-output/marketing_6.webp"
     ],
     [
-        "./architecture_img/architecture_1.png",
-        "./architecture_img/architecture_2.png",
-        "./architecture_img/architecture_3.png",
-        "./architecture_img/architecture_4.png",
-        "./architecture_img/architecture_5.png",
-        "./architecture_img/architecture_6.png",
-        "./architecture_img/architecture_7.png",
-        "./architecture_img/architecture_8.png",
-        "./architecture_img/architecture_9.png"
+        "./architecture_img/webp-output/architecture_1.webp",
+        "./architecture_img/webp-output/architecture_2.webp",
+        "./architecture_img/webp-output/architecture_3.webp",
+        "./architecture_img/webp-output/architecture_4.webp",
+        "./architecture_img/webp-output/architecture_5.webp",
+        "./architecture_img/webp-output/architecture_6.webp",
+        "./architecture_img/webp-output/architecture_7.webp",
+        "./architecture_img/webp-output/architecture_8.webp",
+        "./architecture_img/webp-output/architecture_9.webp"
     ]
 ];
 const projectPreviewPositions = [
