@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blueprint – Architecture</title>
+    <title>Blueprint - Architecture</title>
     <meta name="description" content="Architectural visualisation, spatial concepts, and design direction. Blueprint's architecture service.">
     <script>
         try {
@@ -14,6 +14,11 @@
             }
         } catch (error) {}
     </script>
+    <link rel="preload" as="image" href="./architecture_img/webp-output/architecture_main.webp" fetchpriority="high">
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="font.css">
     <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
@@ -247,7 +252,8 @@
     </style>
 </head>
 
-<body>
+<body data-barba="wrapper">
+    <div data-barba="container" data-barba-namespace="service-architecture">
     <div id="loader" class="loader">
         <div class="loader-content">
             <div class="loader-logo reveal-text">BLUEPRINT</div>
@@ -279,7 +285,7 @@
                     <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'contact.html')"><span>Contact</span></button>
                 </nav>
                 <div class="menu-image-frame" aria-hidden="true">
-                    <img class="menu-image" src="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1200&q=80" alt="">
+                    <img loading="lazy" decoding="async" class="menu-image" src="./web_img/webp-output/web_6.webp" alt="">
                 </div>
                 <div class="menu-overlay-info">
                     <div class="menu-info-group">
@@ -302,7 +308,7 @@
     </div>
 
     <section class="service-hero">
-        <img class="service-hero-bg" src="./Gemini_Generated_Image_mtrrzymtrrzymtrr.png" alt="">
+        <img decoding="async" fetchpriority="high" width="1672" height="941" class="service-hero-bg" src="./architecture_img/webp-output/architecture_main.webp" alt="">
         <div class="service-hero-content">
             <p class="service-eyebrow page-enter">Service — 04</p>
             <h1 class="service-hero-title page-enter">Architecture</h1>
@@ -348,7 +354,7 @@
     </section>
 
     <div class="service-showcase">
-        <img src="https://images.unsplash.com/photo-1574848296471-28f79a036f79?auto=format&fit=crop&w=1800&q=80" alt="Architecture showcase">
+        <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1574848296471-28f79a036f79?auto=format&fit=crop&w=1800&q=80" alt="Architecture showcase">
         <div class="service-showcase-label">SPACE</div>
     </div>
 
@@ -391,10 +397,13 @@
         <button class="service-cta-btn" onclick="handlePageTransition(event, 'contact.html')">Start a project</button>
     </section>
 
+    </div>
+    </div>
     <script src="https://unpkg.com/split-type"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+    <script src="https://unpkg.com/@barba/core"></script>
     <script src="script.js"></script>
     <script>
         window.addEventListener('load', () => {

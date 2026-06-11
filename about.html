@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blueprint - About</title>
+    <title>About Blueprint | Complete Brand and Launch Studio</title>
+    <meta name="description" content="Meet Blueprint, a multidisciplinary studio building complete brands through web development, branding, marketing, and spatial design.">
     <script>
         try {
             if (sessionStorage.getItem("blueprintUseLinkLoader") === "true") {
@@ -13,6 +14,11 @@
             }
         } catch (error) {}
     </script>
+    <link rel="preload" as="image" href="./webp-output/about_hero_background_img.webp" fetchpriority="high">
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="font.css">
     <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
@@ -21,7 +27,8 @@
     <link rel="icon" type="image/x-icon" href="./favicon_2.png">
 </head>
 
-<body>
+<body data-barba="wrapper">
+    <div data-barba="container" data-barba-namespace="about">
     <!-- LOADING SCREEN -->
     <div id="loader" class="loader">
         <div class="loader-content">
@@ -63,7 +70,7 @@
                 </nav>
 
                 <div class="menu-image-frame" aria-hidden="true">
-                    <img class="menu-image" src="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1200&q=80" alt="">
+                    <img loading="lazy" decoding="async" class="menu-image" src="./web_img/webp-output/web_6.webp" alt="">
                 </div>
 
                 <div class="menu-overlay-info">
@@ -111,7 +118,7 @@
                     </div>
                 </div>
                 <figure class="about-story-image-frame">
-                    <img src="about_our_story_hero.png" alt="Blueprint studio story visual">
+                    <img loading="lazy" decoding="async" src="webp-output/about_our_story_hero.webp" alt="Blueprint studio story visual">
                 </figure>
             </section>
 
@@ -155,7 +162,7 @@
                     </div>
                     <article class="about-team-card">
                         <figure class="about-team-portrait">
-                            <img src="team_profiles/bini_profile_img.png" alt="Portrait of Erblin">
+                            <img loading="lazy" decoding="async" src="team_profiles/webp-output/bini_profile_img.webp" alt="Portrait of Erblin">
                         </figure>
                         <div>
                             <h3 class="reveal-text">Erblin</h3>
@@ -165,7 +172,7 @@
                     </article>
                     <article class="about-team-card">
                         <figure class="about-team-portrait">
-                            <img src="team_profiles/Adi_profile.png" alt="Portrait of Adnan">
+                            <img loading="lazy" decoding="async" src="team_profiles/webp-output/Adi_profile.webp" alt="Portrait of Adnan">
                         </figure>
                         <div>
                             <h3 class="reveal-text">Adnan</h3>
@@ -175,7 +182,7 @@
                     </article>
                     <article class="about-team-card">
                         <figure class="about-team-portrait">
-                            <img src="team_profiles/vegimi_profile.png" alt="Portrait of Vegim">
+                            <img loading="lazy" decoding="async" src="team_profiles/webp-output/vegimi_profile.webp" alt="Portrait of Vegim">
                         </figure>
                         <div>
                             <h3 class="reveal-text">Vegim</h3>
@@ -188,7 +195,7 @@
                     </div>
                     <article class="about-team-card">
                         <figure class="about-team-portrait">
-                            <img src="team_profiles/vali_profile.png" alt="Portrait of Valdrin">
+                            <img loading="lazy" decoding="async" src="team_profiles/webp-output/vali_profile.webp" alt="Portrait of Valdrin">
                         </figure>
                         <div>
                             <h3 class="reveal-text">Valdrin</h3>
@@ -201,11 +208,11 @@
                     </div>
                     <article class="about-team-card">
                         <figure class="about-team-portrait">
-                            <img src="team_profiles/besi_profile.png" alt="Portrait of Besfort">
+                            <img loading="lazy" decoding="async" src="team_profiles/webp-output/besi_profile.webp" alt="Portrait of Besfort">
                         </figure>
                         <div>
                             <h3 class="reveal-text">Besfort</h3>
-                            <p class="reveal-text">Specialict</p>
+                            <p class="reveal-text">Specialist</p>
                             <span aria-hidden="true"></span>
                         </div>
                     </article>
@@ -214,7 +221,7 @@
                     </div>
                     <article class="about-team-card">
                         <figure class="about-team-portrait">
-                            <img src="team_profiles/albani_profile_img.png" alt="Portrait of Alban">
+                            <img loading="lazy" decoding="async" src="team_profiles/webp-output/albani_profile_img.webp" alt="Portrait of Alban">
                         </figure>
                         <div>
                             <h3 class="reveal-text">Alban</h3>
@@ -224,7 +231,7 @@
                     </article>
                     <article class="about-team-card">
                         <figure class="about-team-portrait">
-                            <img src="team_profiles/ela_profile.png" alt="Portrait of Anduela">
+                            <img loading="lazy" decoding="async" src="team_profiles/webp-output/ela_profile.webp" alt="Portrait of Anduela">
                         </figure>
                         <div>
                             <h3 class="reveal-text">Anduela</h3>
@@ -234,7 +241,7 @@
                     </article>
                     <article class="about-team-card">
                         <figure class="about-team-portrait">
-                            <img src="team_profiles/ola_profile.png" alt="Portrait of Artiola">
+                            <img loading="lazy" decoding="async" src="team_profiles/webp-output/ola_profile.webp" alt="Portrait of Artiola">
                         </figure>
                         <div>
                             <h3 class="reveal-text">Artiola</h3>
@@ -405,10 +412,13 @@
         </footer>
     </main>
 
+    </div>
+    </div>
     <script src="https://unpkg.com/split-type"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+    <script src="https://unpkg.com/@barba/core"></script>
     <script src="script.js"></script>
 </body>
 </html>

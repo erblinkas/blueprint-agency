@@ -1,7 +1,14 @@
 gsap.registerPlugin(ScrollTrigger);
 
+if (window.Flip) {
+    gsap.registerPlugin(Flip);
+}
+
+const isInsideBlueprintFrame = window.self !== window.top;
 let viewportRefreshTimer = null;
 let lenis = null;
+let barbaViewportPrefetchStarted = false;
+let barbaHoverPrefetchStarted = false;
 
 if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
@@ -9,7 +16,16 @@ if ("scrollRestoration" in history) {
 
 ScrollTrigger.clearScrollMemory("manual");
 
+function isWebDevCardHashLocation() {
+    const pageName = window.location.pathname.split("/").pop().toLowerCase();
+    const isHomePage = pageName === "" || pageName === "index.html";
+
+    return isHomePage && window.location.hash === "#webdev-card";
+}
+
 function resetPageScroll() {
+    if (isWebDevCardHashLocation()) return;
+
     if (lenis) {
         lenis.scrollTo(0, { immediate: true, force: true });
     }
@@ -166,22 +182,88 @@ function scheduleViewportDrivenLayoutRefresh() {
     viewportRefreshTimer = window.setTimeout(refreshViewportDrivenLayout, 120);
 }
 
+function setBlueprintFrameRuntimeActive(isActive) {
+    if (!isInsideBlueprintFrame) return;
+
+    window.__blueprintFrameActive = isActive;
+
+    if (isActive) {
+        gsap.ticker.wake();
+        ScrollTrigger.getAll().forEach((trigger) => trigger.enable(false));
+
+        if (lenis) {
+            lenis.resize();
+            lenis.start();
+        }
+
+        requestAnimationFrame(() => {
+            ScrollTrigger.refresh();
+            ScrollTrigger.update();
+            syncScrollbarIndicator();
+        });
+
+        return;
+    }
+
+    if (lenis) {
+        lenis.stop();
+    }
+
+    ScrollTrigger.getAll().forEach((trigger) => trigger.disable(false));
+    gsap.ticker.sleep();
+}
+
+window.__blueprintSetFrameActive = setBlueprintFrameRuntimeActive;
+
+function setBlueprintShellRuntimeActive(isActive) {
+    if (isInsideBlueprintFrame) return;
+
+    if (isActive) {
+        gsap.ticker.wake();
+        ScrollTrigger.getAll().forEach((trigger) => trigger.enable(false));
+
+        if (!document.documentElement.classList.contains("is-frame-page-active") && lenis) {
+            lenis.start();
+        }
+
+        return;
+    }
+
+    if (lenis) {
+        lenis.stop();
+    }
+
+    ScrollTrigger.getAll().forEach((trigger) => trigger.disable(false));
+    gsap.ticker.sleep();
+}
+
 let pageIsReady = false;
 const currentPageName = window.location.pathname.split("/").pop().toLowerCase();
 const isIndexPage = currentPageName === "" || currentPageName === "index.html";
-const shouldLandOnWebDevCard = isIndexPage && window.location.hash === "#webdev-card";
 const linkLoaderStorageKey = "blueprintUseLinkLoader";
 const serviceDirectNavigationStorageKey = "blueprintServiceDirectNavigation";
+const webDevReverseReturnStorageKey = "blueprintWebDevReverseReturn";
+let shouldLandOnWebDevCard = isIndexPage && window.location.hash === "#webdev-card";
 let shouldUseLinkLoader = false;
 let shouldSkipIncomingLoader = false;
+let shouldPlayWebDevReverseReturn = false;
+let webDevReverseReturnStarted = false;
 
 try {
     shouldUseLinkLoader = sessionStorage.getItem(linkLoaderStorageKey) === "true";
     shouldSkipIncomingLoader = sessionStorage.getItem(serviceDirectNavigationStorageKey) === "true";
+    shouldPlayWebDevReverseReturn = isIndexPage && window.location.hash === "#webdev-card" && sessionStorage.getItem(webDevReverseReturnStorageKey) === "true";
     sessionStorage.removeItem(linkLoaderStorageKey);
     sessionStorage.removeItem(serviceDirectNavigationStorageKey);
+    sessionStorage.removeItem(webDevReverseReturnStorageKey);
 } catch (error) {
     shouldUseLinkLoader = false;
+    shouldSkipIncomingLoader = false;
+    shouldPlayWebDevReverseReturn = false;
+}
+
+if (isInsideBlueprintFrame) {
+    shouldUseLinkLoader = true;
     shouldSkipIncomingLoader = false;
 }
 
@@ -206,6 +288,13 @@ function setLinkLoaderFlag() {
 function navigateWithLinkLoader(url) {
     const loader = document.getElementById('loader');
 
+    setBlueprintShellRuntimeActive(true);
+
+    if (isInsideBlueprintFrame) {
+        prefetchBarbaPage(url);
+    } else {
+        getBlueprintPageFrame(url);
+    }
     setLinkLoaderFlag();
     document.documentElement.classList.add("is-link-transition");
     document.documentElement.style.backgroundColor = "#000000";
@@ -229,7 +318,7 @@ function navigateWithLinkLoader(url) {
 
     gsap.timeline({
         onComplete: () => {
-            window.location.href = url;
+            completeBarbaPageSwap(url);
         }
     })
         .to(".loader", {
@@ -246,24 +335,907 @@ function navigateWithLinkLoader(url) {
         .to({}, { duration: 0.18 });
 }
 
-function navigateDirectlyToService(url) {
+const blueprintPreloadPageList = [
+    "index.html",
+    "projects.html",
+    "approach.html",
+    "about.html",
+    "contact.html",
+    "service-webdev.html",
+    "service-branding.html",
+    "service-marketing.html",
+    "service-architecture.html"
+];
+const blueprintPrefetchedPages = new Set();
+const blueprintPageHtmlCache = new Map();
+const blueprintPagePreloadPromises = new Map();
+const blueprintPreloadedAssets = new Set();
+const blueprintPageFrames = new Map();
+let blueprintAllFramesPreloadStarted = false;
+let blueprintFrameLayer = null;
+let blueprintActiveFrameUrl = null;
+
+function normalizeBlueprintPageUrl(rawUrl) {
+    if (!rawUrl) return null;
+
+    let targetUrl;
+
     try {
-        sessionStorage.setItem(serviceDirectNavigationStorageKey, "true");
+        targetUrl = new URL(rawUrl, window.location.href);
     } catch (error) {
-        // The transition still works when session storage is unavailable.
+        return null;
     }
 
-    window.location.href = url;
+    if (targetUrl.origin !== window.location.origin) return null;
+    if (!/\.html$/i.test(targetUrl.pathname) && targetUrl.pathname !== "/" && targetUrl.pathname !== "") return null;
+
+    targetUrl.hash = "";
+
+    return targetUrl.href;
 }
 
-function playServiceCardExit(clickedBtn, url) {
+function getBarbaInternalPageUrl(rawUrl) {
+    const pageUrl = normalizeBlueprintPageUrl(rawUrl);
+
+    if (!pageUrl) return null;
+
+    const targetUrl = new URL(pageUrl);
+    const currentUrl = new URL(window.location.href);
+    const isSameDocument = targetUrl.pathname === currentUrl.pathname &&
+        targetUrl.search === currentUrl.search;
+
+    if (isSameDocument) return null;
+
+    return pageUrl;
+}
+
+function fetchBlueprintPage(rawUrl) {
+    const url = normalizeBlueprintPageUrl(rawUrl);
+
+    if (!url) return Promise.reject(new Error("Invalid Blueprint page URL"));
+    if (blueprintPageHtmlCache.has(url)) return Promise.resolve(blueprintPageHtmlCache.get(url));
+    if (blueprintPagePreloadPromises.has(url)) return blueprintPagePreloadPromises.get(url);
+
+    const preloadPromise = fetch(url, {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "force-cache",
+        priority: "high"
+    })
+        .then((response) => {
+            if (!response.ok) throw new Error(`Unable to preload ${url}`);
+
+            return response.text();
+        })
+        .then((html) => {
+            blueprintPageHtmlCache.set(url, html);
+            blueprintPrefetchedPages.add(url);
+            warmBlueprintPageAssets(html, url);
+
+            return html;
+        })
+        .catch((error) => {
+            blueprintPagePreloadPromises.delete(url);
+            blueprintPrefetchedPages.delete(url);
+            throw error;
+        });
+
+    blueprintPagePreloadPromises.set(url, preloadPromise);
+
+    return preloadPromise;
+}
+
+function warmBlueprintPageAssets(html, pageUrl) {
+    // Keep page prefetch lightweight. Decoding every destination image up front
+    // was pushing the home page into very high memory usage.
+    if (!html || !pageUrl) return;
+}
+
+function prefetchBarbaPage(rawUrl) {
+    const url = normalizeBlueprintPageUrl(rawUrl);
+
+    if (!url || blueprintPrefetchedPages.has(url)) return Promise.resolve();
+
+    blueprintPrefetchedPages.add(url);
+
+    return fetchBlueprintPage(url).catch(() => {
+        blueprintPrefetchedPages.delete(url);
+    });
+}
+
+function collectBarbaInternalLinks(root = document) {
+    return Array.from(root.querySelectorAll("a[href], button[onclick]"))
+        .map((link) => getBarbaInternalPageUrl(getBarbaTargetFromElement(link)))
+        .filter(Boolean);
+}
+
+function getBarbaTargetFromElement(element) {
+    if (!element) return null;
+
+    if (element.matches && element.matches("a[href]")) {
+        return element.getAttribute("href");
+    }
+
+    const inlineHandler = element.getAttribute && element.getAttribute("onclick");
+    const transitionMatch = inlineHandler && inlineHandler.match(/handlePageTransition\(\s*event\s*,\s*['"]([^'"]+)['"]\s*\)/);
+
+    return transitionMatch ? transitionMatch[1] : null;
+}
+
+function syncBarbaDocumentState(nextHtml) {
+    if (!nextHtml) return;
+
+    const nextDocument = new DOMParser().parseFromString(nextHtml, "text/html");
+    const nextTitle = nextDocument.querySelector("title");
+
+    if (nextTitle) {
+        document.title = nextTitle.textContent;
+    }
+
+    document.body.className = nextDocument.body.className;
+}
+
+function startViewportBarbaPrefetch() {
+    if (!("IntersectionObserver" in window)) return;
+    if (barbaViewportPrefetchStarted) return;
+
+    barbaViewportPrefetchStarted = true;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+
+            const link = entry.target;
+
+            observer.unobserve(link);
+            const targetUrl = getBarbaTargetFromElement(link);
+
+            prefetchBarbaPage(targetUrl);
+        });
+    }, {
+        rootMargin: "360px 0px",
+        threshold: 0.01
+    });
+
+    document.querySelectorAll("a[href], button[onclick]").forEach((link) => {
+        if (getBarbaInternalPageUrl(getBarbaTargetFromElement(link))) {
+            observer.observe(link);
+        }
+    });
+}
+
+function startHoverBarbaPrefetch() {
+    if (barbaHoverPrefetchStarted) return;
+
+    barbaHoverPrefetchStarted = true;
+
+    ["pointerenter", "focusin", "touchstart"].forEach((eventName) => {
+        document.addEventListener(eventName, (event) => {
+            const link = event.target.closest && event.target.closest("a[href], button[onclick]");
+
+            if (!link || link.target || link.hasAttribute("download") || link.dataset.noBarba === "true") return;
+
+            const targetUrl = getBarbaTargetFromElement(link);
+
+            prefetchBarbaPage(targetUrl);
+        }, {
+            capture: true,
+            passive: true
+        });
+    });
+}
+
+function getBlueprintPreloadUrls() {
+    return Array.from(new Set([
+        ...blueprintPreloadPageList.map((page) => normalizeBlueprintPageUrl(page)),
+        ...collectBarbaInternalLinks()
+    ].filter(Boolean)));
+}
+
+function ensureBlueprintFrameLayer() {
+    if (blueprintFrameLayer) return blueprintFrameLayer;
+
+    blueprintFrameLayer = document.createElement("div");
+    blueprintFrameLayer.className = "blueprint-frame-layer";
+    blueprintFrameLayer.setAttribute("aria-hidden", "true");
+    document.body.appendChild(blueprintFrameLayer);
+
+    return blueprintFrameLayer;
+}
+
+function primeBlueprintFrame(frame, url) {
+    let frameWindow;
+    let frameDocument;
+
+    try {
+        frameWindow = frame.contentWindow;
+        frameDocument = frame.contentDocument;
+    } catch (error) {
+        return;
+    }
+
+    if (!frameWindow || !frameDocument || frame.dataset.primed === "true") return;
+
+    frame.dataset.primed = "true";
+
+    frameWindow.__blueprintInsidePreloadedFrame = true;
+    frameWindow.handlePageTransition = function(event, targetUrl) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        const clickedTarget = event && event.currentTarget;
+
+        if (clickedTarget && clickedTarget.closest && clickedTarget.closest(".service-card-web-dev") && isWebDevServiceUrl(targetUrl)) {
+            playWebDevServiceCardImageTransition(clickedTarget, targetUrl);
+            return;
+        }
+
+        window.__blueprintNavigatePreloadedFrame(targetUrl || url);
+    };
+
+    frameDocument.addEventListener("click", (event) => {
+        const panel = event.target.closest && event.target.closest(".service-card-web-dev");
+
+        if (!panel || event.defaultPrevented || event.target.closest("button, a, input, textarea, select")) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        playWebDevServiceCardImageTransition(panel, "service-webdev.html");
+    }, true);
+
+    frameDocument.addEventListener("click", (event) => {
+        const link = event.target.closest && event.target.closest("a[href]");
+
+        if (!link || event.defaultPrevented) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (link.target || link.hasAttribute("download") || link.dataset.noBarba === "true") return;
+
+        const targetUrl = getBarbaInternalPageUrl(link.getAttribute("href"));
+
+        if (!targetUrl) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        window.__blueprintNavigatePreloadedFrame(targetUrl);
+    }, true);
+
+    setBlueprintFrameRuntime(frame, blueprintActiveFrameUrl === url);
+}
+
+function setBlueprintFrameRuntime(frame, isActive) {
+    try {
+        if (frame.contentWindow && typeof frame.contentWindow.__blueprintSetFrameActive === "function") {
+            frame.contentWindow.__blueprintSetFrameActive(isActive);
+        }
+    } catch (error) {}
+}
+
+function getBlueprintPageFrame(rawUrl) {
+    const url = normalizeBlueprintPageUrl(rawUrl);
+
+    if (!url) return null;
+    if (blueprintPageFrames.has(url)) return blueprintPageFrames.get(url);
+
+    const layer = ensureBlueprintFrameLayer();
+    const frame = document.createElement("iframe");
+    const frameState = { frame, ready: false, readyPromise: null };
+
+    frame.className = "blueprint-page-frame";
+    frame.dataset.blueprintFrameUrl = url;
+    frame.loading = "eager";
+    frame.setAttribute("title", `Blueprint page ${new URL(url).pathname.split("/").pop() || "home"}`);
+
+    frameState.readyPromise = new Promise((resolve, reject) => {
+        let didResolve = false;
+        let readyCheckTimer = null;
+
+        const resolveFrameReady = () => {
+            if (didResolve) return;
+
+            didResolve = true;
+            window.clearInterval(readyCheckTimer);
+
+            window.setTimeout(() => {
+                primeBlueprintFrame(frame, url);
+                frameState.ready = true;
+                setBlueprintFrameRuntime(frame, blueprintActiveFrameUrl === url);
+                resolve(frameState);
+            }, 950);
+        };
+
+        readyCheckTimer = window.setInterval(() => {
+            try {
+                const frameDocument = frame.contentDocument;
+
+                if (frameDocument && frameDocument.readyState !== "loading") {
+                    resolveFrameReady();
+                }
+            } catch (error) {}
+        }, 50);
+
+        frame.addEventListener("load", resolveFrameReady, { once: true });
+
+        frame.addEventListener("error", () => {
+            window.clearInterval(readyCheckTimer);
+            reject(new Error(`Unable to preload frame ${url}`));
+        }, { once: true });
+    });
+
+    blueprintPageFrames.set(url, frameState);
+    layer.appendChild(frame);
+    frame.src = url;
+
+    return frameState;
+}
+
+function preloadBlueprintPageFrames() {
+    if (blueprintAllFramesPreloadStarted) return;
+
+    blueprintAllFramesPreloadStarted = true;
+    getBlueprintPreloadUrls().forEach((url, index) => {
+        window.setTimeout(() => {
+            getBlueprintPageFrame(url);
+        }, index * 360);
+    });
+}
+
+function scheduleBlueprintFramePreload() {
+    // Intentionally disabled: preloading live iframes duplicates full pages,
+    // scripts, animations, and decoded images. Frames are created on demand.
+}
+
+function syncBlueprintFrameTitle(frame) {
+    try {
+        const frameTitle = frame.contentDocument && frame.contentDocument.title;
+
+        if (frameTitle) {
+            document.title = frameTitle;
+        }
+    } catch (error) {}
+}
+
+function suppressBlueprintFrameLoader(frame) {
+    try {
+        const frameDocument = frame.contentDocument;
+        const frameWindow = frame.contentWindow;
+        const frameLoader = frameDocument && frameDocument.getElementById("loader");
+
+        if (frameLoader) {
+            frameLoader.style.display = "none";
+        }
+
+        if (frameDocument) {
+            frameDocument.documentElement.classList.remove("is-link-transition");
+            frameDocument.documentElement.classList.remove("is-service-direct-transition");
+            frameDocument.documentElement.style.backgroundColor = "";
+            frameDocument.body.style.overflow = "";
+        }
+
+        if (frameWindow && frameWindow.gsap) {
+            frameWindow.gsap.killTweensOf(".loader, .loader-logo .char, .loader-progress, .loader-progress-bar");
+        }
+    } catch (error) {}
+}
+
+function showPreloadedBlueprintFrame(rawUrl, options = {}) {
+    const url = normalizeBlueprintPageUrl(rawUrl);
+    const frameState = getBlueprintPageFrame(url);
+
+    if (!url || !frameState) return Promise.reject(new Error("Invalid frame page URL"));
+
+    return frameState.readyPromise.then(({ frame }) => {
+        const layer = ensureBlueprintFrameLayer();
+
+        if (options.skipLoaderExit) {
+            suppressBlueprintFrameLoader(frame);
+        }
+
+        Array.from(layer.children).forEach((child) => {
+            const isActiveFrame = child === frame;
+
+            child.classList.toggle("is-active", isActiveFrame);
+            setBlueprintFrameRuntime(child, isActiveFrame);
+        });
+
+        layer.classList.add("is-active");
+        layer.setAttribute("aria-hidden", "false");
+        document.documentElement.classList.add("is-frame-page-active");
+        document.body.style.overflow = "hidden";
+        blueprintActiveFrameUrl = url;
+
+        if (lenis) {
+            lenis.stop();
+        }
+
+        if (options.updateHistory !== false && window.location.href !== url) {
+            window.history.pushState({ blueprintFrameUrl: url }, "", url);
+        }
+
+        syncBlueprintFrameTitle(frame);
+        primeBlueprintFrame(frame, url);
+
+        try {
+            frame.contentWindow.scrollTo(0, 0);
+            frame.contentWindow.focus();
+        } catch (error) {}
+
+        if (options.skipLoaderExit) {
+            document.documentElement.classList.remove("is-link-transition");
+            document.documentElement.style.backgroundColor = "";
+            setBlueprintShellRuntimeActive(false);
+            return Promise.resolve();
+        }
+
+        return animateBarbaLoaderOut().then(() => {
+            setBlueprintShellRuntimeActive(false);
+        });
+    });
+}
+
+window.__blueprintNavigatePreloadedFrame = function(rawUrl) {
+    navigateWithLinkLoader(rawUrl);
+};
+
+window.addEventListener("popstate", () => {
+    const url = normalizeBlueprintPageUrl(window.location.href);
+
+    if (!url || (!blueprintActiveFrameUrl && !document.documentElement.classList.contains("is-frame-page-active"))) {
+        return;
+    }
+
+    document.documentElement.classList.add("is-link-transition");
+    document.documentElement.style.backgroundColor = "#000000";
+    document.body.style.overflow = "hidden";
+
+    showPreloadedBlueprintFrame(url, { updateHistory: false }).catch(() => {
+        window.location.href = url;
+    });
+});
+
+function completeBarbaPageSwap(url) {
+    showPreloadedBlueprintFrame(url).catch(() => {
+        window.location.href = url;
+    });
+}
+
+function animateBarbaLoaderOut() {
+    const loader = document.getElementById("loader");
+
+    if (!loader || !window.gsap) {
+        document.documentElement.classList.remove("is-link-transition");
+        if (!document.documentElement.classList.contains("is-frame-page-active")) {
+            document.body.style.overflow = "";
+        }
+        return Promise.resolve();
+    }
+
+    loader.classList.add("is-link-loader");
+    loader.style.display = "flex";
+    gsap.killTweensOf(".loader, .loader-logo .char, .loader-progress, .loader-progress-bar");
+    gsap.set(".loader-logo .char", { y: 0 });
+    gsap.set(".loader-progress, .loader-progress-bar", { opacity: 0 });
+
+    return new Promise((resolve) => {
+        gsap.to(".loader", {
+            yPercent: -100,
+            duration: 0.82,
+            ease: "expo.inOut",
+            onComplete: () => {
+                loader.style.display = "none";
+                document.documentElement.classList.remove("is-link-transition");
+                document.documentElement.style.backgroundColor = "";
+                if (!document.documentElement.classList.contains("is-frame-page-active")) {
+                    document.body.style.overflow = "";
+                }
+                resolve();
+            }
+        });
+    });
+}
+
+function refreshBarbaPage(nextContainer) {
+    if (!nextContainer) return;
+
+    splitBlueprintText(nextContainer);
+    initRollingLinkHovers();
+    initProjectPreviewImages();
+    initStandaloneProjectCursorPreview();
+    initPremiumAboutPage();
+    startStandalonePageAnimation();
+}
+
+function initBlueprintBarbaOptimizer() {
+    if (!window.barba || window.__blueprintBarbaReady) return;
+
+    const barbaPrefetchPlugin = window.barbaPrefetch && (window.barbaPrefetch.default || window.barbaPrefetch);
+
+    if (barbaPrefetchPlugin && typeof window.barba.use === "function") {
+        window.barba.use(barbaPrefetchPlugin);
+    }
+
+    window.barba.hooks.beforeLeave(() => {
+        if (lenis) {
+            lenis.stop();
+        }
+    });
+
+    window.barba.hooks.beforeEnter(({ next }) => {
+        syncBarbaDocumentState(next && next.html);
+        resetPageScroll();
+    });
+
+    window.barba.hooks.afterEnter(() => {
+        requestAnimationFrame(() => {
+            if (lenis) {
+                lenis.resize();
+                lenis.scrollTo(0, { immediate: true, force: true });
+                lenis.start();
+            }
+
+            syncScrollbarIndicator();
+            startViewportBarbaPrefetch();
+        });
+    });
+
+    try {
+        window.barba.init({
+            cacheIgnore: false,
+            cacheFirstPage: true,
+            prefetchIgnore: false,
+            preventRunning: true,
+            timeout: 8000,
+            prevent: () => true,
+            transitions: [{
+                name: "blueprint-loader-covered-swap",
+                sync: true,
+                beforeEnter({ next }) {
+                    refreshBarbaPage(next && next.container);
+                },
+                afterEnter() {
+                    return animateBarbaLoaderOut();
+                }
+            }]
+        });
+    } catch (error) {
+        return;
+    }
+
+    window.__blueprintBarbaReady = true;
+    document.documentElement.classList.add("has-barba-transitions");
+
+    startHoverBarbaPrefetch();
+    startViewportBarbaPrefetch();
+}
+
+initBlueprintBarbaOptimizer();
+
+if (!isInsideBlueprintFrame) {
+    scheduleBlueprintFramePreload();
+
+    document.addEventListener("click", (event) => {
+        const link = event.target.closest && event.target.closest("a[href]");
+
+        if (!link || event.defaultPrevented) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (link.target || link.hasAttribute("download") || link.dataset.noBarba === "true") return;
+
+        const targetUrl = getBarbaInternalPageUrl(link.getAttribute("href"));
+
+        if (!targetUrl) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        navigateWithLinkLoader(targetUrl);
+    }, true);
+}
+
+function navigateDirectlyToService(url, options = {}) {
+    return showPreloadedBlueprintFrame(url, options).catch(() => {
+        window.location.href = url;
+    });
+}
+
+function isWebDevServiceUrl(url) {
+    const targetUrl = normalizeBlueprintPageUrl(url);
+
+    return Boolean(targetUrl && targetUrl.endsWith("/service-webdev.html"));
+}
+
+function getServiceCardTransitionOptions(url) {
+    return {
+        skipLoaderExit: isWebDevServiceUrl(url)
+    };
+}
+
+let webDevServiceImageTransitionRunning = false;
+
+function getWebDevHeroMediaTargetRect(url) {
+    const targetUrl = normalizeBlueprintPageUrl(url);
+    const frameState = targetUrl ? blueprintPageFrames.get(targetUrl) : null;
+    const frame = frameState && frameState.frame;
+
+    try {
+        const media = frame && frame.contentDocument && frame.contentDocument.querySelector(".webdev-hero-media");
+        const mediaRect = media && media.getBoundingClientRect();
+
+        if (mediaRect && mediaRect.width > 0 && mediaRect.height > 0) {
+            const frameRect = frame.getBoundingClientRect();
+
+            return {
+                left: frameRect.left + mediaRect.left,
+                top: frameRect.top + mediaRect.top,
+                width: mediaRect.width,
+                height: mediaRect.height
+            };
+        }
+    } catch (error) {}
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const isMobile = viewportWidth <= 760;
+    const width = isMobile
+        ? Math.min(viewportWidth * 0.72, 368)
+        : gsap.utils.clamp(280, 448, viewportWidth * 0.35);
+    const height = width * 9 / 16;
+    const yShift = isMobile ? 0.58 : 0.47;
+
+    return {
+        left: (viewportWidth - width) / 2,
+        top: (viewportHeight / 2) - (height * yShift),
+        width,
+        height
+    };
+}
+
+function createWebDevTransitionImage(image) {
+    const rect = image.getBoundingClientRect();
+    const transitionImage = image.cloneNode(true);
+
+    transitionImage.classList.add("webdev-service-transition-image");
+    document.body.appendChild(transitionImage);
+    gsap.set(transitionImage, {
+        position: "fixed",
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        margin: 0,
+        zIndex: 13000,
+        objectFit: "cover",
+        objectPosition: "center",
+        pointerEvents: "none",
+        transformOrigin: "center center",
+        willChange: "transform,width,height,left,top"
+    });
+
+    return transitionImage;
+}
+
+function animateWebDevImageToFullscreen(transitionImage) {
+    const supportsFlip = window.Flip && typeof Flip.getState === "function" && typeof Flip.from === "function";
+
+    if (!supportsFlip) {
+        return gsap.to(transitionImage, {
+            left: 0,
+            top: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            duration: 1,
+            ease: "power3.inOut"
+        });
+    }
+
+    const imageState = Flip.getState(transitionImage);
+
+    gsap.set(transitionImage, {
+        left: 0,
+        top: 0,
+        width: window.innerWidth,
+        height: window.innerHeight
+    });
+
+    return Flip.from(imageState, {
+        duration: 1,
+        ease: "power3.inOut",
+        absolute: true,
+        scale: true
+    });
+}
+
+function setWebDevHeroMediaHidden(url, isHidden) {
+    const targetUrl = normalizeBlueprintPageUrl(url);
+    const frameState = targetUrl ? blueprintPageFrames.get(targetUrl) : null;
+    const frame = frameState && frameState.frame;
+
+    try {
+        const media = frame && frame.contentDocument && frame.contentDocument.querySelector(".webdev-hero-media");
+
+        if (media) {
+            media.style.visibility = isHidden ? "hidden" : "";
+        }
+    } catch (error) {}
+}
+
+function getWebDevReverseTransitionImage(image) {
+    const bootImage = document.querySelector(".webdev-reverse-boot-image");
+
+    if (bootImage) {
+        gsap.set(bootImage, {
+            display: "block",
+            position: "fixed",
+            left: 0,
+            top: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            margin: 0,
+            zIndex: 13000,
+            objectFit: "cover",
+            objectPosition: "center",
+            pointerEvents: "none",
+            transformOrigin: "center center",
+            willChange: "transform,width,height,left,top,opacity",
+            autoAlpha: 1
+        });
+
+        return bootImage;
+    }
+
+    return createWebDevTransitionImage(image);
+}
+
+function playWebDevServiceCardImageTransition(clickedBtn, url) {
+    if (webDevServiceImageTransitionRunning) return;
+
+    webDevServiceImageTransitionRunning = true;
+    const frameState = getBlueprintPageFrame(url);
     const panel = clickedBtn.closest(".panel");
     const content = panel ? panel.querySelector(".reveal-content") : null;
     const image = panel ? panel.querySelector(".card-img-unified") : null;
     const info = panel ? panel.querySelector(".card-info") : null;
 
     if (!panel || !content || !image || !info) {
-        navigateDirectlyToService(url);
+        webDevServiceImageTransitionRunning = false;
+        navigateDirectlyToService(url, getServiceCardTransitionOptions(url));
+        return;
+    }
+
+    const panelRect = panel.getBoundingClientRect();
+    const computedPanelStyle = window.getComputedStyle(panel);
+    const transitionImage = createWebDevTransitionImage(image);
+
+    document.body.style.overflow = "hidden";
+    panel.classList.add("is-service-transitioning");
+
+    if (lenis) {
+        lenis.stop();
+    }
+
+    gsap.killTweensOf([panel, content, info, info.children, image, transitionImage, clickedBtn]);
+    gsap.set(transitionImage, { autoAlpha: 0 });
+    gsap.set(panel, {
+        position: "fixed",
+        left: panelRect.left,
+        top: panelRect.top,
+        width: panelRect.width,
+        height: panelRect.height,
+        x: 0,
+        y: 0,
+        xPercent: 0,
+        yPercent: 0,
+        margin: 0,
+        zIndex: 12990,
+        borderTopLeftRadius: computedPanelStyle.borderTopLeftRadius,
+        borderTopRightRadius: computedPanelStyle.borderTopRightRadius,
+        borderBottomLeftRadius: computedPanelStyle.borderBottomLeftRadius,
+        borderBottomRightRadius: computedPanelStyle.borderBottomRightRadius
+    });
+
+    const transitionTl = gsap.timeline({
+        defaults: { ease: "power3.inOut" },
+        onComplete: () => {
+            navigateDirectlyToService(url, getServiceCardTransitionOptions(url))
+                .then(() => {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            gsap.ticker.wake();
+                            setWebDevHeroMediaHidden(url, true);
+
+                            // Phase 4: after the destination page is visible, morph into its hero media frame.
+                            gsap.to(transitionImage, {
+                                left: () => getWebDevHeroMediaTargetRect(url).left,
+                                top: () => getWebDevHeroMediaTargetRect(url).top,
+                                width: () => getWebDevHeroMediaTargetRect(url).width,
+                                height: () => getWebDevHeroMediaTargetRect(url).height,
+                                duration: 0.95,
+                                ease: "power3.inOut",
+                                onComplete: () => {
+                                    setWebDevHeroMediaHidden(url, false);
+                                    transitionImage.remove();
+                                    webDevServiceImageTransitionRunning = false;
+                                }
+                            });
+                        });
+                    });
+                })
+                .catch(() => {
+                    transitionImage.remove();
+                    webDevServiceImageTransitionRunning = false;
+                });
+        },
+        onInterrupt: () => {
+            transitionImage.remove();
+            setWebDevHeroMediaHidden(url, false);
+            gsap.set(image, { autoAlpha: 1 });
+            gsap.set(panel, { clearProps: "position,left,top,width,height,x,y,xPercent,yPercent,margin,zIndex,borderRadius,autoAlpha" });
+            webDevServiceImageTransitionRunning = false;
+        }
+    });
+
+    // Phase 1: pin the whole card and move it into the viewport so it covers the view.
+    transitionTl
+        .to(panel, {
+            left: 0,
+            top: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            borderBottomLeftRadius: 0,
+            borderBottomRightRadius: 0,
+            duration: 0.72
+        }, 0);
+
+    // Phase 2: slide the lower content down, turning the card into a full image stage.
+    transitionTl
+        .to(info.children, {
+            y: 42,
+            autoAlpha: 0,
+            stagger: 0.035,
+            duration: 0.42,
+            ease: "power3.in"
+        }, 0.58)
+        .to(info, {
+            yPercent: 112,
+            duration: 0.72
+        }, 0.64)
+        .to(content, {
+            gridTemplateRows: "100% 0%",
+            duration: 0.78
+        }, 0.66);
+
+    // Phase 3: clone the now-fullscreen image, hide the card, then morph into the Web Dev hero media frame.
+    transitionTl.add(() => {
+        const imageRect = image.getBoundingClientRect();
+        gsap.set(transitionImage, {
+            left: imageRect.left,
+            top: imageRect.top,
+            width: imageRect.width,
+            height: imageRect.height,
+            autoAlpha: 1
+        });
+        gsap.set(image, { autoAlpha: 0 });
+        gsap.set(panel, { autoAlpha: 0 });
+    }, 1.48);
+
+    if (frameState && frameState.readyPromise) {
+        frameState.readyPromise.catch(() => {});
+    }
+}
+
+function playServiceCardExit(clickedBtn, url) {
+    getBlueprintPageFrame(url);
+
+    const panel = clickedBtn.closest(".panel");
+    const content = panel ? panel.querySelector(".reveal-content") : null;
+    const image = panel ? panel.querySelector(".card-img-unified") : null;
+    const info = panel ? panel.querySelector(".card-info") : null;
+
+    if (!panel || !content || !image || !info) {
+        navigateDirectlyToService(url, getServiceCardTransitionOptions(url));
         return;
     }
 
@@ -296,7 +1268,7 @@ function playServiceCardExit(clickedBtn, url) {
 
     gsap.timeline({
         defaults: { ease: "expo.inOut" },
-        onComplete: () => navigateDirectlyToService(url)
+        onComplete: () => navigateDirectlyToService(url, getServiceCardTransitionOptions(url))
     })
         .to(panel, {
             left: 0,
@@ -352,6 +1324,11 @@ window.handlePageTransition = function(e, url) {
     const clickedBtn = e.currentTarget;
     let siblingsToHide = [];
 
+    if (isIndexPage && clickedBtn.closest(".service-card-web-dev") && isWebDevServiceUrl(url)) {
+        playWebDevServiceCardImageTransition(clickedBtn, url);
+        return;
+    }
+
     if (isIndexPage && (clickedBtn.classList.contains("icon-btn") || clickedBtn.classList.contains("card-image-button")) && clickedBtn.closest(".panel")) {
         playServiceCardExit(clickedBtn, url);
         return;
@@ -381,128 +1358,93 @@ window.handlePageTransition = function(e, url) {
     }
 };
 
-function initCardImageCursor() {
-    const imageButtons = gsap.utils.toArray(".card-image-button");
+if (isIndexPage) {
+    document.addEventListener("click", (event) => {
+        const panel = event.target.closest(".service-card-web-dev");
 
-    if (!imageButtons.length || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+        if (!panel || event.defaultPrevented || event.target.closest("button, a, input, textarea, select")) {
+            return;
+        }
 
-    const cursor = document.createElement("div");
-    cursor.className = "card-image-cursor";
-    cursor.setAttribute("aria-hidden", "true");
-    cursor.innerHTML = `
-        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 0C6.729 0 0 6.729 0 15s6.729 15 15 15 15 -6.729 15 -15S23.271 0 15 0m0 28.89C7.341 28.89 1.11 22.659 1.11 15S7.341 1.11 15 1.11 28.89 7.341 28.89 15 22.659 28.89 15 28.89" />
-            <path d="M12.144 9.444v1.11H18.66L9.393 19.821a0.555 0.555 0 1 0 0.786 0.786L19.443 11.34v6.516h1.11V9.444z" />
-        </svg>
-    `;
-    document.body.appendChild(cursor);
-
-    gsap.set(cursor, {
-        xPercent: -50,
-        yPercent: -50,
-        scale: 0.78
-    });
-
-    const moveX = gsap.quickTo(cursor, "x", { duration: 0.22, ease: "power3.out" });
-    const moveY = gsap.quickTo(cursor, "y", { duration: 0.22, ease: "power3.out" });
-
-    function moveCursor(event) {
-        moveX(event.clientX);
-        moveY(event.clientY);
-    }
-
-    imageButtons.forEach((button) => {
-        button.addEventListener("pointerenter", (event) => {
-            moveCursor(event);
-            gsap.to(cursor, {
-                autoAlpha: 1,
-                scale: 1,
-                duration: 0.28,
-                ease: "back.out(1.7)",
-                overwrite: true
-            });
-        });
-        button.addEventListener("pointermove", moveCursor);
-        button.addEventListener("pointerleave", () => {
-            gsap.to(cursor, {
-                autoAlpha: 0,
-                scale: 0.78,
-                duration: 0.2,
-                ease: "power2.out",
-                overwrite: true
-            });
-        });
+        event.preventDefault();
+        playWebDevServiceCardImageTransition(panel, "service-webdev.html");
     });
 }
 
-initCardImageCursor();
-
 // 1. SPLIT TYPE
-const splitTypes = document.querySelectorAll('.reveal-text, .bottom-logo, .loader-logo, .logo-button, .menu-overlay-blueprint');
-splitTypes.forEach((textElement) => {
-    const usesLineMask =
-        textElement.classList.contains('hero-description') ||
-        textElement.classList.contains('card-desc') ||
-        textElement.classList.contains('masking-overlay-copy') ||
-        textElement.classList.contains('masking-overlay-description') ||
-        textElement.classList.contains('masking-overlay-about-copy') ||
-        textElement.classList.contains('about-section-statement') ||
-        textElement.classList.contains('about-section-label') ||
-        textElement.classList.contains('about-section-body') ||
-        textElement.classList.contains('about-section-fact') ||
-        textElement.classList.contains('about-section-link') ||
-        textElement.classList.contains('contact-section-eyebrow') ||
-        textElement.classList.contains('contact-section-statement') ||
-        textElement.classList.contains('contact-section-label') ||
-        textElement.classList.contains('contact-section-link') ||
-        textElement.classList.contains('contact-section-button') ||
-        textElement.classList.contains('project-category-title') ||
-        textElement.classList.contains('project-list-link') ||
-        textElement.classList.contains('link-page-kicker') ||
-        textElement.classList.contains('link-page-title') ||
-        textElement.classList.contains('link-page-subline') ||
-        textElement.classList.contains('link-page-intro') ||
-        textElement.classList.contains('link-project-service-title') ||
-        textElement.classList.contains('link-project-item') ||
-        textElement.classList.contains('projects-bridge-copy') ||
-        textElement.classList.contains('site-footer-label') ||
-        textElement.classList.contains('site-footer-title') ||
-        textElement.classList.contains('site-footer-meta-text') ||
-        textElement.classList.contains('approach-eyebrow') ||
-        textElement.classList.contains('approach-kicker') ||
-        textElement.classList.contains('approach-title') ||
-        textElement.classList.contains('approach-copy') ||
-        textElement.classList.contains('approach-step-title') ||
-        textElement.classList.contains('approach-step-copy') ||
-        textElement.closest('.service-hero') ||
-        textElement.closest('.about-story-page');
+function splitBlueprintText(root = document) {
+    const splitTypes = root.querySelectorAll('.reveal-text, .bottom-logo, .loader-logo, .logo-button, .menu-overlay-blueprint');
 
-    const split = new SplitType(textElement, { types: usesLineMask ? 'lines' : 'lines,words,chars' });
+    splitTypes.forEach((textElement) => {
+        if (textElement.dataset.blueprintSplit === "true") return;
 
-    if (usesLineMask) {
-        const usesRoomyLineMask = Boolean(textElement.closest && textElement.closest(".link-page-hero-approach"));
-        const maskPadTop = usesRoomyLineMask ? '0.32em' : '0.18em';
-        const maskPadBottom = usesRoomyLineMask ? '0.34em' : '0.2em';
+        textElement.dataset.blueprintSplit = "true";
+        const usesLineMask =
+            textElement.classList.contains('hero-description') ||
+            textElement.classList.contains('card-desc') ||
+            textElement.classList.contains('masking-overlay-copy') ||
+            textElement.classList.contains('masking-overlay-description') ||
+            textElement.classList.contains('masking-overlay-about-copy') ||
+            textElement.classList.contains('about-section-statement') ||
+            textElement.classList.contains('about-section-label') ||
+            textElement.classList.contains('about-section-body') ||
+            textElement.classList.contains('about-section-fact') ||
+            textElement.classList.contains('about-section-link') ||
+            textElement.classList.contains('contact-section-eyebrow') ||
+            textElement.classList.contains('contact-section-statement') ||
+            textElement.classList.contains('contact-section-label') ||
+            textElement.classList.contains('contact-section-link') ||
+            textElement.classList.contains('contact-section-button') ||
+            textElement.classList.contains('project-category-title') ||
+            textElement.classList.contains('project-list-link') ||
+            textElement.classList.contains('link-page-kicker') ||
+            textElement.classList.contains('link-page-title') ||
+            textElement.classList.contains('link-page-subline') ||
+            textElement.classList.contains('link-page-intro') ||
+            textElement.classList.contains('link-project-service-title') ||
+            textElement.classList.contains('link-project-item') ||
+            textElement.classList.contains('projects-bridge-copy') ||
+            textElement.classList.contains('site-footer-label') ||
+            textElement.classList.contains('site-footer-title') ||
+            textElement.classList.contains('site-footer-meta-text') ||
+            textElement.classList.contains('approach-eyebrow') ||
+            textElement.classList.contains('approach-kicker') ||
+            textElement.classList.contains('approach-title') ||
+            textElement.classList.contains('approach-copy') ||
+            textElement.classList.contains('approach-step-title') ||
+            textElement.classList.contains('approach-step-copy') ||
+            textElement.closest('.service-hero') ||
+            textElement.closest('.about-story-page');
 
-        split.lines.forEach(line => {
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('line-mask');
-            wrapper.style.transform = 'translate3d(0, 140%, 0)';
-            wrapper.style.display = 'block';
-            wrapper.style.willChange = 'transform';
+        const split = new SplitType(textElement, { types: usesLineMask ? 'lines' : 'lines,words,chars' });
 
-            while (line.firstChild) {
-                wrapper.appendChild(line.firstChild);
-            }
-            line.appendChild(wrapper);
-            line.style.overflow = 'hidden';
-            line.style.paddingTop = maskPadTop;
-            line.style.paddingBottom = maskPadBottom;
-            line.style.marginTop = `-${maskPadTop}`;
-            line.style.marginBottom = `-${maskPadBottom}`;
-        });
-    }
-});
+        if (usesLineMask) {
+            const usesRoomyLineMask = Boolean(textElement.closest && textElement.closest(".link-page-hero-approach"));
+            const maskPadTop = usesRoomyLineMask ? '0.32em' : '0.18em';
+            const maskPadBottom = usesRoomyLineMask ? '0.34em' : '0.2em';
+
+            split.lines.forEach(line => {
+                const wrapper = document.createElement('div');
+                wrapper.classList.add('line-mask');
+                wrapper.style.transform = 'translate3d(0, 140%, 0)';
+                wrapper.style.display = 'block';
+                wrapper.style.willChange = 'transform';
+
+                while (line.firstChild) {
+                    wrapper.appendChild(line.firstChild);
+                }
+                line.appendChild(wrapper);
+                line.style.overflow = 'hidden';
+                line.style.paddingTop = maskPadTop;
+                line.style.paddingBottom = maskPadBottom;
+                line.style.marginTop = `-${maskPadTop}`;
+                line.style.marginBottom = `-${maskPadBottom}`;
+            });
+        }
+    });
+}
+
+splitBlueprintText();
 
 function createHoverChars(text, useRevealChars = false) {
     return Array.from(text).map(char => {
@@ -614,49 +1556,49 @@ function initProjectsShowcaseAnimation() {
         {
             label: "Web development",
             projects: [
-                { name: "Meridian launch system", year: "2026", image: "./web_img/web_1.png" },
-                { name: "Atlas platform rebuild", year: "2025", image: "./web_img/web_2.png" },
-                { name: "Northline commerce flow", year: "2025", image: "./web_img/web_3.png" },
-                { name: "Forma booking portal", year: "2024", image: "./web_img/web_4.png" },
-                { name: "Signal dashboard suite", year: "2024", image: "./web_img/web_5.png" },
-                { name: "Cobalt product site", year: "2023", image: "./web_img/web_6.png" },
-                { name: "Arc web experience", year: "2023", image: "./web_img/web_7.png" }
+                { name: "Meridian launch system", year: "2026", image: "./web_img/webp-output/web_1.webp" },
+                { name: "Atlas platform rebuild", year: "2025", image: "./web_img/webp-output/web_2.webp" },
+                { name: "Northline commerce flow", year: "2025", image: "./web_img/webp-output/web_3.webp" },
+                { name: "Forma booking portal", year: "2024", image: "./web_img/webp-output/web_4.webp" },
+                { name: "Signal dashboard suite", year: "2024", image: "./web_img/webp-output/web_5.webp" },
+                { name: "Cobalt product site", year: "2023", image: "./web_img/webp-output/web_6.webp" },
+                { name: "Arc web experience", year: "2023", image: "./web_img/webp-output/web_7.webp" }
             ]
         },
         {
             label: "Branding",
             projects: [
-                { name: "Northline identity", year: "2026", image: "./branding_img/branding_1.png" },
-                { name: "Forma brand system", year: "2025", image: "./branding_img/branding_2.png" },
-                { name: "Civic mark refresh", year: "2025", image: "./branding_img/branding_3.png" },
-                { name: "Vessel packaging set", year: "2024", image: "./branding_img/branding_4.png" },
-                { name: "Oakroom visual language", year: "2024", image: "./branding_img/branding_5.png" },
-                { name: "Arcade identity kit", year: "2023", image: "./branding_img/branding_6.png" },
-                { name: "Summit launch identity", year: "2023", image: "./branding_img/branding_7.png" }
+                { name: "Northline identity", year: "2026", image: "./branding_img/webp-output/branding_1.webp" },
+                { name: "Forma brand system", year: "2025", image: "./branding_img/webp-output/branding_2.webp" },
+                { name: "Civic mark refresh", year: "2025", image: "./branding_img/webp-output/branding_3.webp" },
+                { name: "Vessel packaging set", year: "2024", image: "./branding_img/webp-output/branding_4.webp" },
+                { name: "Oakroom visual language", year: "2024", image: "./branding_img/webp-output/branding_5.webp" },
+                { name: "Arcade identity kit", year: "2023", image: "./branding_img/webp-output/branding_6.webp" },
+                { name: "Summit launch identity", year: "2023", image: "./branding_img/webp-output/branding_7.webp" }
             ]
         },
         {
             label: "Digital marketing",
             projects: [
-                { name: "Signal campaign rollout", year: "2026", image: "./marketing_img/marketing_1.png" },
-                { name: "Horizon paid media", year: "2025", image: "./marketing_img/marketing_2.png" },
-                { name: "Meridian launch ads", year: "2025", image: "./marketing_img/marketing_3.png" },
-                { name: "Northline content system", year: "2024", image: "./marketing_img/marketing_4.png" },
-                { name: "Atlas growth funnel", year: "2024", image: "./marketing_img/marketing_5.png" },
-                { name: "Forma social direction", year: "2023", image: "./marketing_img/marketing_6.png" },
-                { name: "Cobalt email series", year: "2023", image: "./marketing_img/marketing_7.png" }
+                { name: "Signal campaign rollout", year: "2026", image: "./marketing_img/webp-output/marketing_1.webp" },
+                { name: "Horizon paid media", year: "2025", image: "./marketing_img/webp-output/marketing_2.webp" },
+                { name: "Meridian launch ads", year: "2025", image: "./marketing_img/webp-output/marketing_3.webp" },
+                { name: "Northline content system", year: "2024", image: "./marketing_img/webp-output/marketing_4.webp" },
+                { name: "Atlas growth funnel", year: "2024", image: "./marketing_img/webp-output/marketing_5.webp" },
+                { name: "Forma social direction", year: "2023", image: "./marketing_img/webp-output/marketing_6.webp" },
+                { name: "Cobalt email series", year: "2023", image: "./marketing_img/webp-output/marketing_7.webp" }
             ]
         },
         {
             label: "Architecture",
             projects: [
-                { name: "Monolith architecture visuals", year: "2026", image: "./architecture_img/architecture_1.png" },
-                { name: "Fieldhouse retail concept", year: "2025", image: "./architecture_img/architecture_2.png" },
-                { name: "Stonegate interior study", year: "2025", image: "./architecture_img/architecture_3.png" },
-                { name: "Oakroom spatial package", year: "2024", image: "./architecture_img/architecture_4.png" },
-                { name: "Horizon facade direction", year: "2024", image: "./architecture_img/architecture_5.png" },
-                { name: "Vessel showroom layout", year: "2023", image: "./architecture_img/architecture_6.png" },
-                { name: "Civic wayfinding system", year: "2023", image: "./architecture_img/architecture_7.png" }
+                { name: "Monolith architecture visuals", year: "2026", image: "./architecture_img/webp-output/architecture_1.webp" },
+                { name: "Fieldhouse retail concept", year: "2025", image: "./architecture_img/webp-output/architecture_2.webp" },
+                { name: "Stonegate interior study", year: "2025", image: "./architecture_img/webp-output/architecture_3.webp" },
+                { name: "Oakroom spatial package", year: "2024", image: "./architecture_img/webp-output/architecture_4.webp" },
+                { name: "Horizon facade direction", year: "2024", image: "./architecture_img/webp-output/architecture_5.webp" },
+                { name: "Vessel showroom layout", year: "2023", image: "./architecture_img/webp-output/architecture_6.webp" },
+                { name: "Civic wayfinding system", year: "2023", image: "./architecture_img/webp-output/architecture_7.webp" }
             ]
         }
     ];
@@ -919,11 +1861,6 @@ function initProjectsShowcaseAnimation() {
 
     if (nextButton) {
         nextButton.addEventListener("click", () => changeShowcaseProject(1));
-    }
-
-    const columns = projectsShowcase.querySelectorAll(".projects-showcase-col:not(.projects-showcase-col-main)");
-    if (columns.length >= 2) {
-        // Remove the old column listeners
     }
 
     showcaseCards.forEach((card, index) => {
@@ -1652,7 +2589,7 @@ window.addEventListener("resize", scheduleMenuBlueprintFit, { passive: true });
 // Hide cards above screen initially so they don't show when loader slides up
 gsap.set(".panel:not(.hero-section)", { yPercent: -100 });
 
-window.addEventListener('load', () => {
+function runPageLoadSequence() {
     resetPageScroll();
 
     if (shouldLandOnWebDevCard) {
@@ -1670,6 +2607,7 @@ window.addEventListener('load', () => {
         syncNavState();
         document.documentElement.classList.remove("is-link-transition");
         document.documentElement.classList.remove("is-service-direct-transition");
+        document.documentElement.classList.remove("is-webdev-card-landing");
         document.documentElement.style.backgroundColor = "";
 
         if (loaderElement) {
@@ -1710,6 +2648,7 @@ window.addEventListener('load', () => {
         scrollToWebDevCardHashIfRequested();
         document.documentElement.classList.remove("is-link-transition");
         document.documentElement.classList.remove("is-service-direct-transition");
+        document.documentElement.classList.remove("is-webdev-card-landing");
         document.documentElement.style.backgroundColor = "";
 
         if (loaderElement) {
@@ -1743,6 +2682,7 @@ window.addEventListener('load', () => {
             scrollToWebDevCardHashIfRequested();
             document.documentElement.classList.remove("is-link-transition");
             document.documentElement.classList.remove("is-service-direct-transition");
+            document.documentElement.classList.remove("is-webdev-card-landing");
             document.documentElement.style.backgroundColor = "";
             document.getElementById('loader').style.display = 'none';
         }
@@ -1819,14 +2759,12 @@ window.addEventListener('load', () => {
                 const el = document.querySelector('.highlight-container');
                 if (el) el.classList.add('active');
             }, "-=0.3")
-            /* ONLY ADDED THIS LOGO ANIMATION BELOW */
             .to(".bottom-logo .char", {
                 y: 0,
                 stagger: 0.02,
                 duration: 0.8,
                 ease: "power4.out"
             }, "-=0.6")
-            /* ------------------------------------ */
             .fromTo(".hero-line", {
                 scaleX: 0,
                 transformOrigin: "left"
@@ -1836,12 +2774,23 @@ window.addEventListener('load', () => {
                 ease: "expo.out"
             }, "-=0.6");
     }
-});
+}
+
+if (shouldUseLinkLoader || shouldSkipIncomingLoader) {
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", runPageLoadSequence, { once: true });
+    } else {
+        runPageLoadSequence();
+    }
+} else {
+    window.addEventListener("load", runPageLoadSequence, { once: true });
+}
 
 // 3. MAIN SCROLL LOGIC
 const panels = gsap.utils.toArray(".panel:not(.hero-section)");
 const hero = document.querySelector(".hero-section");
 const phoneBreakpoint = 600;
+const mobileServiceCardQuery = window.matchMedia("(max-width: 767px)");
 const serviceCardRevealTimelines = new Map();
 
 function isPhoneViewport() {
@@ -2238,59 +3187,59 @@ let projectHoverCheckQueued = false;
 const getUnsplashImage = (photoId) => `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=1200&q=80`;
 const projectPreviewImageSets = [
     [
-        "./web_img/web_1.png",
-        "./web_img/web_2.png",
-        "./web_img/web_3.png",
-        "./web_img/web_4.png",
-        "./web_img/web_5.png",
-        "./web_img/web_6.png",
-        "./web_img/web_7.png",
-        "./web_img/web_8.png",
-        "./web_img/web_9.png",
-        "./web_img/web_10.png"
+        "./web_img/webp-output/web_1.webp",
+        "./web_img/webp-output/web_2.webp",
+        "./web_img/webp-output/web_3.webp",
+        "./web_img/webp-output/web_4.webp",
+        "./web_img/webp-output/web_5.webp",
+        "./web_img/webp-output/web_6.webp",
+        "./web_img/webp-output/web_7.webp",
+        "./web_img/webp-output/web_8.webp",
+        "./web_img/webp-output/web_9.webp",
+        "./web_img/webp-output/web_10.webp"
     ],
     [
-        "./branding_img/branding_1.png",
-        "./branding_img/branding_2.png",
-        "./branding_img/branding_3.png",
-        "./branding_img/branding_4.png",
-        "./branding_img/branding_5.png",
-        "./branding_img/branding_6.png",
-        "./branding_img/branding_7.png",
-        "./branding_img/branding_8.png",
-        "./branding_img/branding_9.png",
-        "./branding_img/branding_10.png",
-        "./branding_img/branding_1.png",
-        "./branding_img/branding_2.png"
+        "./branding_img/webp-output/branding_1.webp",
+        "./branding_img/webp-output/branding_2.webp",
+        "./branding_img/webp-output/branding_3.webp",
+        "./branding_img/webp-output/branding_4.webp",
+        "./branding_img/webp-output/branding_5.webp",
+        "./branding_img/webp-output/branding_6.webp",
+        "./branding_img/webp-output/branding_7.webp",
+        "./branding_img/webp-output/branding_8.webp",
+        "./branding_img/webp-output/branding_9.webp",
+        "./branding_img/webp-output/branding_10.webp",
+        "./branding_img/webp-output/branding_1.webp",
+        "./branding_img/webp-output/branding_2.webp"
     ],
     [
-        "./marketing_img/marketing_1.png",
-        "./marketing_img/marketing_2.png",
-        "./marketing_img/marketing_3.png",
-        "./marketing_img/marketing_4.png",
-        "./marketing_img/marketing_5.png",
-        "./marketing_img/marketing_6.png",
-        "./marketing_img/marketing_7.png",
-        "./marketing_img/marketing_8.png",
-        "./marketing_img/marketing_9.png",
-        "./marketing_img/marketing_10.png",
-        "./marketing_img/marketing_1.png",
-        "./marketing_img/marketing_2.png",
-        "./marketing_img/marketing_3.png",
-        "./marketing_img/marketing_4.png",
-        "./marketing_img/marketing_5.png",
-        "./marketing_img/marketing_6.png"
+        "./marketing_img/webp-output/marketing_1.webp",
+        "./marketing_img/webp-output/marketing_2.webp",
+        "./marketing_img/webp-output/marketing_3.webp",
+        "./marketing_img/webp-output/marketing_4.webp",
+        "./marketing_img/webp-output/marketing_5.webp",
+        "./marketing_img/webp-output/marketing_6.webp",
+        "./marketing_img/webp-output/marketing_7.webp",
+        "./marketing_img/webp-output/marketing_8.webp",
+        "./marketing_img/webp-output/marketing_9.webp",
+        "./marketing_img/webp-output/marketing_10.webp",
+        "./marketing_img/webp-output/marketing_1.webp",
+        "./marketing_img/webp-output/marketing_2.webp",
+        "./marketing_img/webp-output/marketing_3.webp",
+        "./marketing_img/webp-output/marketing_4.webp",
+        "./marketing_img/webp-output/marketing_5.webp",
+        "./marketing_img/webp-output/marketing_6.webp"
     ],
     [
-        "./architecture_img/architecture_1.png",
-        "./architecture_img/architecture_2.png",
-        "./architecture_img/architecture_3.png",
-        "./architecture_img/architecture_4.png",
-        "./architecture_img/architecture_5.png",
-        "./architecture_img/architecture_6.png",
-        "./architecture_img/architecture_7.png",
-        "./architecture_img/architecture_8.png",
-        "./architecture_img/architecture_9.png"
+        "./architecture_img/webp-output/architecture_1.webp",
+        "./architecture_img/webp-output/architecture_2.webp",
+        "./architecture_img/webp-output/architecture_3.webp",
+        "./architecture_img/webp-output/architecture_4.webp",
+        "./architecture_img/webp-output/architecture_5.webp",
+        "./architecture_img/webp-output/architecture_6.webp",
+        "./architecture_img/webp-output/architecture_7.webp",
+        "./architecture_img/webp-output/architecture_8.webp",
+        "./architecture_img/webp-output/architecture_9.webp"
     ]
 ];
 const projectPreviewPositions = [
@@ -2602,6 +3551,98 @@ function initStandaloneProjectCursorPreview() {
 
 initStandaloneProjectCursorPreview();
 
+function initServiceImageCursor() {
+    const supportsFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+    if (!supportsFinePointer) return;
+
+    const cursor = document.createElement("div");
+    cursor.className = "service-image-cursor";
+    cursor.setAttribute("aria-hidden", "true");
+    cursor.innerHTML = `
+        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.144 9.444v1.11H18.66L9.393 19.821a0.555 0.555 0 1 0 0.786 0.786L19.443 11.34v6.516h1.11V9.444z" />
+        </svg>
+    `;
+    document.body.appendChild(cursor);
+
+    let activeTarget = null;
+    let targetX = window.innerWidth / 2;
+    let targetY = window.innerHeight / 2;
+    let currentX = targetX;
+    let currentY = targetY;
+    let animationFrame = null;
+
+    function isServiceCardImage(element) {
+        return Boolean(element && element.closest(".panel") && element.matches(".card-img-unified"));
+    }
+
+    function renderCursor() {
+        currentX += (targetX - currentX) * 0.2;
+        currentY += (targetY - currentY) * 0.2;
+
+        cursor.style.setProperty("--cursor-x", `${currentX}px`);
+        cursor.style.setProperty("--cursor-y", `${currentY}px`);
+
+        if (activeTarget) {
+            animationFrame = requestAnimationFrame(renderCursor);
+            return;
+        }
+
+        animationFrame = null;
+    }
+
+    function showCursor(event, target) {
+        activeTarget = target;
+        targetX = event.clientX;
+        targetY = event.clientY;
+        currentX = targetX;
+        currentY = targetY;
+        cursor.style.setProperty("--cursor-x", `${currentX}px`);
+        cursor.style.setProperty("--cursor-y", `${currentY}px`);
+        cursor.classList.add("is-visible");
+
+        if (!animationFrame) {
+            animationFrame = requestAnimationFrame(renderCursor);
+        }
+    }
+
+    function hideCursor() {
+        activeTarget = null;
+        cursor.classList.remove("is-visible");
+    }
+
+    // Delegate pointer events so all current and future service card images share one cursor.
+    document.addEventListener("pointerover", (event) => {
+        const target = event.target.closest && event.target.closest(".card-img-unified");
+
+        if (!isServiceCardImage(target)) return;
+
+        showCursor(event, target);
+    });
+
+    document.addEventListener("pointermove", (event) => {
+        if (!activeTarget) return;
+
+        targetX = event.clientX;
+        targetY = event.clientY;
+    }, { passive: true });
+
+    document.addEventListener("pointerout", (event) => {
+        if (!activeTarget) return;
+
+        const nextTarget = event.relatedTarget;
+
+        if (nextTarget && activeTarget.contains(nextTarget)) return;
+
+        hideCursor();
+    });
+
+    window.addEventListener("blur", hideCursor);
+}
+
+initServiceImageCursor();
+
 // 4. AUTOMATIC NAVBAR SWAP LOGIC
 const navTl = gsap.timeline({ paused: true });
 const navHideTl = gsap.timeline({ paused: true });
@@ -2655,17 +3696,6 @@ let masterTl;
 let navIsRevealed = false;
 const navRevealTime = 1;
 const logoButton = document.querySelector(".logo-button");
-const coloredSurfaceSelector = ".service-card-web-dev, .service-card-branding, .service-card-marketing, .service-card-architecture, .approach-card, .contact-card";
-const lightSurfaceSelector = ".hero-section, .masking-overlay-card, .masking-overlay-card-about";
-
-function setLogoMask(top = 0, right = 0, bottom = 100, left = 0) {
-    if (!logoButton) return;
-
-    logoButton.style.setProperty("--logo-mask-top", `${top}%`);
-    logoButton.style.setProperty("--logo-mask-right", `${right}%`);
-    logoButton.style.setProperty("--logo-mask-bottom", `${bottom}%`);
-    logoButton.style.setProperty("--logo-mask-left", `${left}%`);
-}
 
 function getIntersectionRect(rectA, rectB) {
     const left = Math.max(rectA.left, rectB.left);
@@ -2678,99 +3708,48 @@ function getIntersectionRect(rectA, rectB) {
     return { left, right, top, bottom };
 }
 
-function isTopColoredSurface(surface, intersection) {
-    const probeX = (intersection.left + intersection.right) / 2;
-    const probeY = (intersection.top + intersection.bottom) / 2;
-    const elementsAtProbe = document.elementsFromPoint(probeX, probeY);
-
-    for (const element of elementsAtProbe) {
-        if (!element.closest) continue;
-        if (element.closest(".navbar")) continue;
-        if (element.closest(".menu-overlay.is-open, .menu-overlay.is-closing")) return false;
-        if (element.closest(lightSurfaceSelector)) return false;
-
-        const coloredSurface = element.closest(coloredSurfaceSelector);
-
-        if (coloredSurface) {
-            return coloredSurface === surface;
-        }
-    }
-
-    return false;
-}
-
-function getLogoApproachCoverIntersection(logoRect) {
-    const approachPanel = document.querySelector(".approach-articles-mask");
-
-    if (!approachPanel) return null;
-
-    const panelRect = approachPanel.getBoundingClientRect();
-    const intersection = getIntersectionRect(logoRect, panelRect);
-
-    if (!intersection) return null;
-
-    const probeX = (intersection.left + intersection.right) / 2;
-    const probeY = (intersection.top + intersection.bottom) / 2;
-    const elementsAtProbe = document.elementsFromPoint(probeX, probeY);
-    const panelIsVisible = elementsAtProbe.some(element => {
-        return element.closest && element.closest(".approach-articles-mask") === approachPanel;
-    });
-
-    return panelIsVisible ? intersection : null;
-}
-
 function syncLogoContrast() {
     if (!logoButton) return;
 
     if (document.body.classList.contains("menu-active") || document.body.classList.contains("menu-mask-active")) {
+        logoButton.style.color = "#ffffff";
         return;
     }
 
     const logoRect = logoButton.getBoundingClientRect();
-    const coloredSurfaces = gsap.utils.toArray(coloredSurfaceSelector);
-    let activeIntersection = null;
-    let activeZIndex = -Infinity;
+    const probeX = logoRect.left + (logoRect.width / 2);
+    const probeY = logoRect.top + (logoRect.height / 2);
+    const elementsAtLogo = document.elementsFromPoint(probeX, probeY);
+    let backgroundColor = window.getComputedStyle(document.body).backgroundColor;
 
-    coloredSurfaces.forEach(surface => {
-        const surfaceRect = surface.getBoundingClientRect();
-        const intersection = getIntersectionRect(logoRect, surfaceRect);
+    for (const element of elementsAtLogo) {
+        if (!element.closest || element.closest(".navbar")) continue;
 
-        if (!intersection || !isTopColoredSurface(surface, intersection)) return;
+        const computedColor = window.getComputedStyle(element).backgroundColor;
+        const match = computedColor.match(/rgba?\(([^)]+)\)/);
 
-        const zIndex = parseFloat(window.getComputedStyle(surface).zIndex) || 0;
+        if (!match) continue;
 
-        if (zIndex >= activeZIndex) {
-            activeZIndex = zIndex;
-            activeIntersection = intersection;
+        const colorParts = match[1].split(",").map(value => parseFloat(value.trim()));
+        const alpha = colorParts.length > 3 ? colorParts[3] : 1;
+
+        if (alpha > 0.08) {
+            backgroundColor = computedColor;
+            break;
         }
-    });
+    }
 
-    if (!activeIntersection) {
-        setLogoMask();
+    const match = backgroundColor.match(/rgba?\(([^)]+)\)/);
+
+    if (!match) {
+        logoButton.style.color = "#ffffff";
         return;
     }
 
-    const toPercent = value => gsap.utils.clamp(0, 100, value);
-    let top = toPercent(((activeIntersection.top - logoRect.top) / logoRect.height) * 100);
-    const right = toPercent(((logoRect.right - activeIntersection.right) / logoRect.width) * 100);
-    let bottom = toPercent(((logoRect.bottom - activeIntersection.bottom) / logoRect.height) * 100);
-    const left = toPercent(((activeIntersection.left - logoRect.left) / logoRect.width) * 100);
-    const approachCoverIntersection = getLogoApproachCoverIntersection(logoRect);
+    const [red, green, blue] = match[1].split(",").map(value => parseFloat(value.trim()));
+    const luminance = ((0.2126 * red) + (0.7152 * green) + (0.0722 * blue)) / 255;
 
-    if (approachCoverIntersection) {
-        if (approachCoverIntersection.top <= logoRect.top && approachCoverIntersection.bottom >= logoRect.bottom) {
-            setLogoMask(0, right, 100, left);
-            return;
-        }
-
-        if (approachCoverIntersection.bottom >= logoRect.bottom) {
-            bottom = Math.max(bottom, toPercent(((logoRect.bottom - approachCoverIntersection.top) / logoRect.height) * 100));
-        } else if (approachCoverIntersection.top <= logoRect.top) {
-            top = Math.max(top, toPercent(((approachCoverIntersection.bottom - logoRect.top) / logoRect.height) * 100));
-        }
-    }
-
-    setLogoMask(top, right, bottom, left);
+    logoButton.style.color = luminance > 0.72 ? "#000000" : "#ffffff";
 }
 
 function revealNav() {
@@ -2896,6 +3875,12 @@ panels.forEach((panel, i) => {
         duration: 1,
         onUpdate: function () {
             const progress = this.progress();
+
+            if (mobileServiceCardQuery.matches) {
+                prevProgress = progress;
+                return;
+            }
+
             const scrollingDown = progress > prevProgress;
             const scrollingUp = progress < prevProgress;
 
@@ -2915,6 +3900,165 @@ panels.forEach((panel, i) => {
         }
     }, i);
 });
+
+function initMobileServiceCardRevealObserver() {
+    const serviceCards = panels.slice();
+    let observer = null;
+    let isActive = false;
+
+    function setCardHidden(panel) {
+        const content = panel.querySelector(".reveal-content");
+        const titleChars = panel.querySelectorAll(".card-title .char");
+        const descMasks = panel.querySelectorAll(".card-desc .line-mask");
+        const divider = panel.querySelector(".card-info hr");
+        const iconSvg = panel.querySelector(".icon-btn svg");
+
+        const timeline = serviceCardRevealTimelines.get(panel);
+        if (timeline) {
+            timeline.pause(0);
+        }
+
+        gsap.set(content, { autoAlpha: 0, y: 20 });
+        gsap.set(titleChars, { y: "140%" });
+        gsap.set(descMasks, { y: "140%" });
+        gsap.set(divider, { scaleX: 0, opacity: 0, transformOrigin: "left" });
+        gsap.set(iconSvg, { scale: 0, rotate: -45, opacity: 0 });
+    }
+
+    function activate() {
+        if (isActive) return;
+        isActive = true;
+
+        serviceCards.forEach(setCardHidden);
+
+        if (!("IntersectionObserver" in window)) {
+            serviceCards.forEach(panel => serviceCardRevealTimelines.get(panel)?.progress(1).pause());
+            return;
+        }
+
+        observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const timeline = serviceCardRevealTimelines.get(entry.target);
+                if (!timeline) return;
+
+                if (entry.isIntersecting && entry.intersectionRatio >= 0.24) {
+                    timeline.play();
+                } else if (entry.boundingClientRect.top > 0) {
+                    timeline.reverse();
+                }
+            });
+        }, {
+            threshold: [0, 0.24, 0.5, 0.75],
+            rootMargin: "0px 0px -14% 0px"
+        });
+
+        serviceCards.forEach(panel => observer.observe(panel));
+    }
+
+    function deactivate() {
+        if (!isActive) return;
+        isActive = false;
+
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
+    }
+
+    function sync() {
+        if (mobileServiceCardQuery.matches) {
+            activate();
+        } else {
+            deactivate();
+        }
+    }
+
+    sync();
+
+    if (mobileServiceCardQuery.addEventListener) {
+        mobileServiceCardQuery.addEventListener("change", sync);
+    } else if (mobileServiceCardQuery.addListener) {
+        mobileServiceCardQuery.addListener(sync);
+    }
+}
+
+initMobileServiceCardRevealObserver();
+
+function initMobileServiceCardRadiusSync() {
+    const serviceCards = panels.slice();
+    const scrollContainer = document.querySelector(".scroll-container");
+    let isActive = false;
+    let ticking = false;
+
+    function setRadiusForScrollPosition() {
+        ticking = false;
+
+        if (!mobileServiceCardQuery.matches) return;
+
+        const viewportHeight = getViewportHeight();
+        const flattenStart = viewportHeight;
+        const flattenEnd = viewportHeight * 0.5;
+        const maxRadius = 28;
+
+        serviceCards.forEach((panel) => {
+            const rect = panel.getBoundingClientRect();
+            const progress = gsap.utils.clamp(0, 1, (flattenStart - rect.top) / (flattenStart - flattenEnd));
+            const radius = Math.round((maxRadius * (1 - progress)) * 100) / 100;
+            const peekOpacity = Math.round((1 - progress) * 100) / 100;
+
+            panel.style.setProperty("--mobile-service-card-radius", `${radius}px`);
+            panel.style.setProperty("--mobile-service-card-peek-opacity", `${peekOpacity}`);
+        });
+    }
+
+    function requestSync() {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(setRadiusForScrollPosition);
+    }
+
+    function activate() {
+        if (isActive) return;
+        isActive = true;
+        setRadiusForScrollPosition();
+        window.addEventListener("scroll", requestSync, { passive: true });
+        scrollContainer?.addEventListener("scroll", requestSync, { passive: true });
+        window.addEventListener("resize", requestSync);
+        window.addEventListener("orientationchange", requestSync);
+    }
+
+    function deactivate() {
+        if (!isActive) return;
+        isActive = false;
+        ticking = false;
+        window.removeEventListener("scroll", requestSync);
+        scrollContainer?.removeEventListener("scroll", requestSync);
+        window.removeEventListener("resize", requestSync);
+        window.removeEventListener("orientationchange", requestSync);
+        serviceCards.forEach((panel) => {
+            panel.style.removeProperty("--mobile-service-card-radius");
+            panel.style.removeProperty("--mobile-service-card-peek-opacity");
+        });
+    }
+
+    function sync() {
+        if (mobileServiceCardQuery.matches) {
+            activate();
+        } else {
+            deactivate();
+        }
+    }
+
+    sync();
+
+    if (mobileServiceCardQuery.addEventListener) {
+        mobileServiceCardQuery.addEventListener("change", sync);
+    } else if (mobileServiceCardQuery.addListener) {
+        mobileServiceCardQuery.addListener(sync);
+    }
+}
+
+initMobileServiceCardRadiusSync();
 
 masterTl.fromTo(".masking-overlay-card", {
     y: () => getViewportHeight(),
@@ -3263,8 +4407,129 @@ function prepareNaturalWebCardHashLanding() {
     });
 }
 
-function scrollToWebDevCardHashIfRequested() {
-    if (!shouldLandOnWebDevCard || !masterTl || !masterTl.scrollTrigger) return;
+function playWebDevCardReturnTransition(webPanel) {
+    const content = webPanel ? webPanel.querySelector(".reveal-content") : null;
+    const image = webPanel ? webPanel.querySelector(".card-img-unified") : null;
+    const info = webPanel ? webPanel.querySelector(".card-info") : null;
+    const descMasks = info ? info.querySelectorAll(".card-desc .line-mask") : [];
+    const titleChars = info ? info.querySelectorAll(".card-title .char") : [];
+    const divider = info ? info.querySelector("hr") : null;
+    const iconSvg = info ? info.querySelector(".icon-btn svg") : null;
+
+    if (!webPanel || !content || !image || !info) return;
+
+    const transitionImage = getWebDevReverseTransitionImage(image);
+
+    gsap.killTweensOf([content, image, info, info.children, descMasks, titleChars, divider, iconSvg, transitionImage]);
+    webPanel.classList.add("is-service-transitioning");
+    gsap.set(webPanel, {
+        x: 0,
+        xPercent: 0,
+        y: 0,
+        yPercent: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        borderTopLeftRadius: 0,
+        borderBottomLeftRadius: 0
+    });
+
+    // Start the home page exactly where the forward transition left it: card covers the view, image fills it.
+    gsap.set(content, { gridTemplateRows: "100% 0%" });
+    gsap.set(info, { yPercent: 112, autoAlpha: 1 });
+    gsap.set(info.children, { y: 0, autoAlpha: 1 });
+    gsap.set(descMasks, { y: "140%" });
+    gsap.set(titleChars, { y: "140%" });
+    gsap.set(divider, { scaleX: 0, opacity: 0, transformOrigin: "left" });
+    gsap.set(iconSvg, { scale: 0, rotate: -45, opacity: 0 });
+    gsap.set(image, { autoAlpha: 1 });
+    gsap.set(transitionImage, {
+        left: 0,
+        top: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        autoAlpha: 1
+    });
+
+    document.documentElement.classList.remove("is-webdev-reverse-return");
+    document.documentElement.style.backgroundColor = "";
+    try {
+        window.history.replaceState(window.history.state, document.title, `${window.location.pathname}${window.location.search}`);
+    } catch (error) {}
+
+    const returnTl = gsap.timeline({
+        defaults: { ease: "power3.inOut" },
+        onComplete: () => {
+            transitionImage.remove();
+            applyWebDevCardFullViewScrollPosition();
+            webPanel.classList.remove("is-service-transitioning");
+            webPanel.classList.add("is-webdev-returned");
+            gsap.set(webPanel, {
+                x: 0,
+                xPercent: 0,
+                y: 0,
+                yPercent: 0,
+                width: window.innerWidth,
+                height: window.innerHeight,
+                borderTopLeftRadius: 0,
+                borderBottomLeftRadius: 0
+            });
+            gsap.set(content, { gridTemplateRows: "70% 30%", autoAlpha: 1, y: 0 });
+            gsap.set(image, { autoAlpha: 1 });
+            gsap.set(info, { yPercent: 0, autoAlpha: 1 });
+            gsap.set(info.children, { y: 0, autoAlpha: 1 });
+            gsap.set(descMasks, { y: 0 });
+            gsap.set(titleChars, { y: 0 });
+            gsap.set(divider, { scaleX: 1, opacity: 1, transformOrigin: "left" });
+            gsap.set(iconSvg, { scale: 1, rotate: 0, opacity: 1 });
+        }
+    });
+
+    // Phase 1: remove the fullscreen curtain in one frame after the real card image is ready behind it.
+    returnTl
+        .set(transitionImage, {
+            autoAlpha: 0,
+            onComplete: () => transitionImage.remove()
+        }, 0.24);
+
+    // Phase 2: slide the content back into place, letting the real image shrink with the card layout.
+    returnTl
+        .to(content, {
+            gridTemplateRows: "70% 30%",
+            duration: 0.86
+        }, 0.42)
+        .to(info, {
+            yPercent: 0,
+            duration: 0.78
+        }, 0.48)
+        .to(titleChars, {
+            y: 0,
+            stagger: 0.015,
+            duration: 0.6,
+            ease: "power3.out"
+        }, 0.48)
+        .to(descMasks, {
+            y: 0,
+            stagger: 0.1,
+            duration: 0.6,
+            ease: "power3.out"
+        }, 0.5)
+        .to(divider, {
+            scaleX: 1,
+            opacity: 1,
+            duration: 0.6,
+            ease: "expo.out"
+        }, 0.56)
+        .to(iconSvg, {
+            scale: 1,
+            rotate: 0,
+            opacity: 1,
+            duration: 0.5,
+            ease: "back.out(1.7)"
+        }, 0.64);
+}
+
+function applyWebDevCardFullViewScrollPosition() {
+    if (!masterTl || !masterTl.scrollTrigger) return false;
 
     ScrollTrigger.refresh();
 
@@ -3272,33 +4537,72 @@ function scrollToWebDevCardHashIfRequested() {
     const timelineDuration = masterTl.duration();
     const targetTime = 1;
 
-    if (!timelineDuration) return;
+    if (!timelineDuration) return false;
 
     const targetScroll = trigger.start + ((targetTime / timelineDuration) * (trigger.end - trigger.start));
 
-    if (typeof trigger.scroll === "function") {
-        trigger.scroll(targetScroll);
-    } else if (lenis) {
+    if (lenis) {
+        lenis.resize();
         lenis.scrollTo(targetScroll, {
             immediate: true,
             force: true
         });
-    } else {
-        window.scrollTo(0, targetScroll);
     }
 
+    if (typeof trigger.scroll === "function") {
+        trigger.scroll(targetScroll);
+    }
+
+    window.scrollTo(0, targetScroll);
+    document.documentElement.scrollTop = targetScroll;
+    document.body.scrollTop = targetScroll;
     ScrollTrigger.update();
     masterTl.time(targetTime, false);
     ScrollTrigger.update();
     syncNavState();
+
+    return true;
+}
+
+function scrollToWebDevCardHashIfRequested() {
+    if (!shouldLandOnWebDevCard || !masterTl || !masterTl.scrollTrigger) return;
+
+    if (!applyWebDevCardFullViewScrollPosition()) return;
+
     prepareNaturalWebCardHashLanding();
 
     const webPanel = document.querySelector(".service-card-web-dev");
     const webRevealTl = webPanel ? serviceCardRevealTimelines.get(webPanel) : null;
+    const finishLanding = () => {
+        applyWebDevCardFullViewScrollPosition();
 
-    if (webRevealTl) {
-        webRevealTl.restart();
+        if (shouldPlayWebDevReverseReturn) {
+            if (webPanel && !webDevReverseReturnStarted) {
+                webDevReverseReturnStarted = true;
+                playWebDevCardReturnTransition(webPanel);
+            } else if (!webPanel) {
+                document.documentElement.classList.remove("is-webdev-reverse-return");
+                document.documentElement.style.backgroundColor = "";
+            }
+
+            return;
+        }
+
+        if (webRevealTl) {
+            webRevealTl.restart();
+        }
+    };
+
+    if (shouldPlayWebDevReverseReturn) {
+        requestAnimationFrame(() => {
+            applyWebDevCardFullViewScrollPosition();
+            requestAnimationFrame(finishLanding);
+        });
+
+        return;
     }
+
+    finishLanding();
 }
 
 // 5. FULL-SCREEN MENU

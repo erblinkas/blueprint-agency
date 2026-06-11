@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blueprint – Web Development</title>
+    <title>Blueprint - Web Development</title>
     <meta name="description" content="Custom, responsive websites that convert visitors into customers. Blueprint's web development service.">
     <script>
         try {
@@ -14,6 +14,11 @@
             }
         } catch (error) {}
     </script>
+    <link rel="preload" as="image" href="./web_img/webp-output/web_main.webp" fetchpriority="high">
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="font.css">
     <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
@@ -22,7 +27,7 @@
     <link rel="icon" type="image/x-icon" href="./favicon_2.png">
     <style>
         /* ── SERVICE PAGE STYLES ── */
-        body { background-color: #01161e; color: #f4f1e8; }
+        body { background-color: #806542; color: #000000; }
 
         .service-hero {
             width: 100%;
@@ -32,41 +37,76 @@
             height: 100svh;
             min-height: 100svh;
             max-height: 100svh;
-            display: grid;
-            grid-template-columns: minmax(30rem, 0.95fr) minmax(24rem, 0.62fr);
-            grid-template-rows: minmax(0, 1fr);
-            align-items: end;
-            gap: clamp(2rem, 4vw, 4.5rem);
-            padding: clamp(8rem, 14vh, 10.5rem) clamp(2rem, 3.1vw, 3.35rem) clamp(2.4rem, 4.2vh, 3rem);
+            display: block;
+            padding: 0;
             position: relative;
             overflow: hidden;
             box-sizing: border-box;
             isolation: isolate;
-            background-color: #01161e;
-            background-image: none;
+            background: linear-gradient(90deg, #e6dac8 0 50%, #806542 50% 100%);
         }
 
-        .service-hero-bg {
-            position: absolute;
-            inset: 0;
-            object-fit: cover;
-            object-position: center;
-            width: 100%;
-            height: 100%;
-        }
-
-        .service-hero.about-page-hero::after {
+        .webdev-reference-hero::after {
             display: none;
         }
 
-        .service-hero .service-hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: none;
+        .webdev-hero-media {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: 1;
+            width: clamp(17.5rem, 35vw, 28rem);
+            aspect-ratio: 16 / 9;
+            transform: translate(-50%, -47%);
+            overflow: hidden;
         }
 
-        .service-hero .about-page-title {
-            max-width: 24ch;
+        .webdev-hero-media img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .service-hero .webdev-hero-content {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            max-width: none;
+            pointer-events: none;
+        }
+
+        .webdev-hero-title {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: max-content;
+            margin: 0;
+            transform: translate(-50%, -42%);
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(4.6rem, 9.8vw, 9.4rem);
+            font-weight: 300;
+            line-height: 0.82;
+            letter-spacing: 0;
+            color: #000000;
+            white-space: nowrap;
+        }
+
+        .webdev-hero-title .line {
+            overflow: visible;
+        }
+
+        .webdev-hero-copy {
+            position: absolute;
+            left: clamp(2rem, 4vw, 4rem);
+            bottom: clamp(2.35rem, 8.4vh, 5.4rem);
+            width: min(27ch, 26vw);
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.78rem, 1vw, 1rem);
+            line-height: 1.12;
+            color: #3e3933;
         }
 
         .service-eyebrow {
@@ -189,9 +229,10 @@
         }
 
         .service-feature-title {
-            font-family: 'CabinetGrotesk-bold', sans-serif;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
             font-size: clamp(2.35rem, 4.4vw, 5.2rem);
             line-height: 0.94;
+            font-weight: 300;
             letter-spacing: 0;
             margin: 0 0 clamp(1rem, 1.8vw, 1.5rem);
             overflow: hidden;
@@ -206,11 +247,322 @@
         }
 
         /* ── SHOWCASE IMAGE ── */
-        .service-showcase {
-            position: relative;
-            height: 60vh;
-            min-height: 400px;
+        .webdev-included {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            height: 100vh;
+            min-height: 100vh;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            padding: clamp(4rem, 8.8vw, 7rem) clamp(2.6rem, 5.3vw, 4rem) clamp(3rem, 6vw, 4.8rem);
+            background-color: #e6dac8;
+            color: #000000;
+            border-bottom: 2px solid #000000;
             overflow: hidden;
+        }
+
+        .webdev-included-title {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3.4rem, 6.2vw, 6.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: #000000;
+        }
+
+        .webdev-included-grid {
+            display: grid;
+            grid-template-columns: minmax(13rem, 0.74fr) minmax(0, 1.64fr);
+            grid-template-rows: auto;
+            column-gap: clamp(3rem, 7vw, 7rem);
+            row-gap: 0;
+            align-items: end;
+            margin-top: clamp(4.2rem, 8.4vw, 7.2rem);
+        }
+
+        .webdev-included-grid.service-features-grid {
+            grid-template-columns: minmax(13rem, 0.74fr) minmax(0, 1.64fr);
+            grid-template-rows: auto;
+            row-gap: 0;
+            column-gap: clamp(3rem, 7vw, 7rem);
+        }
+
+        .webdev-included-visual {
+            position: relative;
+            width: min(100%, 15.3rem);
+            aspect-ratio: 1 / 1.02;
+            background-color: #806542;
+            overflow: visible;
+        }
+
+        .webdev-included-visual img {
+            position: absolute;
+            left: -0.28rem;
+            bottom: -0.8rem;
+            width: 124%;
+            max-width: none;
+            display: block;
+        }
+
+        .webdev-included-content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            row-gap: clamp(4.8rem, 7.8vw, 7rem);
+            align-items: start;
+        }
+
+        .webdev-included .service-feature {
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: stretch;
+            max-width: none;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            row-gap: clamp(4.8rem, 7.8vw, 7rem);
+            align-items: start;
+            padding: 0;
+            overflow: visible;
+        }
+
+        .webdev-included .service-feature:nth-of-type(n + 3) {
+            display: none;
+        }
+
+        .webdev-included .service-feature:hover {
+            transform: none;
+        }
+
+        .webdev-included-item-title {
+            grid-column: 1;
+            justify-self: end;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(2.9rem, 4.6vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: #000000;
+        }
+
+        .webdev-included .service-feature-title {
+            grid-column: 1;
+            justify-self: end;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(2.9rem, 4.6vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: #000000;
+            overflow: visible;
+        }
+
+        .webdev-included-num {
+            grid-column: 2;
+            justify-self: end;
+            margin-top: 0.28rem;
+            margin-left: clamp(2.5rem, 7vw, 8rem);
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            line-height: 1;
+            color: #6e6356;
+        }
+
+        .webdev-included .service-feature-num {
+            grid-column: 2;
+            justify-self: end;
+            margin: 0.28rem 0 0 clamp(2.5rem, 7vw, 8rem);
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            letter-spacing: 0;
+            line-height: 1;
+            color: #6e6356;
+        }
+
+        .webdev-included-copy {
+            grid-column: 1 / -1;
+            justify-self: end;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: #5f5850;
+        }
+
+        .webdev-included .service-feature-body {
+            grid-column: 1 / -1;
+            justify-self: end;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: #5f5850;
+        }
+
+        .webdev-responsive-mask {
+            position: relative;
+            z-index: 4;
+            height: 100vh;
+            min-height: 100vh;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            margin-top: -1px;
+            padding: clamp(4.2rem, 8.5vw, 6.7rem) clamp(2.8rem, 8vw, 5.3rem) clamp(3.2rem, 6.5vw, 5rem);
+            display: grid;
+            grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 0.78fr);
+            column-gap: clamp(3rem, 8vw, 8rem);
+            align-items: center;
+            background-color: #806542;
+            color: #f7f0df;
+            overflow: hidden;
+        }
+
+        .webdev-responsive-copy {
+            align-self: stretch;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            min-height: 0;
+        }
+
+        .webdev-responsive-num {
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.78rem, 1vw, 0.96rem);
+            line-height: 1;
+            color: rgba(247, 240, 223, 0.72);
+        }
+
+        .webdev-responsive-title {
+            align-self: start;
+            margin: clamp(3.4rem, 6.7vw, 5.4rem) 0 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3rem, 4.9vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: #ffffff;
+        }
+
+        .webdev-responsive-text {
+            max-width: 38rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: rgba(247, 240, 223, 0.78);
+        }
+
+        .webdev-responsive-visual {
+            position: relative;
+            justify-self: center;
+            width: min(100%, 18.4rem);
+            aspect-ratio: 1 / 1.13;
+            background-color: #e6dac8;
+        }
+
+        .webdev-responsive-visual img {
+            position: absolute;
+            left: 50%;
+            bottom: 0.2rem;
+            width: 58%;
+            max-width: none;
+            display: block;
+            transform: translateX(-50%);
+        }
+
+        .webdev-process-collage {
+            position: relative;
+            z-index: 6;
+            height: 100vh;
+            min-height: 100vh;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            padding: clamp(2.2rem, 4.2vw, 3rem) clamp(2.8rem, 7.6vw, 5rem);
+            background-color: #e6dac8;
+            color: #000000;
+            overflow: hidden;
+        }
+
+        .webdev-process-title {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: grid;
+            place-items: center;
+            margin: 0;
+            transform: none;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(5rem, 9vw, 9.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            white-space: nowrap;
+            color: #000000;
+        }
+
+        .webdev-process-card {
+            position: absolute;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            row-gap: 0.45rem;
+            width: clamp(12rem, 24vw, 22.2rem);
+            color: #000000;
+        }
+
+        .webdev-process-card img {
+            grid-column: 1 / -1;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            display: block;
+            object-fit: cover;
+        }
+
+        .webdev-process-card span,
+        .webdev-process-card strong {
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.2vw, 1.18rem);
+            font-weight: 300;
+            line-height: 0.95;
+        }
+
+        .webdev-process-card span {
+            color: rgba(0, 0, 0, 0.58);
+        }
+
+        .webdev-process-top-left {
+            left: 20%;
+            top: 7.4%;
+        }
+
+        .webdev-process-top-right {
+            right: 5%;
+            top: 10.5%;
+        }
+
+        .webdev-process-bottom-left {
+            left: 9.8%;
+            bottom: 5.8%;
+        }
+
+        .webdev-process-bottom-right {
+            right: 19%;
+            bottom: 5.6%;
+            width: clamp(10rem, 15.6vw, 15rem);
+        }
+
+        .service-showcase {
+            display: none;
         }
 
         .service-showcase img {
@@ -240,8 +592,7 @@
 
         /* ── PROCESS ── */
         .service-process {
-            padding: 6rem 4rem;
-            background-color: #01161e;
+            display: none;
         }
 
         .service-process-title {
@@ -292,6 +643,8 @@
 
         /* ── CTA ── */
         .service-cta {
+            position: relative;
+            z-index: 5;
             padding: 8rem 4rem;
             background-color: #f4f1e8;
             color: #01161e;
@@ -328,6 +681,75 @@
         }
 
         /* ── BACK BUTTON ── */
+        .webdev-final {
+            position: relative;
+            z-index: 7;
+            height: 100vh;
+            min-height: 100vh;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            display: grid;
+            grid-template-columns: 42.8% 57.2%;
+            background-color: #e6dac8;
+            color: #000000;
+            overflow: hidden;
+        }
+
+        .webdev-final-media {
+            position: relative;
+            min-height: inherit;
+            background-color: #806542;
+        }
+
+        .webdev-final-media img {
+            position: absolute;
+            left: 22.6%;
+            top: 7.3%;
+            width: 53.4%;
+            aspect-ratio: 1 / 1.2;
+            display: block;
+            object-fit: cover;
+        }
+
+        .webdev-final-copy {
+            padding: clamp(2.2rem, 4.1vw, 3.1rem) clamp(3rem, 8.8vw, 5.8rem);
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            align-content: start;
+        }
+
+        .webdev-final-title {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(1.8rem, 2.6vw, 2.6rem);
+            font-weight: 300;
+            line-height: 0.92;
+            letter-spacing: 0;
+        }
+
+        .webdev-final-lede,
+        .webdev-final-note {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.78rem, 0.98vw, 0.95rem);
+            line-height: 1.18;
+            color: #625c54;
+        }
+
+        .webdev-final-lede {
+            max-width: 52rem;
+            margin-top: clamp(0.75rem, 1.3vw, 1rem);
+            padding-bottom: clamp(0.8rem, 1.5vw, 1.1rem);
+            border-bottom: 1px solid #000000;
+        }
+
+        .webdev-final-note {
+            align-self: center;
+            max-width: 46rem;
+        }
+
         .service-back-btn {
             display: inline-flex;
             align-items: center;
@@ -393,10 +815,25 @@
         @media (max-width: 760px) {
             .service-hero, .service-section, .service-process, .service-cta { padding-left: 2rem; padding-right: 2rem; }
             .service-hero {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto;
-                align-content: end;
-                padding-top: 7.5rem;
+                padding-left: 0;
+                padding-right: 0;
+                background: linear-gradient(90deg, #e6dac8 0 50%, #806542 50% 100%);
+            }
+            .webdev-hero-media {
+                width: min(72vw, 23rem);
+                transform: translate(-50%, -58%);
+            }
+            .webdev-hero-title {
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -42%);
+                font-size: clamp(3.2rem, 15vw, 6.2rem);
+            }
+            .webdev-hero-copy {
+                left: 1.5rem;
+                bottom: 2.4rem;
+                width: min(26ch, calc(100vw - 3rem));
+                font-size: 0.82rem;
             }
             .service-section {
                 padding-top: 5rem;
@@ -417,6 +854,176 @@
             .service-feature:hover {
                 transform: translateY(-0.35rem);
             }
+            .webdev-included {
+                height: 100vh;
+                min-height: 100vh;
+                max-height: 100vh;
+                height: 100svh;
+                min-height: 100svh;
+                max-height: 100svh;
+                padding: 4.8rem 1.5rem 3rem;
+            }
+            .webdev-included-title {
+                font-size: clamp(3.2rem, 15vw, 5.4rem);
+            }
+            .webdev-included-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+                margin-top: 3.4rem;
+            }
+            .webdev-included-grid.service-features-grid {
+                grid-template-columns: 1fr;
+                row-gap: 2.5rem;
+            }
+            .webdev-included-visual {
+                width: min(15.3rem, 70vw);
+            }
+            .webdev-included-content {
+                grid-template-columns: 1fr auto;
+                row-gap: 2rem;
+            }
+            .webdev-included .service-feature {
+                grid-column: 1;
+                grid-row: auto;
+                grid-template-columns: 1fr auto;
+                row-gap: 2rem;
+                transform: none;
+            }
+            .webdev-included-item-title {
+                justify-self: start;
+                font-size: clamp(2.8rem, 12vw, 4.4rem);
+            }
+            .webdev-included .service-feature-title {
+                justify-self: start;
+                font-size: clamp(2.8rem, 12vw, 4.4rem);
+            }
+            .webdev-included-num {
+                margin-left: 1rem;
+            }
+            .webdev-included .service-feature-num {
+                margin-left: 1rem;
+            }
+            .webdev-included-copy {
+                justify-self: start;
+                max-width: 100%;
+                font-size: 0.92rem;
+                line-height: 1.16;
+            }
+            .webdev-included .service-feature-body {
+                justify-self: start;
+                max-width: 100%;
+                font-size: 0.92rem;
+                line-height: 1.16;
+            }
+            .webdev-responsive-mask {
+                height: 100vh;
+                min-height: 100vh;
+                max-height: 100vh;
+                height: 100svh;
+                min-height: 100svh;
+                max-height: 100svh;
+                padding: 4.8rem 1.5rem 3rem;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto minmax(0, 1fr);
+                row-gap: 2.8rem;
+                align-items: end;
+            }
+            .webdev-responsive-copy {
+                min-height: auto;
+                grid-template-rows: auto auto auto;
+                row-gap: 2rem;
+            }
+            .webdev-responsive-title {
+                margin: 1.8rem 0 0;
+                font-size: clamp(2.8rem, 12vw, 4.4rem);
+            }
+            .webdev-responsive-text {
+                max-width: 100%;
+                font-size: 0.92rem;
+                line-height: 1.16;
+            }
+            .webdev-responsive-visual {
+                width: min(15rem, 72vw);
+                justify-self: center;
+            }
+            .webdev-process-collage {
+                height: 100vh;
+                min-height: 100vh;
+                max-height: 100vh;
+                height: 100svh;
+                min-height: 100svh;
+                max-height: 100svh;
+                padding: 4.8rem 1.5rem 3rem;
+                display: grid;
+                grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+                gap: 0.7rem;
+            }
+            .webdev-process-title {
+                position: relative;
+                left: auto;
+                top: auto;
+                transform: none;
+                order: 2;
+                font-size: clamp(3.4rem, 15vw, 5.4rem);
+                white-space: normal;
+            }
+            .webdev-process-card,
+            .webdev-process-top-left,
+            .webdev-process-top-right,
+            .webdev-process-bottom-left,
+            .webdev-process-bottom-right {
+                position: relative;
+                left: auto;
+                right: auto;
+                top: auto;
+                bottom: auto;
+                width: 100%;
+            }
+            .webdev-process-card img {
+                aspect-ratio: 16 / 8.6;
+            }
+            .webdev-process-top-left {
+                order: 1;
+            }
+            .webdev-process-top-right {
+                order: 3;
+            }
+            .webdev-process-bottom-left {
+                order: 4;
+            }
+            .webdev-process-bottom-right {
+                order: 5;
+            }
+            .webdev-final {
+                height: 100vh;
+                min-height: 100vh;
+                max-height: 100vh;
+                height: 100svh;
+                min-height: 100svh;
+                max-height: 100svh;
+                grid-template-columns: 1fr;
+                grid-template-rows: 48% 52%;
+            }
+            .webdev-final-media {
+                min-height: 0;
+            }
+            .webdev-final-media img {
+                left: 50%;
+                top: 3rem;
+                width: min(68vw, 18rem);
+                transform: translateX(-50%);
+            }
+            .webdev-final-copy {
+                min-height: 0;
+                padding: 2.4rem 1.5rem 3rem;
+            }
+            .webdev-final-title {
+                font-size: clamp(2rem, 9vw, 3.2rem);
+            }
+            .webdev-final-note {
+                align-self: start;
+                margin-top: 5rem;
+            }
             .service-hero-return {
                 top: max(1rem, env(safe-area-inset-top));
                 width: 48px;
@@ -427,7 +1034,8 @@
     </style>
 </head>
 
-<body>
+<body data-barba="wrapper">
+    <div data-barba="container" data-barba-namespace="service-webdev">
     <!-- LOADING SCREEN -->
     <div id="loader" class="loader">
         <div class="loader-content">
@@ -471,7 +1079,7 @@
                     <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'contact.html')"><span>Contact</span></button>
                 </nav>
                 <div class="menu-image-frame" aria-hidden="true">
-                    <img class="menu-image" src="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1200&q=80" alt="">
+                    <img loading="lazy" decoding="async" class="menu-image" src="./web_img/webp-output/web_6.webp" alt="">
                 </div>
                 <div class="menu-overlay-info">
                     <div class="menu-info-group">
@@ -494,26 +1102,27 @@
     </div>
 
     <!-- HERO -->
-    <section class="service-hero about-page-hero" id="service-hero" aria-label="Web Development">
-        <img class="service-hero-bg" src="./web_img/web_main.png" alt="">
-        <div class="service-hero-content about-page-hero-copy">
-            <p class="about-page-kicker">
-                <span class="about-page-kicker-word about-page-kicker-word-about reveal-text">Web</span>
-                <span class="about-hero-rule" aria-hidden="true"></span>
-                <span class="about-page-kicker-word about-page-kicker-word-blueprint reveal-text">Development</span>
-            </p>
-            <h1 class="about-page-title reveal-text">Custom, responsive websites that convert visitors into customers. We build fast, accessible, and visually stunning digital experiences from the ground up.</h1>
+    <section class="service-hero webdev-reference-hero" id="service-hero" aria-label="Web Development">
+        <div class="webdev-hero-media" aria-hidden="true">
+            <img decoding="async" fetchpriority="high" width="1448" height="1086" src="./web_img/webp-output/web_main.webp" alt="">
+        </div>
+        <div class="service-hero-content webdev-hero-content">
+            <h1 class="webdev-hero-title reveal-text">Web Development</h1>
+            <p class="webdev-hero-copy reveal-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo</p>
         </div>
     </section>
 
     <!-- FEATURES -->
-    <section class="service-section">
-        <p class="service-section-label page-enter">What's Included</p>
-        <div class="service-features-grid">
+    <section class="service-section webdev-included" aria-label="What's included">
+        <h2 class="webdev-included-title page-enter">What's included</h2>
+        <div class="service-features-grid webdev-included-grid">
+            <div class="webdev-included-visual page-enter" aria-hidden="true">
+                <img loading="lazy" decoding="async" src="./web_img/webp-output/web_elements_1.webp" alt="">
+            </div>
             <div class="service-feature page-enter">
                 <div class="service-feature-num">01</div>
                 <h3 class="service-feature-title">Custom Design</h3>
-                <p class="service-feature-body">Bespoke layouts crafted around your brand identity — no templates, no compromises.</p>
+                <p class="service-feature-body">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.</p>
             </div>
             <div class="service-feature page-enter">
                 <div class="service-feature-num">02</div>
@@ -543,9 +1152,45 @@
         </div>
     </section>
 
+    <section class="webdev-responsive-mask" aria-label="Responsive Build">
+        <div class="webdev-responsive-copy page-enter">
+            <span class="webdev-responsive-num">02</span>
+            <h2 class="webdev-responsive-title">Responsive Build</h2>
+            <p class="webdev-responsive-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.</p>
+        </div>
+        <div class="webdev-responsive-visual page-enter" aria-hidden="true">
+            <img loading="lazy" decoding="async" src="./web_img/webp-output/web_elements_2.webp" alt="">
+        </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section class="webdev-process-collage" aria-label="How it works">
+        <article class="webdev-process-card webdev-process-top-left page-enter">
+            <strong>Discovery Call</strong>
+            <span>01</span>
+            <img loading="lazy" decoding="async" src="./web_img/webp-output/web_7.webp" alt="">
+        </article>
+        <article class="webdev-process-card webdev-process-top-right page-enter">
+            <strong>Wireframes &amp; Prototype</strong>
+            <span>02</span>
+            <img loading="lazy" decoding="async" src="./web_img/webp-output/web_2.webp" alt="">
+        </article>
+        <h2 class="webdev-process-title page-enter">How it works</h2>
+        <article class="webdev-process-card webdev-process-bottom-left page-enter">
+            <img loading="lazy" decoding="async" src="./web_img/webp-output/web_4.webp" alt="">
+            <strong>Design &amp; Build</strong>
+            <span>03</span>
+        </article>
+        <article class="webdev-process-card webdev-process-bottom-right page-enter">
+            <img loading="lazy" decoding="async" src="./web_img/webp-output/web_5.webp" alt="">
+            <strong>Launch &amp; Hand-off</strong>
+            <span>04</span>
+        </article>
+    </section>
+
     <!-- SHOWCASE -->
     <div class="service-showcase">
-        <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1800&q=80" alt="Web development showcase">
+        <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1800&q=80" alt="Web development showcase">
         <div class="service-showcase-label">WEB</div>
     </div>
 
@@ -584,27 +1229,38 @@
         </div>
     </section>
 
-    <!-- CTA -->
-    <section class="service-cta">
-        <h2 class="service-cta-title page-enter">Ready to build something great?</h2>
-        <button class="service-cta-btn" onclick="handlePageTransition(event, 'contact.html')">Start a project</button>
+    <!-- FINAL -->
+    <section class="webdev-final" aria-label="Discovery Call">
+        <div class="webdev-final-media page-enter">
+            <img loading="lazy" decoding="async" src="./web_img/webp-output/web_5.webp" alt="">
+        </div>
+        <div class="webdev-final-copy page-enter">
+            <h2 class="webdev-final-title">Discovery Call</h2>
+            <p class="webdev-final-lede">We learn your goals, audience, and visual direction so every decision is rooted in real context.</p>
+            <p class="webdev-final-note">High-fidelity designs become a living, breathing website — tested across browsers and devices.</p>
+        </div>
     </section>
 
+    </div>
+    </div>
     <script src="https://unpkg.com/split-type"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+    <script src="https://unpkg.com/@barba/core"></script>
     <script src="script.js"></script>
     <script>
-        const serviceHero = document.querySelector('.service-hero.about-page-hero');
+        const serviceHero = document.querySelector('#service-hero');
         if (serviceHero && window.gsap) {
             const heroRule = serviceHero.querySelector('.about-hero-rule');
             const heroRevealTargets = serviceHero.querySelectorAll('.char, .line-mask');
 
-            gsap.set(heroRule, {
-                scaleX: 0,
-                transformOrigin: 'center'
-            });
+            if (heroRule) {
+                gsap.set(heroRule, {
+                    scaleX: 0,
+                    transformOrigin: 'center'
+                });
+            }
             gsap.set(serviceHero.querySelectorAll('.about-page-kicker-word-about .line-mask'), { y: '140%' });
             gsap.set(serviceHero.querySelectorAll('.about-page-kicker-word-blueprint .line-mask'), { y: '-140%' });
             gsap.set(serviceHero.querySelectorAll('.about-page-title .line-mask'), { y: '140%' });
@@ -687,43 +1343,64 @@
                     overwrite: true
                 });
 
+                const navigateToWebDevCard = () => {
+                    window.location.href = 'index.html#webdev-card';
+                };
+
+                try {
+                    sessionStorage.removeItem('blueprintWebDevReverseReturn');
+                } catch (error) {}
+
+                const growHeroImageOut = () => {
+                    const heroMedia = serviceHero.querySelector('.webdev-hero-media');
+                    const heroImage = heroMedia ? heroMedia.querySelector('img') : null;
+                    const heroImageRect = heroImage ? heroImage.getBoundingClientRect() : null;
+                    const transitionImage = heroImage && heroImageRect ? heroImage.cloneNode(true) : null;
+
+                    if (!transitionImage) {
+                        navigateToWebDevCard();
+                        return;
+                    }
+
+                    transitionImage.style.position = 'fixed';
+                    transitionImage.style.left = `${heroImageRect.left}px`;
+                    transitionImage.style.top = `${heroImageRect.top}px`;
+                    transitionImage.style.width = `${heroImageRect.width}px`;
+                    transitionImage.style.height = `${heroImageRect.height}px`;
+                    transitionImage.style.margin = '0';
+                    transitionImage.style.objectFit = 'cover';
+                    transitionImage.style.objectPosition = 'center';
+                    transitionImage.style.pointerEvents = 'none';
+                    transitionImage.style.zIndex = '13000';
+                    transitionImage.style.transformOrigin = 'center center';
+                    transitionImage.style.willChange = 'transform,width,height,left,top';
+                    transitionImage.classList.add('webdev-service-transition-image');
+                    document.body.appendChild(transitionImage);
+                    gsap.set(heroMedia, { autoAlpha: 0 });
+                    gsap.set(document.body, { overflow: 'hidden' });
+
+                    gsap.to(transitionImage, {
+                        left: 0,
+                        top: 0,
+                        width: window.innerWidth,
+                        height: window.innerHeight,
+                        duration: 0.92,
+                        ease: 'power3.inOut',
+                        onComplete: navigateToWebDevCard
+                    });
+                };
+
                 const startY = window.scrollY;
                 const heroTop = serviceHero.getBoundingClientRect().top + window.scrollY;
                 const scrollDuration = Math.abs(startY - heroTop) > 8 ? 0.92 : 0.08;
                 const scrollState = { y: startY };
-                const heroText = serviceHero.querySelectorAll('.service-hero-content .line-mask');
-                const heroRule = serviceHero.querySelector('.about-hero-rule');
-                const animateHeroTextOut = () => {
-                    const exitTl = gsap.timeline({
-                        defaults: { ease: 'power4.inOut' },
-                        onComplete: () => {
-                            window.location.href = 'index.html#webdev-card';
-                        }
-                    });
-
-                    if (heroRule) {
-                        exitTl.to(heroRule, {
-                            scaleX: 0,
-                            transformOrigin: 'center',
-                            duration: 0.62
-                        }, 0);
-                    }
-
-                    if (heroText.length) {
-                        exitTl.to(heroText, {
-                            y: '-140%',
-                            stagger: 0.035,
-                            duration: 0.72
-                        }, 0.04);
-                    }
-                };
 
                 gsap.to(scrollState, {
                     y: heroTop,
                     duration: scrollDuration,
                     ease: 'power3.inOut',
                     onUpdate: () => window.scrollTo(0, scrollState.y),
-                    onComplete: animateHeroTextOut
+                    onComplete: growHeroImageOut
                 });
             });
 
@@ -750,7 +1427,7 @@
         });
 
         // Scroll-reveal for sections below the hero
-        gsap.utils.toArray('.service-section .page-enter, .service-process .page-enter, .service-cta .page-enter').forEach(el => {
+        gsap.utils.toArray('.service-section .page-enter, .webdev-responsive-mask .page-enter, .webdev-process-collage .page-enter, .webdev-final .page-enter').forEach(el => {
             gsap.fromTo(el,
                 { opacity: 0, y: 40 },
                 {

@@ -4,19 +4,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blueprint</title>
+    <title>Blueprint | Business Launch, Branding, Web Development & Marketing</title>
+    <meta name="description" content="Blueprint helps new businesses launch with web development, branding, marketing, and spatial design in one complete starter pack.">
     <script>
         if ("scrollRestoration" in history) {
             history.scrollRestoration = "manual";
         }
+        let shouldUseWebDevReverseReturn = false;
         try {
             if (sessionStorage.getItem("blueprintUseLinkLoader") === "true") {
                 document.documentElement.classList.add("is-link-transition");
                 document.documentElement.style.backgroundColor = "#000000";
             }
+            if (window.location.hash === "#webdev-card") {
+                document.documentElement.classList.add("is-webdev-card-landing");
+            }
+            if (sessionStorage.getItem("blueprintWebDevReverseReturn") === "true") {
+                shouldUseWebDevReverseReturn = true;
+                document.documentElement.classList.add("is-webdev-reverse-return");
+                document.documentElement.style.backgroundColor = "#2c2416";
+            }
         } catch (error) {}
-        window.scrollTo(0, 0);
+        if (!shouldUseWebDevReverseReturn) {
+            window.scrollTo(0, 0);
+        }
     </script>
+    <style>
+        .is-webdev-reverse-return body {
+            overflow: hidden;
+            background-color: #2c2416;
+        }
+
+        .is-webdev-reverse-return #loader {
+            display: none;
+        }
+
+        .is-webdev-card-landing #loader {
+            display: none;
+        }
+
+        .is-webdev-reverse-return .scroll-container {
+            visibility: hidden;
+        }
+
+        .is-webdev-card-landing .scroll-container {
+            visibility: hidden;
+        }
+
+        .webdev-reverse-boot-image {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 13000;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            object-position: center;
+            pointer-events: none;
+            contain: layout paint;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+
+        .is-webdev-reverse-return .webdev-reverse-boot-image {
+            display: block;
+        }
+    </style>
+    <link rel="preload" as="image" href="./web_img/webp-output/web_main.webp" fetchpriority="high">
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="font.css">
     <link href="https://fonts.cdnfonts.com/css/alliance-no1" rel="stylesheet">
@@ -25,7 +83,9 @@
     <link rel="icon" type="image/x-icon" href="./favicon_2.png">
 </head>
 
-<body>
+<body data-barba="wrapper">
+    <img decoding="async" class="webdev-reverse-boot-image" src="./web_img/webp-output/web_main.webp" alt="" aria-hidden="true">
+    <div data-barba="container" data-barba-namespace="home">
     <!-- LOADING SCREEN -->
     <div id="loader" class="loader">
         <div class="loader-content">
@@ -78,8 +138,8 @@
                 </nav>
 
                 <div class="menu-image-frame" aria-hidden="true">
-                    <img class="menu-image"
-                        src="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1200&q=80"
+                    <img loading="lazy" decoding="async" class="menu-image"
+                        src="./web_img/webp-output/web_6.webp"
                         alt="">
                 </div>
 
@@ -125,7 +185,7 @@
         <section class="panel service-card-web-dev" id="webdev-card">
             <div class="reveal-content">
                 <button class="card-image-button" type="button" onclick="handlePageTransition(event, 'service-webdev.html')" aria-label="View Web Development service">
-                    <img src="./web_img/web_main.png" alt="Web Development Showcase"
+                    <img decoding="async" fetchpriority="high" width="1448" height="1086" src="./web_img/webp-output/web_main.webp" alt="Web Development Showcase"
                         class="card-img-unified">
                 </button>
                 <div class="card-info">
@@ -149,7 +209,9 @@
 
         <section class="panel service-card-branding">
             <div class="reveal-content">
-                <img src="./branding_img/branding_main.png" alt="branding showcase" class="card-img-unified">
+                <button class="card-image-button" type="button" onclick="handlePageTransition(event, 'service-branding.html')" aria-label="View Branding & Identity service">
+                    <img loading="lazy" decoding="async" width="1448" height="1086" src="./branding_img/webp-output/branding_main.webp" alt="Branding showcase" class="card-img-unified">
+                </button>
                 <div class="card-info">
                     <h3 class="card-desc reveal-text">Memorable logos and complete brand identity packages.</h3>
                     <hr>
@@ -170,8 +232,10 @@
 
         <section class="panel service-card-marketing">
             <div class="reveal-content">
-                <img src="./marketing_img/marketing_main.png" alt="marketing showcase"
-                    class="card-img-unified">
+                <button class="card-image-button" type="button" onclick="handlePageTransition(event, 'service-marketing.html')" aria-label="View Digital Marketing service">
+                    <img loading="lazy" decoding="async" width="1516" height="1037" src="./marketing_img/webp-output/marketing_main.webp" alt="Marketing showcase"
+                        class="card-img-unified">
+                </button>
                 <div class="card-info">
                     <h3 class="card-desc reveal-text">Strategic marketing solutions including social media, SEO, and
                         digital
@@ -193,8 +257,10 @@
         </section>
         <section class="panel service-card-architecture">
             <div class="reveal-content">
-                <img src="./architecture_img/architecture_main.png" alt="architecture showcase"
-                    class="card-img-unified">
+                <button class="card-image-button" type="button" onclick="handlePageTransition(event, 'service-architecture.html')" aria-label="View Architecture service">
+                    <img loading="lazy" decoding="async" width="1672" height="941" src="./architecture_img/webp-output/architecture_main.webp" alt="Architecture showcase"
+                        class="card-img-unified">
+                </button>
                 <div class="card-info">
                     <h3 class="card-desc reveal-text">Custom, responsive websites that convert visitors into customers.
                     </h3>
@@ -230,7 +296,7 @@
                 <section class="project-category" aria-labelledby="web-development-projects">
                     <h2 class="project-category-title reveal-text" id="web-development-projects">Web development</h2>
                     <div class="project-category-preview" aria-hidden="true">
-                        <img class="project-preview-image is-active" src="./web_img/web_1.png" alt="">
+                        <img loading="lazy" decoding="async" class="project-preview-image is-active" src="./web_img/webp-output/web_1.webp" alt="">
                     </div>
                     <div class="project-category-list">
                         <a class="project-list-link reveal-text" href="#" data-index="(01)"><span>Meridian launch
@@ -259,7 +325,7 @@
                 <section class="project-category" aria-labelledby="branding-projects">
                     <h2 class="project-category-title reveal-text" id="branding-projects">Branding & Identity</h2>
                     <div class="project-category-preview" aria-hidden="true">
-                        <img class="project-preview-image is-active" src="./branding_img/branding_1.png" alt="">
+                        <img loading="lazy" decoding="async" class="project-preview-image is-active" src="./branding_img/webp-output/branding_1.webp" alt="">
                     </div>
                     <div class="project-category-list">
                         <a class="project-list-link reveal-text" href="#" data-index="(01)"><span>Northline brand
@@ -292,7 +358,7 @@
                 <section class="project-category" aria-labelledby="marketing-projects">
                     <h2 class="project-category-title reveal-text" id="marketing-projects">Digital Marketing</h2>
                     <div class="project-category-preview" aria-hidden="true">
-                        <img class="project-preview-image is-active" src="./marketing_img/marketing_1.png" alt="">
+                        <img loading="lazy" decoding="async" class="project-preview-image is-active" src="./marketing_img/webp-output/marketing_1.webp" alt="">
                     </div>
                     <div class="project-category-list">
                         <a class="project-list-link reveal-text" href="#" data-index="(01)"><span>Signal digital
@@ -333,7 +399,7 @@
                 <section class="project-category" aria-labelledby="architecture-projects">
                     <h2 class="project-category-title reveal-text" id="architecture-projects">Architecture</h2>
                     <div class="project-category-preview" aria-hidden="true">
-                        <img class="project-preview-image is-active" src="./architecture_img/webp-output/architecture_1.webp" alt="">
+                        <img loading="lazy" decoding="async" class="project-preview-image is-active" src="./architecture_img/webp-output/architecture_1.webp" alt="">
                     </div>
                     <div class="project-category-list">
                         <a class="project-list-link reveal-text" href="#" data-index="(01)"><span>Monolith architecture
@@ -360,13 +426,16 @@
         </section>
 
         <section class="approach-card">
-            <img class="approach-fg-video" src="./approach_background_img.png" alt="" aria-hidden="true">
+            <img loading="lazy" decoding="async" width="1586" height="992" class="approach-fg-video" src="./webp-output/approach_background_img.webp" alt="" aria-hidden="true">
             <div class="approach-copy-block">
                 <h2 class="approach-eyebrow reveal-text">Approach</h2>
-                <p class="approach-kicker reveal-text">We blend strategy, design, tech, and space.</p>
+                <p class="approach-kicker reveal-text">We blend strategy, design, tech and space.</p>
                 <hr>
-                <p class="approach-title reveal-text">A clear process from vision to launch.</p>
-                <p class="approach-copy reveal-text">Complete brands, built with purpose.</p>
+                <p class="approach-title reveal-text"><span class="approach-title-line">A clear process</span><span
+                        class="approach-title-line">from vision</span><span class="approach-title-line">to launch.</span>
+                </p>
+                <p class="approach-copy reveal-text"><span class="approach-copy-line">Complete brands,</span><span
+                        class="approach-copy-line">built with purpose.</span></p>
             </div>
             <div class="approach-articles-mask">
                 <div class="approach-steps" aria-label="Approach steps">
@@ -412,9 +481,21 @@
             <div class="about-section-inner">
                 <p class="masking-overlay-about-copy reveal-text">About</p>
 
+                <p class="about-laptop-note about-laptop-note-top" aria-hidden="true">A small studio</p>
+                <div class="about-laptop-media about-laptop-media-top" aria-hidden="true">
+                    <img loading="lazy" decoding="async" src="./about_home_img_1.png" alt="">
+                </div>
+                <p class="about-laptop-note about-laptop-note-bottom" aria-hidden="true">Thoughtful &middot; Clear &middot; Purposeful</p>
+
                 <p class="about-section-statement reveal-text">
                     Blueprint is a compact creative studio helping new businesses launch with clear strategy, identity, websites, marketing, and spatial direction.
                 </p>
+
+                <div class="about-laptop-media about-laptop-media-services" aria-hidden="true">
+                    <img loading="lazy" decoding="async" src="./about_home_img_2.png" alt="">
+                </div>
+                <p class="about-laptop-services-word about-laptop-services-word-our" aria-hidden="true">Our</p>
+                <p class="about-laptop-services-word about-laptop-services-word-services" aria-hidden="true">Services</p>
 
                 <div class="about-section-grid" aria-label="About Blueprint">
                     <div class="about-section-column">
@@ -435,9 +516,9 @@
                 </div>
 
                 <div class="about-section-facts" aria-label="Blueprint essentials">
-                    <p class="about-section-fact reveal-text"><span>01</span> Strategy before production</p>
-                    <p class="about-section-fact reveal-text"><span>02</span> Design systems, not one-off assets</p>
-                    <p class="about-section-fact reveal-text"><span>03</span> Built for launch, growth, and handoff</p>
+                    <p class="about-section-fact"><span>01</span><strong>Strategy</strong><em>before production</em></p>
+                    <p class="about-section-fact"><span>02</span><strong>Design</strong><em>systems, not one-off assets</em></p>
+                    <p class="about-section-fact"><span>03</span><strong>Built</strong><em>for launch, growth, and handoff</em></p>
                 </div>
 
                 <button class="about-section-link reveal-text" type="button"
@@ -523,10 +604,14 @@
             </div>
         </footer>
     </main>
+    </div>
+    </div>
     <script src="https://unpkg.com/split-type"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/Flip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+    <script src="https://unpkg.com/@barba/core"></script>
     <script src="script.js"></script>
 </body>
 
