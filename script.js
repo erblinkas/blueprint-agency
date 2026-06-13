@@ -55,13 +55,85 @@ scrollbarIndicatorThumb.className = "scrollbar-indicator-thumb";
 scrollbarIndicator.appendChild(scrollbarIndicatorThumb);
 document.body.appendChild(scrollbarIndicator);
 
-function syncScrollbarIndicator() {
-    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    const progress = gsap.utils.clamp(0, 1, window.scrollY / maxScroll);
-    const travel = scrollbarIndicator.clientHeight - scrollbarIndicatorThumb.clientHeight;
+let scrollbarDragState = null;
 
-    scrollbarIndicatorThumb.style.transform = `translate3d(0, ${travel * progress}px, 0)`;
+function getScrollbarMetrics() {
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const travel = Math.max(1, scrollbarIndicator.clientHeight - scrollbarIndicatorThumb.clientHeight);
+
+    return { maxScroll, travel };
 }
+
+function syncScrollbarIndicator() {
+    const { maxScroll, travel } = getScrollbarMetrics();
+    const progress = gsap.utils.clamp(0, 1, window.scrollY / maxScroll);
+
+    scrollbarIndicatorThumb.style.transform = `translate3d(-50%, ${travel * progress}px, 0)`;
+}
+
+function scrollToScrollbarProgress(progress) {
+    const { maxScroll } = getScrollbarMetrics();
+    const targetScroll = gsap.utils.clamp(0, 1, progress) * maxScroll;
+
+    if (lenis) {
+        lenis.scrollTo(targetScroll, { immediate: true, force: true });
+    } else {
+        window.scrollTo(0, targetScroll);
+    }
+
+    syncScrollbarIndicator();
+}
+
+function updateScrollbarFromPointer(clientY) {
+    if (!scrollbarDragState) return;
+
+    const { travel } = getScrollbarMetrics();
+    const nextThumbY = clientY - scrollbarDragState.trackTop - scrollbarDragState.pointerOffsetY;
+
+    scrollToScrollbarProgress(nextThumbY / travel);
+}
+
+scrollbarIndicator.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+
+    const trackRect = scrollbarIndicator.getBoundingClientRect();
+    const thumbRect = scrollbarIndicatorThumb.getBoundingClientRect();
+    const pointerIsOnThumb = event.target === scrollbarIndicatorThumb;
+
+    scrollbarDragState = {
+        trackTop: trackRect.top,
+        pointerOffsetY: pointerIsOnThumb
+            ? event.clientY - thumbRect.top
+            : scrollbarIndicatorThumb.clientHeight / 2
+    };
+
+    scrollbarIndicator.classList.add("is-dragging");
+    scrollbarIndicator.setPointerCapture(event.pointerId);
+    updateScrollbarFromPointer(event.clientY);
+    event.preventDefault();
+});
+
+scrollbarIndicator.addEventListener("pointermove", (event) => {
+    if (!scrollbarDragState) return;
+
+    updateScrollbarFromPointer(event.clientY);
+    event.preventDefault();
+});
+
+function stopScrollbarDrag(event) {
+    if (!scrollbarDragState) return;
+
+    scrollbarDragState = null;
+    scrollbarIndicator.classList.remove("is-dragging");
+
+    if (event && scrollbarIndicator.hasPointerCapture(event.pointerId)) {
+        scrollbarIndicator.releasePointerCapture(event.pointerId);
+    }
+}
+
+scrollbarIndicator.addEventListener("pointerup", stopScrollbarDrag);
+scrollbarIndicator.addEventListener("pointercancel", stopScrollbarDrag);
+scrollbarIndicator.addEventListener("lostpointercapture", stopScrollbarDrag);
 
 window.addEventListener("scroll", syncScrollbarIndicator, { passive: true });
 window.addEventListener("resize", syncScrollbarIndicator, { passive: true });
@@ -169,8 +241,7 @@ function refreshViewportDrivenLayout() {
 
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            ScrollTrigger.refresh();
-            ScrollTrigger.update();
+            refreshScrollTriggersPreservingMasterProgress();
             syncScrollbarIndicator();
             syncApproachMasks();
         });
@@ -180,6 +251,35 @@ function refreshViewportDrivenLayout() {
 function scheduleViewportDrivenLayoutRefresh() {
     window.clearTimeout(viewportRefreshTimer);
     viewportRefreshTimer = window.setTimeout(refreshViewportDrivenLayout, 120);
+}
+
+function refreshScrollTriggersPreservingMasterProgress() {
+    const trigger = masterTl && masterTl.scrollTrigger;
+    const shouldRestoreProgress = Boolean(trigger && trigger.end > trigger.start);
+    const progress = shouldRestoreProgress ? gsap.utils.clamp(0, 1, trigger.progress) : 0;
+
+    ScrollTrigger.refresh();
+
+    if (shouldRestoreProgress && masterTl.scrollTrigger) {
+        const refreshedTrigger = masterTl.scrollTrigger;
+        const targetScroll = refreshedTrigger.start + (progress * (refreshedTrigger.end - refreshedTrigger.start));
+
+        if (lenis) {
+            lenis.resize();
+            lenis.scrollTo(targetScroll, { immediate: true, force: true });
+        }
+
+        if (typeof refreshedTrigger.scroll === "function") {
+            refreshedTrigger.scroll(targetScroll);
+        } else {
+            window.scrollTo(0, targetScroll);
+        }
+
+        masterTl.progress(progress, false);
+    }
+
+    ScrollTrigger.update();
+    syncApproachLayerState({ useScrollPosition: true, forceAboutVisible: true });
 }
 
 function setBlueprintFrameRuntimeActive(isActive) {
@@ -1323,6 +1423,9 @@ window.handlePageTransition = function(e, url) {
     e.preventDefault();
     const clickedBtn = e.currentTarget;
     let siblingsToHide = [];
+    const redirectToTarget = () => {
+        navigateWithLinkLoader(url);
+    };
 
     if (isIndexPage && clickedBtn.closest(".service-card-web-dev") && isWebDevServiceUrl(url)) {
         playWebDevServiceCardImageTransition(clickedBtn, url);
@@ -1350,11 +1453,11 @@ window.handlePageTransition = function(e, url) {
             stagger: 0.05,
             ease: "power2.in",
             onComplete: () => {
-                navigateWithLinkLoader(url);
+                redirectToTarget();
             }
         });
     } else {
-        navigateWithLinkLoader(url);
+        redirectToTarget();
     }
 };
 
@@ -1390,6 +1493,7 @@ function splitBlueprintText(root = document) {
             textElement.classList.contains('about-section-body') ||
             textElement.classList.contains('about-section-fact') ||
             textElement.classList.contains('about-section-link') ||
+            textElement.classList.contains('about-laptop-services-word') ||
             textElement.classList.contains('contact-section-eyebrow') ||
             textElement.classList.contains('contact-section-statement') ||
             textElement.classList.contains('contact-section-label') ||
@@ -1524,6 +1628,9 @@ function initRollingLinkHovers() {
 
         target.addEventListener("pointerenter", () => playHover(true));
         target.addEventListener("pointerleave", () => playHover(false));
+        target.addEventListener("touchstart", () => playHover(true), { passive: true });
+        target.addEventListener("touchend", () => playHover(false), { passive: true });
+        target.addEventListener("touchcancel", () => playHover(false), { passive: true });
         target.addEventListener("focus", () => playHover(true));
         target.addEventListener("blur", () => playHover(false));
     });
@@ -1546,6 +1653,60 @@ if (shouldUseLinkLoader) {
 }
 
 gsap.set(".approach-title .line-mask, .approach-copy .line-mask", { y: "-140%" });
+gsap.set(".masking-overlay-about-copy .line-mask, .about-laptop-services-word .line-mask", { y: "-140%" });
+gsap.set(".about-section-link .line-mask", { y: "140%" });
+
+function initMobileAboutScrollReveals() {
+    if (!isIndexPage || !window.matchMedia("(max-width: 767px)").matches) return;
+
+    const titleTargets = gsap.utils.toArray(".masking-overlay-about-copy, .about-laptop-services-word");
+    const bodyTargets = gsap.utils.toArray(".about-section-statement, .about-section-label, .about-section-body");
+
+    titleTargets.forEach((item) => {
+        const masks = item.querySelectorAll(".line-mask");
+        if (!masks.length) return;
+
+        gsap.set(masks, { y: "-140%" });
+
+        ScrollTrigger.create({
+            trigger: item,
+            start: "top 88%",
+            once: true,
+            onEnter: () => {
+                gsap.to(masks, {
+                    y: 0,
+                    stagger: 0.08,
+                    duration: 0.8,
+                    ease: "power4.out"
+                });
+            }
+        });
+    });
+
+    bodyTargets.forEach((item) => {
+        const masks = item.querySelectorAll(".line-mask");
+        if (!masks.length) return;
+
+        gsap.set(masks, { y: "140%" });
+
+        ScrollTrigger.create({
+            trigger: item,
+            start: "top 88%",
+            once: true,
+            onEnter: () => {
+                gsap.to(masks, {
+                    y: 0,
+                    stagger: 0.06,
+                    duration: 0.72,
+                    ease: "power4.out"
+                });
+            }
+        });
+    });
+
+}
+
+initMobileAboutScrollReveals();
 
 function initProjectsShowcaseAnimation() {
     const projectsShowcase = document.querySelector(".projects-showcase-hero");
@@ -1604,6 +1765,7 @@ function initProjectsShowcaseAnimation() {
     ];
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const showcaseContainer = projectsShowcase.querySelector(".projects-template-container");
+    const showcaseDragArea = projectsShowcase.querySelector(".projects-showcase-items");
     const showcaseCards = gsap.utils.toArray(projectsShowcase.querySelectorAll(".projects-showcase-item"));
     const prevButton = projectsShowcase.querySelector(".projects-showcase-prev");
     const nextButton = projectsShowcase.querySelector(".projects-showcase-next");
@@ -1617,6 +1779,9 @@ function initProjectsShowcaseAnimation() {
     const serviceNav = projectsShowcase.querySelector(".projects-service-nav");
     const leftWord = projectsShowcase.querySelector(".projects-showcase-word-left");
     const rightWord = projectsShowcase.querySelector(".projects-showcase-word-right");
+    const mobileDots = gsap.utils.toArray(projectsShowcase.querySelectorAll(".projects-mobile-dots span"));
+    const mobileDetailTitle = projectsShowcase.querySelector(".projects-mobile-detail h1");
+    const mobileDetailCopy = projectsShowcase.querySelector(".projects-mobile-detail p");
     const navbar = document.querySelector(".navbar");
 
     if (!showcaseLetters.length || !mainImage || !showcaseTitle || !leftWord || !rightWord) return null;
@@ -1628,6 +1793,8 @@ function initProjectsShowcaseAnimation() {
     let isProjectSwapAnimating = false;
     let dragStartX = 0;
     let dragStartY = 0;
+    let liveDragX = 0;
+    let dragPointerId = null;
 
     function getActiveProjects() {
         return projectServices[activeServiceIndex].projects;
@@ -1654,6 +1821,36 @@ function initProjectsShowcaseAnimation() {
         if (image) {
             image.src = project.image;
             image.alt = `${project.name} preview`;
+        }
+    }
+
+    function getMobileProjectDescription(project) {
+        const descriptions = {
+            "Forma booking portal": "A streamlined booking experience designed for clarity, speed, and seamless management.",
+            "Meridian launch system": "A clean launch experience built to move visitors from first impression to action.",
+            "Atlas platform rebuild": "A sharper platform rebuild focused on structure, speed, and product confidence.",
+            "Northline commerce flow": "A refined commerce flow designed for easier browsing and faster decisions.",
+            "Signal dashboard suite": "A focused dashboard system shaped around visibility, rhythm, and daily use.",
+            "Cobalt product site": "A product site designed to make complex value feel clear and immediate.",
+            "Arc web experience": "An immersive web experience built around pace, clarity, and visual restraint."
+        };
+
+        return descriptions[project.name] || "A focused project experience shaped for clarity, rhythm, and confident everyday use.";
+    }
+
+    function updateMobileProjectInfo() {
+        const centerIndex = Math.floor(showcaseCards.length / 2);
+        const project = getCurrentProject(projectOffset + centerIndex);
+
+        if (!project) return;
+        if (mobileDetailTitle) mobileDetailTitle.textContent = project.name;
+        if (mobileDetailCopy) mobileDetailCopy.textContent = getMobileProjectDescription(project);
+
+        if (mobileDots.length) {
+            const activeDotIndex = gsap.utils.clamp(0, mobileDots.length - 1, projectOffset + 1);
+            mobileDots.forEach((dot, index) => {
+                dot.classList.toggle("is-active", index === activeDotIndex);
+            });
         }
     }
 
@@ -1709,6 +1906,7 @@ function initProjectsShowcaseAnimation() {
         showcaseCards.forEach((card, index) => {
             setShowcaseCard(card, getCurrentProject(projectOffset + index));
         });
+        updateMobileProjectInfo();
     }
 
     function revealServiceImages(onComplete) {
@@ -1763,18 +1961,36 @@ function initProjectsShowcaseAnimation() {
         showcaseContainer.style.setProperty("--projects-controls-y", `${controlsCenter - containerRect.top - (controlsHeight / 2) - 28}px`);
     }
 
-    function changeShowcaseProject(delta) {
+    function createShowcaseProjectTransition(delta, options = {}) {
         if (isProjectSwapAnimating || !showcaseCards.length || delta === 0) return;
 
         isProjectSwapAnimating = true;
         const sign = Math.sign(delta);
+        const stepCount = Math.max(1, Math.abs(delta));
+        const isScrubbed = Boolean(options.scrub);
+        const transitionDuration = isScrubbed ? 1 : (options.duration || Math.max(0.3, 0.62 - ((stepCount - 1) * 0.055)));
+        const transitionEase = isScrubbed ? "none" : (options.ease || "power3.inOut");
+        const startOffset = projectOffset;
 
         const cardRects = showcaseCards.map(card => card.getBoundingClientRect());
         const cardClones = showcaseCards.map((card, index) => {
             const rect = cardRects[index];
             const clone = card.cloneNode(true);
             clone.classList.add("projects-showcase-item-clone");
-            gsap.set(clone, { position: "fixed", left: rect.left, top: rect.top, width: rect.width, height: rect.height, margin: 0, zIndex: 18, pointerEvents: "none" });
+            gsap.set(clone, {
+                position: "fixed",
+                left: rect.left,
+                top: rect.top,
+                x: 0,
+                y: 0,
+                width: rect.width,
+                height: rect.height,
+                margin: 0,
+                zIndex: 18,
+                pointerEvents: "none",
+                force3D: true,
+                willChange: "transform,width,height,opacity"
+            });
             document.body.appendChild(clone);
             return { clone, oldIndex: index };
         });
@@ -1794,7 +2010,21 @@ function initProjectsShowcaseAnimation() {
                 
                 const startX = sign > 0 ? window.innerWidth + (newIndex * 50) : -incomingRect.width - ((showcaseCards.length - newIndex) * 50);
                 
-                gsap.set(clone, { position: "fixed", left: startX, top: incomingRect.top, width: incomingRect.width, height: incomingRect.height, autoAlpha: 1, margin: 0, zIndex: 18, pointerEvents: "none" });
+                gsap.set(clone, {
+                    position: "fixed",
+                    left: startX,
+                    top: incomingRect.top,
+                    x: 0,
+                    y: 0,
+                    width: incomingRect.width,
+                    height: incomingRect.height,
+                    autoAlpha: 1,
+                    margin: 0,
+                    zIndex: 18,
+                    pointerEvents: "none",
+                    force3D: true,
+                    willChange: "transform,width,height,opacity"
+                });
                 document.body.appendChild(clone);
                 incomingClones.push({ clone, newIndex });
             }
@@ -1802,28 +2032,42 @@ function initProjectsShowcaseAnimation() {
 
         const allClones = [...cardClones.map(c => c.clone), ...incomingClones.map(c => c.clone)];
 
-        gsap.timeline({
-            defaults: { duration: 0.72, ease: "power4.inOut" },
-            onComplete: () => {
-                allClones.forEach(clone => clone.remove());
-                gsap.set(showcaseCards, { autoAlpha: 1 });
-                updateShowcaseControlPosition();
-                revealMainTitleMasks();
-                isProjectSwapAnimating = false;
+        const finishTransition = (shouldCommit) => {
+            allClones.forEach(clone => clone.remove());
+            if (!shouldCommit) {
+                projectOffset = startOffset;
+                populateShowcaseCards();
             }
-        })
+            gsap.set(showcaseCards, { autoAlpha: 1 });
+            updateShowcaseControlPosition();
+            if (shouldCommit) revealMainTitleMasks();
+            isProjectSwapAnimating = false;
+        };
+
+        const transitionTimelineOptions = {
+            paused: true,
+            defaults: { duration: transitionDuration, ease: transitionEase }
+        };
+
+        if (!isScrubbed && !options.paused) {
+            transitionTimelineOptions.onComplete = () => finishTransition(true);
+        }
+
+        const transitionTimeline = gsap.timeline(transitionTimelineOptions)
         .to(cardClones.map(c => c.clone), {
-            left: (i) => {
+            y: (i) => {
                 const oldIndex = cardClones[i].oldIndex;
                 const newIndex = oldIndex - delta;
-                if (newIndex >= 0 && newIndex < showcaseCards.length) return cardRects[newIndex].left;
-                return sign > 0 ? -cardRects[0].width * 2 : window.innerWidth + cardRects[0].width;
+                const targetTop = (newIndex >= 0 && newIndex < showcaseCards.length) ? cardRects[newIndex].top : cardRects[oldIndex].top;
+                return targetTop - cardRects[oldIndex].top;
             },
-            top: (i) => {
+            x: (i) => {
                 const oldIndex = cardClones[i].oldIndex;
                 const newIndex = oldIndex - delta;
-                if (newIndex >= 0 && newIndex < showcaseCards.length) return cardRects[newIndex].top;
-                return cardRects[oldIndex].top;
+                const targetLeft = (newIndex >= 0 && newIndex < showcaseCards.length)
+                    ? cardRects[newIndex].left
+                    : (sign > 0 ? -cardRects[0].width * 2 : window.innerWidth + cardRects[0].width);
+                return targetLeft - cardRects[oldIndex].left;
             },
             width: (i) => {
                 const oldIndex = cardClones[i].oldIndex;
@@ -1844,16 +2088,39 @@ function initProjectsShowcaseAnimation() {
             }
         }, 0)
         .to(incomingClones.map(c => c.clone), {
-            left: (i) => cardRects[incomingClones[i].newIndex].left,
-            top: (i) => cardRects[incomingClones[i].newIndex].top,
+            x: (i) => {
+                const newIndex = incomingClones[i].newIndex;
+                const startLeft = sign > 0 ? window.innerWidth + (newIndex * 50) : -cardRects[newIndex].width - ((showcaseCards.length - newIndex) * 50);
+                return cardRects[newIndex].left - startLeft;
+            },
+            y: 0,
             width: (i) => cardRects[incomingClones[i].newIndex].width,
             height: (i) => cardRects[incomingClones[i].newIndex].height,
             autoAlpha: 1
         }, 0);
+
+        return {
+            delta,
+            timeline: transitionTimeline,
+            commit: () => finishTransition(true),
+            cancel: () => finishTransition(false)
+        };
+    }
+
+    function changeShowcaseProject(delta, options = {}) {
+        const transition = createShowcaseProjectTransition(delta, options);
+
+        if (!transition) return null;
+        if (!options.scrub && !options.paused) transition.timeline.play(0);
+
+        return transition;
     }
 
     populateShowcaseCards();
     setActiveServiceTab();
+    projectsShowcase.querySelectorAll(".projects-showcase-img img").forEach((image) => {
+        image.draggable = false;
+    });
 
     if (prevButton) {
         prevButton.addEventListener("click", () => changeShowcaseProject(-1));
@@ -1862,14 +2129,6 @@ function initProjectsShowcaseAnimation() {
     if (nextButton) {
         nextButton.addEventListener("click", () => changeShowcaseProject(1));
     }
-
-    showcaseCards.forEach((card, index) => {
-        card.addEventListener("click", () => {
-            const centerIndex = Math.floor(showcaseCards.length / 2);
-            const delta = index - centerIndex;
-            if (delta !== 0) changeShowcaseProject(delta);
-        });
-    });
 
     serviceTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
@@ -1896,48 +2155,428 @@ function initProjectsShowcaseAnimation() {
         updateShowcaseControlPosition();
     });
 
-    if (showcaseContainer) {
-        showcaseContainer.addEventListener("pointerdown", (event) => {
-            if (event.target.closest("button, a")) return;
+    if (showcaseDragArea && showcaseContainer) {
+        const scrollSpeed = 1;
+        const scrollEase = 0.18;
+        const dragEase = 0.35;
+        const friction = 0.95;
+        let dragTargetX = 0;
+        let dragCurrentX = 0;
+        let dragVelocityX = 0;
+        let lastDragX = 0;
+        let dragTransition = null;
+        let dragReleaseTween = null;
+        const dragStartDeadzone = 8;
+        const dragCommitProgress = 0.34;
+        const dragMomentum = 0.018;
+        const dragReleaseVelocity = 4;
+        const dragReleaseMinDuration = 0.18;
+        const dragReleaseMaxDuration = 0.38;
+        const dragMomentumMaxSlides = 2;
+        const dragMomentumFriction = 0.54;
+        const dragMomentumStopVelocity = 4.2;
+        const dragMomentumMinDuration = 0.16;
+        const dragMomentumMaxDuration = 0.46;
+
+        const getDragStepThreshold = () => {
+            const mainCard = projectsShowcase.querySelector(".projects-showcase-item-main");
+            const mainWidth = mainCard ? mainCard.getBoundingClientRect().width : 0;
+
+            return Math.max(72, Math.min(132, mainWidth * 0.34 || window.innerWidth * 0.14));
+        };
+
+        const fullShowcaseImageClipPath = "polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)";
+
+        const setShowcaseImageFinalState = (image) => {
+            if (!image) return;
+
+            gsap.set(image, {
+                clearProps: "position,inset,width,height,zIndex"
+            });
+            gsap.set(image, {
+                autoAlpha: 1,
+                scale: 1,
+                xPercent: 0,
+                yPercent: 0,
+                clipPath: fullShowcaseImageClipPath,
+                transformOrigin: "center center",
+                force3D: true
+            });
+        };
+
+        const setMainImageFinalState = (image) => {
+            setShowcaseImageFinalState(image);
+        };
+
+        const changeShowcaseImagesInPlace = (delta, options = {}) => {
+            if (isProjectSwapAnimating || !showcaseCards.length || delta === 0) return;
+
+            isProjectSwapAnimating = true;
+            const sign = Math.sign(delta);
+            const stepCount = Math.max(1, Math.abs(delta));
+            const duration = options.duration || Math.max(0.34, 0.5 - ((stepCount - 1) * 0.025));
+            const nextOffset = gsap.utils.wrap(0, getActiveProjects().length, projectOffset + delta);
+            const centerIndex = Math.floor(showcaseCards.length / 2);
+            const imageSwaps = showcaseCards.map((card, index) => {
+                const imageWrap = card.querySelector(".projects-showcase-img");
+                const outgoingImage = imageWrap ? imageWrap.querySelector("img") : null;
+                const nextProject = getCurrentProject(nextOffset + index);
+
+                if (!imageWrap || !outgoingImage || !nextProject) return null;
+
+                const incomingImage = outgoingImage.cloneNode(true);
+                incomingImage.src = nextProject.image;
+                incomingImage.alt = `${nextProject.name} preview`;
+                incomingImage.draggable = false;
+
+                return {
+                    card,
+                    index,
+                    imageWrap,
+                    outgoingImage,
+                    incomingImage
+                };
+            }).filter(Boolean);
+
+            if (!imageSwaps.length) {
+                projectOffset = nextOffset;
+                populateShowcaseCards();
+                setMainImageFinalState(projectsShowcase.querySelector(".projects-showcase-item-main .projects-showcase-img img"));
+                updateShowcaseControlPosition();
+                revealMainTitleMasks(0.03);
+                isProjectSwapAnimating = false;
+                return;
+            }
+
+            gsap.killTweensOf(imageSwaps.flatMap(({ outgoingImage, incomingImage }) => [outgoingImage, incomingImage]));
+
+            imageSwaps.forEach(({ imageWrap, outgoingImage, incomingImage }) => {
+                gsap.set(imageWrap, {
+                    position: "relative",
+                    overflow: "hidden"
+                });
+                gsap.set(outgoingImage, {
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    zIndex: 1,
+                    autoAlpha: 1,
+                    xPercent: 0,
+                    yPercent: 0,
+                    scale: 1,
+                    clipPath: fullShowcaseImageClipPath,
+                    transformOrigin: "center center",
+                    force3D: true
+                });
+                gsap.set(incomingImage, {
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    zIndex: 2,
+                    autoAlpha: 0,
+                    xPercent: sign > 0 ? 102 : -102,
+                    yPercent: 0,
+                    scale: 1,
+                    clipPath: fullShowcaseImageClipPath,
+                    transformOrigin: "center center",
+                    force3D: true
+                });
+
+                imageWrap.appendChild(incomingImage);
+            });
+
+            const swapTimeline = gsap.timeline({
+                onComplete: () => {
+                    projectOffset = nextOffset;
+                    populateShowcaseCards();
+                    imageSwaps.forEach(({ outgoingImage, incomingImage }) => {
+                        incomingImage.remove();
+                        setShowcaseImageFinalState(outgoingImage);
+                    });
+                    setMainImageFinalState(projectsShowcase.querySelector(".projects-showcase-item-main .projects-showcase-img img"));
+                    updateShowcaseControlPosition();
+                    revealMainTitleMasks(0.03);
+                    isProjectSwapAnimating = false;
+                }
+            });
+
+            imageSwaps.forEach(({ index, outgoingImage, incomingImage }) => {
+                const distanceFromCenter = Math.abs(index - centerIndex);
+                const localDuration = duration + (distanceFromCenter * 0.025);
+                const slideDistance = 102 - (distanceFromCenter * 3);
+
+                swapTimeline
+                    .to(outgoingImage, {
+                        xPercent: sign > 0 ? -slideDistance : slideDistance,
+                        autoAlpha: 0,
+                        duration: localDuration,
+                        ease: options.ease || "power3.inOut",
+                        overwrite: true
+                    }, 0)
+                    .to(incomingImage, {
+                        xPercent: 0,
+                        autoAlpha: 1,
+                        duration: localDuration,
+                        ease: options.ease || "power3.inOut",
+                        overwrite: true
+                    }, 0);
+            });
+        };
+
+        const resetLiveDragX = (onComplete) => {
+            liveDragX = 0;
+            dragTargetX = 0;
+            dragCurrentX = 0;
+            dragVelocityX = 0;
+            gsap.set(showcaseCards, {
+                x: 0,
+                y: 0,
+                rotateZ: 0,
+                scale: 1,
+                clearProps: "zIndex"
+            });
+            if (onComplete) onComplete();
+        };
+
+        const getDragProjectDirection = (deltaX) => deltaX < 0 ? 1 : -1;
+
+        const getDragTransitionDistance = (deltaX) => {
+            if (!dragTransition) return 0;
+
+            return dragTransition.delta > 0 ? -deltaX : deltaX;
+        };
+
+        const startDragTransition = (direction) => {
+            if (dragReleaseTween) {
+                dragReleaseTween.kill();
+                dragReleaseTween = null;
+            }
+
+            dragTransition = createShowcaseProjectTransition(direction, { scrub: true });
+            if (dragTransition) dragTransition.timeline.progress(0).pause();
+
+            return dragTransition;
+        };
+
+        const completeLiveDragTransition = () => {
+            if (!dragTransition) return;
+
+            const completedTransition = dragTransition;
+            dragTransition = null;
+            completedTransition.timeline.progress(1).pause();
+            completedTransition.commit();
+            resetLiveDragX();
+        };
+
+        const cancelLiveDragTransition = () => {
+            if (!dragTransition) return;
+
+            const canceledTransition = dragTransition;
+            dragTransition = null;
+            canceledTransition.timeline.progress(0).pause();
+            canceledTransition.cancel();
+            resetLiveDragX();
+        };
+
+        const continueReleaseMomentum = (direction, velocity) => {
+            let momentumVelocity = Math.abs(velocity);
+            const startVelocity = momentumVelocity;
+            const momentumSlides = momentumVelocity > dragReleaseVelocity
+                ? gsap.utils.clamp(1, dragMomentumMaxSlides, Math.ceil(momentumVelocity / 10))
+                : 0;
+
+            if (!momentumSlides) return false;
+
+            let completedSlides = 0;
+
+            const runNextMomentumSlide = () => {
+                if (completedSlides >= momentumSlides || momentumVelocity <= dragMomentumStopVelocity) {
+                    dragTransition = null;
+                    dragReleaseTween = null;
+                    resetLiveDragX();
+                    return;
+                }
+
+                const momentumTransition = createShowcaseProjectTransition(direction, { scrub: true });
+
+                if (!momentumTransition) {
+                    dragTransition = null;
+                    dragReleaseTween = null;
+                    resetLiveDragX();
+                    return;
+                }
+
+                dragTransition = momentumTransition;
+                momentumTransition.timeline.progress(0).pause();
+
+                const slowdownProgress = 1 - gsap.utils.clamp(
+                    0,
+                    1,
+                    (momentumVelocity - dragMomentumStopVelocity) / Math.max(startVelocity - dragMomentumStopVelocity, 1)
+                );
+                const momentumDuration = gsap.utils.interpolate(
+                    dragMomentumMinDuration,
+                    dragMomentumMaxDuration,
+                    slowdownProgress
+                );
+
+                dragReleaseTween = gsap.to(momentumTransition.timeline, {
+                    progress: 1,
+                    duration: momentumDuration,
+                    ease: completedSlides === 0 ? "power2.out" : "power3.out",
+                    onComplete: () => {
+                        momentumTransition.commit();
+                        if (dragTransition === momentumTransition) dragTransition = null;
+                        completedSlides += 1;
+                        momentumVelocity *= dragMomentumFriction;
+                        runNextMomentumSlide();
+                    }
+                });
+            };
+
+            runNextMomentumSlide();
+            return true;
+        };
+
+        gsap.ticker.add(() => {
+            if (showcaseContainer.classList.contains("is-dragging") || dragTransition || dragReleaseTween) return;
+
+            dragVelocityX *= friction;
+            if (Math.abs(dragVelocityX) < 0.02 && Math.abs(dragTargetX) < 0.5 && Math.abs(dragCurrentX) < 0.5) {
+                resetLiveDragX();
+            }
+        });
+
+        showcaseDragArea.addEventListener("pointerdown", (event) => {
+            if (event.button !== 0 || isProjectSwapAnimating) return;
+            if (!event.target.closest(".projects-showcase-img")) return;
 
             dragStartX = event.clientX;
             dragStartY = event.clientY;
+            lastDragX = event.clientX;
+            dragTargetX = 0;
+            dragCurrentX = 0;
+            dragVelocityX = 0;
+            dragPointerId = event.pointerId;
             showcaseContainer.classList.add("is-dragging");
+            showcaseDragArea.setPointerCapture(event.pointerId);
+            event.preventDefault();
         });
 
-        showcaseContainer.addEventListener("touchstart", (event) => {
-            if (event.target.closest("button, a")) return;
+        showcaseDragArea.addEventListener("pointermove", (event) => {
+            if (!showcaseContainer.classList.contains("is-dragging")) return;
+            if (dragPointerId !== null && event.pointerId !== dragPointerId) return;
+            if (isProjectSwapAnimating && !dragTransition) return;
 
-            dragStartX = event.touches[0].clientX;
-            dragStartY = event.touches[0].clientY;
-            showcaseContainer.classList.add("is-dragging");
-        }, { passive: true });
+            const deltaX = event.clientX - dragStartX;
+            const deltaY = event.clientY - dragStartY;
+
+            if (Math.abs(deltaX) < Math.abs(deltaY)) return;
+
+            const pointerDeltaX = event.clientX - lastDragX;
+            lastDragX = event.clientX;
+            dragVelocityX = pointerDeltaX * scrollSpeed;
+
+            if (!dragTransition && Math.abs(deltaX) >= dragStartDeadzone) {
+                startDragTransition(getDragProjectDirection(deltaX));
+            }
+
+            if (dragTransition) {
+                const dragDistance = getDragTransitionDistance(deltaX);
+
+                if (dragDistance < -dragStartDeadzone) {
+                    cancelLiveDragTransition();
+                    dragStartX = event.clientX;
+                    lastDragX = event.clientX;
+                    event.preventDefault();
+                    return;
+                }
+
+                const dragProgress = gsap.utils.clamp(0, 1, dragDistance / getDragStepThreshold());
+                dragTransition.timeline.progress(dragProgress).pause();
+                dragCurrentX = dragDistance;
+                dragTargetX = dragDistance;
+                liveDragX = dragDistance;
+
+                if (dragProgress >= 1) {
+                    completeLiveDragTransition();
+                    dragStartX = event.clientX;
+                    lastDragX = event.clientX;
+                }
+            }
+
+            event.preventDefault();
+        });
 
         const finishProjectDrag = (event) => {
             if (!showcaseContainer.classList.contains("is-dragging")) return;
+            if (dragPointerId !== null && event.pointerId !== dragPointerId) return;
 
-            const endX = event.changedTouches ? event.changedTouches[0].clientX : event.clientX;
-            const endY = event.changedTouches ? event.changedTouches[0].clientY : event.clientY;
-
-            const deltaX = endX - dragStartX;
-            const deltaY = endY - dragStartY;
+            const deltaX = event.clientX - dragStartX;
+            const deltaY = event.clientY - dragStartY;
 
             showcaseContainer.classList.remove("is-dragging");
+            if (showcaseDragArea.hasPointerCapture(event.pointerId)) {
+                showcaseDragArea.releasePointerCapture(event.pointerId);
+            }
+            dragPointerId = null;
 
-            if (Math.abs(deltaX) < 45 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+            if (!dragTransition) {
+                resetLiveDragX();
+                return;
+            }
 
-            changeShowcaseProject(deltaX < 0 ? 1 : -1);
+            const activeTransition = dragTransition;
+            const currentProgress = activeTransition.timeline.progress();
+            const directionVelocity = activeTransition.delta > 0 ? -dragVelocityX : dragVelocityX;
+            const momentumProgress = gsap.utils.clamp(-0.22, 0.34, directionVelocity * dragMomentum);
+            const projectedProgress = gsap.utils.clamp(0, 1, currentProgress + momentumProgress);
+            const shouldCommit = projectedProgress >= dragCommitProgress || directionVelocity > dragReleaseVelocity;
+            const targetProgress = shouldCommit ? 1 : 0;
+            const remainingProgress = Math.abs(targetProgress - currentProgress);
+            const releaseDuration = gsap.utils.clamp(
+                dragReleaseMinDuration,
+                dragReleaseMaxDuration,
+                0.18 + (remainingProgress * 0.18)
+            );
+
+            dragReleaseTween = gsap.to(activeTransition.timeline, {
+                progress: targetProgress,
+                duration: releaseDuration,
+                ease: "power2.out",
+                onComplete: () => {
+                    if (shouldCommit) {
+                        activeTransition.commit();
+                    } else {
+                        activeTransition.cancel();
+                    }
+
+                    if (dragTransition === activeTransition) dragTransition = null;
+                    if (shouldCommit && continueReleaseMomentum(activeTransition.delta, directionVelocity)) return;
+
+                    dragReleaseTween = null;
+                    resetLiveDragX();
+                }
+            });
         };
 
-        showcaseContainer.addEventListener("pointerup", finishProjectDrag);
+        showcaseDragArea.addEventListener("pointerup", finishProjectDrag);
         window.addEventListener("pointerup", finishProjectDrag);
-        showcaseContainer.addEventListener("touchend", finishProjectDrag);
 
-        showcaseContainer.addEventListener("pointercancel", () => {
+        showcaseDragArea.addEventListener("pointercancel", (event) => {
             showcaseContainer.classList.remove("is-dragging");
-        });
-        showcaseContainer.addEventListener("touchcancel", () => {
-            showcaseContainer.classList.remove("is-dragging");
+            if (dragPointerId !== null && showcaseDragArea.hasPointerCapture(event.pointerId)) {
+                showcaseDragArea.releasePointerCapture(event.pointerId);
+            }
+            dragPointerId = null;
+            if (dragReleaseTween) {
+                dragReleaseTween.kill();
+                dragReleaseTween = null;
+            }
+            cancelLiveDragTransition();
+            resetLiveDragX();
         });
     }
 
@@ -3052,12 +3691,6 @@ aboutTextTl
         stagger: 0.055,
         duration: 0.7,
         ease: "power4.out"
-    }, "-=0.42")
-    .to(".about-section-fact .line-mask, .about-section-link .line-mask", {
-        y: 0,
-        stagger: 0.06,
-        duration: 0.65,
-        ease: "power4.out"
     }, "-=0.38");
 
 const contactTextTl = gsap.timeline({ paused: true });
@@ -3643,6 +4276,131 @@ function initServiceImageCursor() {
 
 initServiceImageCursor();
 
+function initProjectsShowcaseDragCursor() {
+    const supportsFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+    if (!supportsFinePointer || document.querySelector(".projects-showcase-drag-cursor")) return;
+
+    const cursor = document.createElement("div");
+    cursor.className = "projects-showcase-drag-cursor";
+    cursor.setAttribute("aria-hidden", "true");
+    cursor.innerHTML = `
+        <i class="fa-light fa-arrows-left-right" aria-hidden="true">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 8 4 16l7 8" />
+                <path d="M21 8l7 8-7 8" />
+                <path d="M5 16h22" />
+            </svg>
+        </i>
+    `;
+    document.body.appendChild(cursor);
+
+    let activeTarget = null;
+    let targetX = window.innerWidth / 2;
+    let targetY = window.innerHeight / 2;
+    let currentX = targetX;
+    let currentY = targetY;
+    let animationFrame = null;
+    let isPointerDown = false;
+
+    function isProjectShowcaseImage(element) {
+        return Boolean(
+            element &&
+            element.matches(".projects-showcase-img") &&
+            (element.closest(".projects-showcase-items") || element.closest(".projects-showcase-item-clone"))
+        );
+    }
+
+    function renderCursor() {
+        currentX += (targetX - currentX) * 0.2;
+        currentY += (targetY - currentY) * 0.2;
+
+        cursor.style.setProperty("--cursor-x", `${currentX}px`);
+        cursor.style.setProperty("--cursor-y", `${currentY}px`);
+
+        if (activeTarget) {
+            animationFrame = requestAnimationFrame(renderCursor);
+            return;
+        }
+
+        animationFrame = null;
+    }
+
+    function showCursor(event, target) {
+        activeTarget = target;
+        targetX = event.clientX;
+        targetY = event.clientY;
+        currentX = targetX;
+        currentY = targetY;
+        cursor.style.setProperty("--cursor-x", `${currentX}px`);
+        cursor.style.setProperty("--cursor-y", `${currentY}px`);
+        cursor.classList.add("is-visible");
+
+        if (!animationFrame) {
+            animationFrame = requestAnimationFrame(renderCursor);
+        }
+    }
+
+    function hideCursor() {
+        activeTarget = null;
+        isPointerDown = false;
+        cursor.classList.remove("is-visible", "is-dragging");
+    }
+
+    document.addEventListener("pointerover", (event) => {
+        const target = event.target.closest && event.target.closest(".projects-showcase-img");
+
+        if (!isProjectShowcaseImage(target)) return;
+
+        showCursor(event, target);
+    });
+
+    document.addEventListener("pointermove", (event) => {
+        if (!activeTarget) return;
+
+        targetX = event.clientX;
+        targetY = event.clientY;
+    }, { passive: true });
+
+    document.addEventListener("pointerout", (event) => {
+        if (!activeTarget) return;
+        if (isPointerDown) return;
+
+        const nextTarget = event.relatedTarget;
+
+        if (nextTarget && (activeTarget.contains(nextTarget) || isProjectShowcaseImage(nextTarget.closest && nextTarget.closest(".projects-showcase-img")))) return;
+
+        hideCursor();
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+        if (!activeTarget || event.target.closest(".projects-showcase-img") !== activeTarget) return;
+
+        isPointerDown = true;
+        cursor.classList.add("is-dragging");
+    });
+
+    document.addEventListener("pointerup", () => {
+        isPointerDown = false;
+        cursor.classList.remove("is-dragging");
+
+        const elementAtCursor = document.elementFromPoint(targetX, targetY);
+        const nextTarget = elementAtCursor && elementAtCursor.closest ? elementAtCursor.closest(".projects-showcase-img") : null;
+
+        if (!isProjectShowcaseImage(nextTarget)) {
+            hideCursor();
+            return;
+        }
+
+        activeTarget = nextTarget;
+    });
+
+    document.addEventListener("pointercancel", hideCursor);
+    window.addEventListener("blur", hideCursor);
+}
+
+initProjectsShowcaseDragCursor();
+
 // 4. AUTOMATIC NAVBAR SWAP LOGIC
 const navTl = gsap.timeline({ paused: true });
 const navHideTl = gsap.timeline({ paused: true });
@@ -3693,6 +4451,7 @@ navHideTl.to(".logo-button .char", {
     });
 
 let masterTl;
+let aboutStartTime = null;
 let navIsRevealed = false;
 const navRevealTime = 1;
 const logoButton = document.querySelector(".logo-button");
@@ -3721,6 +4480,11 @@ function syncLogoContrast() {
     const probeY = logoRect.top + (logoRect.height / 2);
     const elementsAtLogo = document.elementsFromPoint(probeX, probeY);
     let backgroundColor = window.getComputedStyle(document.body).backgroundColor;
+
+    if (elementsAtLogo.some(element => element.closest && element.closest(".masking-overlay-card-about"))) {
+        logoButton.style.color = "#000000";
+        return;
+    }
 
     for (const element of elementsAtLogo) {
         if (!element.closest || element.closest(".navbar")) continue;
@@ -3800,6 +4564,34 @@ function syncNavState() {
     syncLogoContrast();
 }
 
+function syncApproachLayerState({ useScrollPosition = false, forceAboutVisible = false } = {}) {
+    if (!masterTl || !Number.isFinite(aboutStartTime)) return;
+
+    const trigger = masterTl.scrollTrigger;
+    const timelineDuration = masterTl.duration();
+    const currentTimelineTime = useScrollPosition && trigger && trigger.end > trigger.start && timelineDuration
+        ? timelineDuration * gsap.utils.clamp(0, 1, ((typeof trigger.scroll === "function" ? trigger.scroll() : window.scrollY) - trigger.start) / (trigger.end - trigger.start))
+        : masterTl.time();
+    const isAboutFullyInView = currentTimelineTime >= aboutStartTime + aboutTransitionDuration - 0.001;
+
+    gsap.set(".approach-card", {
+        autoAlpha: isAboutFullyInView ? 0 : 1,
+        pointerEvents: isAboutFullyInView ? "none" : "auto"
+    });
+
+    gsap.set(approachStepCards, {
+        autoAlpha: 1,
+        pointerEvents: "auto"
+    });
+
+    if (forceAboutVisible && isAboutFullyInView) {
+        gsap.set(".masking-overlay-card-about", {
+            y: 0,
+            yPercent: 0
+        });
+    }
+}
+
 masterTl = gsap.timeline({
     scrollTrigger: {
         trigger: ".scroll-container",
@@ -3811,6 +4603,7 @@ masterTl = gsap.timeline({
         invalidateOnRefresh: true,
         onUpdate: () => {
             syncNavState();
+            syncApproachLayerState();
             syncApproachMasks();
             scheduleProjectRevealCheck();
             scheduleProjectScrollHover();
@@ -3824,6 +4617,7 @@ masterTl = gsap.timeline({
             gsap.set(".contact-card", { x: getViewportWidth(), xPercent: 0 });
             gsap.set(".site-footer", { y: 0, autoAlpha: isIndexPage ? 0 : 1 });
             syncNavState();
+            syncApproachLayerState({ useScrollPosition: true, forceAboutVisible: true });
             syncApproachMasks();
             resetProjectRevealItems();
             scheduleProjectRevealCheck();
@@ -4317,7 +5111,7 @@ approachStepCards.forEach((step, index) => {
     }, cardScrollTime + 0.18);
 });
 
-const aboutStartTime = approachHorizontalStartTime + approachStepHorizontalTotalDuration;
+aboutStartTime = approachHorizontalStartTime + approachStepHorizontalTotalDuration;
 
 masterTl.fromTo(".masking-overlay-card-about", {
     y: () => getViewportHeight(),
@@ -4347,6 +5141,20 @@ if (aboutHoldDuration > 0) {
 }
 
 if (aboutReadDuration > 0) {
+    masterTl.to(".about-laptop-services-word .line-mask", {
+        y: 0,
+        stagger: 0.08,
+        duration: Math.min(0.8, aboutReadDuration * 0.42),
+        ease: "power4.out"
+    }, aboutStartTime + aboutTransitionDuration + aboutHoldDuration + (aboutReadDuration * 0.34));
+
+    masterTl.to(".about-section-link .line-mask", {
+        y: 0,
+        stagger: 0.055,
+        duration: Math.min(0.65, aboutReadDuration * 0.34),
+        ease: "power4.out"
+    }, aboutStartTime + aboutTransitionDuration + aboutHoldDuration + (aboutReadDuration * 0.48));
+
     masterTl.to(".about-section-inner", {
         y: () => getAboutMetrics().endY,
         ease: "none",
@@ -4616,6 +5424,10 @@ const contactThankClose = document.querySelector(".contact-thank-close");
 
 function openContactThankModal() {
     if (!contactThankModal) return;
+
+    if (contactThankModal.parentElement !== document.body) {
+        document.body.appendChild(contactThankModal);
+    }
 
     contactThankModal.classList.add("is-open");
     contactThankModal.setAttribute("aria-hidden", "false");
