@@ -5441,11 +5441,90 @@ function closeContactThankModal() {
     contactThankModal.setAttribute("aria-hidden", "true");
 }
 
+// Personal inbox that receives every form submission. FormSubmit.co delivers
+// here with no monthly send limit. On the very first submission FormSubmit
+// emails this address a one-time confirmation link — click it once and every
+// future submission arrives automatically, forever.
+const CONTACT_FORM_EMAIL = "erblinkasumaj0@gmail.com";
+
 if (contactForm && contactThankModal) {
-    contactForm.addEventListener("submit", (event) => {
+    const contactSubmitButton = contactForm.querySelector('button[type="submit"]');
+    const contactSubmitDefaultText = contactSubmitButton?.querySelector("span")?.textContent || "Send";
+    let contactErrorEl = null;
+    let contactIsSending = false;
+
+    function setContactError(message) {
+        if (!message) {
+            contactErrorEl?.remove();
+            contactErrorEl = null;
+            return;
+        }
+        if (!contactErrorEl) {
+            contactErrorEl = document.createElement("p");
+            contactErrorEl.className = "contact-form-error";
+            contactErrorEl.setAttribute("role", "alert");
+            contactForm.appendChild(contactErrorEl);
+        }
+        contactErrorEl.textContent = message;
+    }
+
+    function setContactButtonText(text) {
+        if (!contactSubmitButton) return;
+        const span = contactSubmitButton.querySelector("span");
+        if (span) span.textContent = text;
+        else contactSubmitButton.textContent = text;
+    }
+
+    contactForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        openContactThankModal();
-        contactForm.reset();
+        if (contactIsSending) return;
+
+        // Native HTML5 validation (required fields + valid email format).
+        if (!contactForm.checkValidity()) {
+            contactForm.reportValidity();
+            return;
+        }
+
+        setContactError("");
+        contactIsSending = true;
+        if (contactSubmitButton) contactSubmitButton.disabled = true;
+        setContactButtonText("Sending…");
+
+        try {
+            const formData = new FormData(contactForm);
+            // FormSubmit configuration fields.
+            formData.append("_subject", "New Blueprint enquiry");
+            formData.append("_template", "table");
+            formData.append("_captcha", "false");
+
+            const response = await fetch(
+                "https://formsubmit.co/ajax/" + encodeURIComponent(CONTACT_FORM_EMAIL),
+                {
+                    method: "POST",
+                    headers: { Accept: "application/json" },
+                    body: formData
+                }
+            );
+
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok && (result.success === "true" || result.success === true)) {
+                openContactThankModal();
+                contactForm.reset();
+            } else if (result.message && /activat/i.test(result.message)) {
+                // One-time FormSubmit state before the inbox owner clicks the
+                // "Activate Form" link. Surface it so it isn't mistaken for a failure.
+                setContactError("Almost there — this form needs to be activated once. Please check your inbox for the activation link.");
+            } else {
+                throw new Error(result.message || "Request failed");
+            }
+        } catch (error) {
+            setContactError("Sorry, something went wrong sending your message. Please try again or email us directly.");
+        } finally {
+            contactIsSending = false;
+            if (contactSubmitButton) contactSubmitButton.disabled = false;
+            setContactButtonText(contactSubmitDefaultText);
+        }
     });
 
     contactThankClose?.addEventListener("click", closeContactThankModal);
