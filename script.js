@@ -946,6 +946,7 @@ function refreshBarbaPage(nextContainer) {
     initStandaloneProjectCursorPreview();
     initPremiumAboutPage();
     startStandalonePageAnimation();
+    initMobilePageTextReveals();
 }
 
 function initBlueprintBarbaOptimizer() {
@@ -1708,6 +1709,45 @@ function initMobileAboutScrollReveals() {
 
 initMobileAboutScrollReveals();
 
+function initMobilePageTextReveals() {
+    if (!window.matchMedia("(max-width: 767px)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const masks = gsap.utils.toArray([
+        ".scroll-container .line-mask",
+        ".link-page-main .line-mask",
+        ".link-page-reveal-footer .line-mask"
+    ].join(",")).filter((mask) => {
+        if (mask.dataset.mobileRevealInit === "true") return false;
+        if (mask.closest(".loader, .menu-overlay, .navbar, .hero-section, .link-page-hero, .projects-showcase-hero")) return false;
+        if (mask.closest(".masking-overlay-about-copy, .about-laptop-services-word, .about-section-statement, .about-section-label, .about-section-body")) return false;
+        return true;
+    });
+
+    if (!masks.length) return;
+
+    masks.forEach((mask) => {
+        mask.dataset.mobileRevealInit = "true";
+    });
+
+    gsap.set(masks, { y: "140%" });
+
+    ScrollTrigger.batch(masks, {
+        start: "top 90%",
+        once: true,
+        onEnter: (batch) => {
+            gsap.to(batch, {
+                y: 0,
+                stagger: 0.045,
+                duration: 0.78,
+                ease: "power4.out"
+            });
+        }
+    });
+}
+
+initMobilePageTextReveals();
+
 function initProjectsShowcaseAnimation() {
     const projectsShowcase = document.querySelector(".projects-showcase-hero");
 
@@ -1780,6 +1820,8 @@ function initProjectsShowcaseAnimation() {
     const leftWord = projectsShowcase.querySelector(".projects-showcase-word-left");
     const rightWord = projectsShowcase.querySelector(".projects-showcase-word-right");
     const mobileDots = gsap.utils.toArray(projectsShowcase.querySelectorAll(".projects-mobile-dots span"));
+    const mobileMetaName = projectsShowcase.querySelector(".projects-mobile-meta-name");
+    const mobileMetaYear = projectsShowcase.querySelector(".projects-mobile-meta-year");
     const mobileDetailTitle = projectsShowcase.querySelector(".projects-mobile-detail h1");
     const mobileDetailCopy = projectsShowcase.querySelector(".projects-mobile-detail p");
     const navbar = document.querySelector(".navbar");
@@ -1845,10 +1887,13 @@ function initProjectsShowcaseAnimation() {
         if (!project) return;
         if (mobileDetailTitle) mobileDetailTitle.textContent = project.name;
         if (mobileDetailCopy) mobileDetailCopy.textContent = getMobileProjectDescription(project);
+        if (mobileMetaName) mobileMetaName.textContent = project.name;
+        if (mobileMetaYear) mobileMetaYear.textContent = project.year;
 
         if (mobileDots.length) {
             const activeDotIndex = gsap.utils.clamp(0, mobileDots.length - 1, projectOffset + 1);
             mobileDots.forEach((dot, index) => {
+                if (dot.classList.contains("projects-mobile-meta-name") || dot.classList.contains("projects-mobile-meta-year")) return;
                 dot.classList.toggle("is-active", index === activeDotIndex);
             });
         }
@@ -2166,6 +2211,8 @@ function initProjectsShowcaseAnimation() {
         let lastDragX = 0;
         let dragTransition = null;
         let dragReleaseTween = null;
+        let dragProgressTween = null;
+        let dragTargetProgress = 0;
         const dragStartDeadzone = 8;
         const dragCommitProgress = 0.34;
         const dragMomentum = 0.018;
@@ -2177,12 +2224,55 @@ function initProjectsShowcaseAnimation() {
         const dragMomentumStopVelocity = 4.2;
         const dragMomentumMinDuration = 0.16;
         const dragMomentumMaxDuration = 0.46;
+        const projectsPhoneSwipeQuery = window.matchMedia("(max-width: 767px)");
+        const projectsLaptopSwipeQuery = window.matchMedia("(min-width: 768px) and (pointer: fine)");
+        let phoneSwipeActive = false;
+        let phoneSwipeX = 0;
+        let phoneSwipeTween = null;
 
         const getDragStepThreshold = () => {
             const mainCard = projectsShowcase.querySelector(".projects-showcase-item-main");
             const mainWidth = mainCard ? mainCard.getBoundingClientRect().width : 0;
 
             return Math.max(72, Math.min(132, mainWidth * 0.34 || window.innerWidth * 0.14));
+        };
+
+        const getPhoneSwipeStepDistance = () => {
+            const cardRects = showcaseCards
+                .map((card) => card.getBoundingClientRect())
+                .filter((rect) => rect.width > 0 && rect.height > 0)
+                .sort((a, b) => a.left - b.left);
+
+            if (cardRects.length > 1) {
+                return Math.abs(cardRects[1].left - cardRects[0].left);
+            }
+
+            return Math.max(120, (cardRects[0] ? cardRects[0].width : window.innerWidth * 0.54) + (window.innerWidth * 0.072));
+        };
+
+        const getMaxPhoneMomentumSlides = () => Math.min(5, Math.max(1, getActiveProjects().length - 1));
+        const shouldUseDirectProjectSwipe = () => projectsPhoneSwipeQuery.matches || projectsLaptopSwipeQuery.matches;
+
+        const setPhoneSwipeX = (x) => {
+            phoneSwipeX = x;
+            gsap.set(showcaseDragArea, {
+                x,
+                force3D: true
+            });
+        };
+
+        const resetPhoneSwipe = () => {
+            if (phoneSwipeTween) {
+                phoneSwipeTween.kill();
+                phoneSwipeTween = null;
+            }
+
+            phoneSwipeActive = false;
+            phoneSwipeX = 0;
+            gsap.set(showcaseDragArea, {
+                x: 0,
+                clearProps: "transform"
+            });
         };
 
         const fullShowcaseImageClipPath = "polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)";
@@ -2326,10 +2416,25 @@ function initProjectsShowcaseAnimation() {
         };
 
         const resetLiveDragX = (onComplete) => {
+            if (dragProgressTween) {
+                dragProgressTween.kill();
+                dragProgressTween = null;
+            }
+            if (phoneSwipeTween) {
+                phoneSwipeTween.kill();
+                phoneSwipeTween = null;
+            }
+            phoneSwipeActive = false;
+            phoneSwipeX = 0;
+            gsap.set(showcaseDragArea, {
+                x: 0,
+                clearProps: "transform"
+            });
             liveDragX = 0;
             dragTargetX = 0;
             dragCurrentX = 0;
             dragVelocityX = 0;
+            dragTargetProgress = 0;
             gsap.set(showcaseCards, {
                 x: 0,
                 y: 0,
@@ -2342,6 +2447,86 @@ function initProjectsShowcaseAnimation() {
 
         const getDragProjectDirection = (deltaX) => deltaX < 0 ? 1 : -1;
 
+        const completePhoneSwipe = (deltaX, deltaY) => {
+            if (!phoneSwipeActive) return false;
+
+            if (phoneSwipeTween) {
+                phoneSwipeTween.kill();
+                phoneSwipeTween = null;
+            }
+
+            const stepDistance = getPhoneSwipeStepDistance();
+            const direction = Math.abs(deltaX) > 2 ? getDragProjectDirection(deltaX) : (dragVelocityX < 0 ? 1 : -1);
+            const directionVelocity = direction > 0 ? -dragVelocityX : dragVelocityX;
+            const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
+            const shouldCommit = isHorizontalSwipe && (Math.abs(deltaX) >= stepDistance * 0.22 || directionVelocity > dragReleaseVelocity);
+            const distanceSlides = Math.max(1, Math.round(Math.abs(deltaX) / stepDistance));
+            const velocitySlides = directionVelocity > dragReleaseVelocity
+                ? Math.ceil((directionVelocity - dragReleaseVelocity) / 5) + 1
+                : 1;
+            const slideCount = shouldCommit
+                ? gsap.utils.clamp(1, getMaxPhoneMomentumSlides(), Math.max(distanceSlides, velocitySlides))
+                : 0;
+            const targetX = shouldCommit ? -direction * stepDistance * slideCount : 0;
+            const remainingDistance = Math.max(0, Math.abs(targetX - phoneSwipeX));
+            const slideDuration = shouldCommit
+                ? gsap.utils.clamp(0.18, 0.7, remainingDistance / Math.max(900, directionVelocity * 120))
+                : 0.3;
+
+            isProjectSwapAnimating = true;
+
+            if (!shouldCommit) {
+                phoneSwipeTween = gsap.to(showcaseDragArea, {
+                    x: targetX,
+                    duration: slideDuration,
+                    ease: "back.out(1.1)",
+                    overwrite: true,
+                    force3D: true,
+                    onComplete: () => {
+                        gsap.set(showcaseDragArea, {
+                            x: 0,
+                            clearProps: "transform"
+                        });
+                        phoneSwipeTween = null;
+                        phoneSwipeActive = false;
+                        phoneSwipeX = 0;
+                        isProjectSwapAnimating = false;
+                        updateShowcaseControlPosition();
+                    }
+                });
+
+                return true;
+            }
+
+            const finishPhoneMomentum = () => {
+                projectOffset = gsap.utils.wrap(0, getActiveProjects().length, projectOffset + (direction * slideCount));
+                populateShowcaseCards();
+                gsap.set(showcaseDragArea, {
+                    x: 0,
+                    clearProps: "transform"
+                });
+                phoneSwipeTween = null;
+                phoneSwipeActive = false;
+                phoneSwipeX = 0;
+                isProjectSwapAnimating = false;
+                updateShowcaseControlPosition();
+            };
+
+            phoneSwipeTween = gsap.to(showcaseDragArea, {
+                x: targetX,
+                duration: slideDuration,
+                ease: "power3.out",
+                overwrite: true,
+                force3D: true,
+                onUpdate: () => {
+                    phoneSwipeX = Number(gsap.getProperty(showcaseDragArea, "x")) || 0;
+                },
+                onComplete: finishPhoneMomentum
+            });
+
+            return true;
+        };
+
         const getDragTransitionDistance = (deltaX) => {
             if (!dragTransition) return 0;
 
@@ -2353,16 +2538,51 @@ function initProjectsShowcaseAnimation() {
                 dragReleaseTween.kill();
                 dragReleaseTween = null;
             }
+            if (dragProgressTween) {
+                dragProgressTween.kill();
+                dragProgressTween = null;
+            }
 
             dragTransition = createShowcaseProjectTransition(direction, { scrub: true });
             if (dragTransition) dragTransition.timeline.progress(0).pause();
+            dragTargetProgress = 0;
 
             return dragTransition;
+        };
+
+        const setDragTransitionProgress = (progress, immediate = false) => {
+            if (!dragTransition) return;
+
+            dragTargetProgress = gsap.utils.clamp(0, 1, progress);
+
+            if (dragProgressTween) {
+                dragProgressTween.kill();
+                dragProgressTween = null;
+            }
+
+            if (immediate || reduceMotion) {
+                dragTransition.timeline.progress(dragTargetProgress).pause();
+                return;
+            }
+
+            dragProgressTween = gsap.to(dragTransition.timeline, {
+                progress: dragTargetProgress,
+                duration: 0.16,
+                ease: "power3.out",
+                overwrite: true,
+                onComplete: () => {
+                    dragProgressTween = null;
+                }
+            });
         };
 
         const completeLiveDragTransition = () => {
             if (!dragTransition) return;
 
+            if (dragProgressTween) {
+                dragProgressTween.kill();
+                dragProgressTween = null;
+            }
             const completedTransition = dragTransition;
             dragTransition = null;
             completedTransition.timeline.progress(1).pause();
@@ -2373,6 +2593,10 @@ function initProjectsShowcaseAnimation() {
         const cancelLiveDragTransition = () => {
             if (!dragTransition) return;
 
+            if (dragProgressTween) {
+                dragProgressTween.kill();
+                dragProgressTween = null;
+            }
             const canceledTransition = dragTransition;
             dragTransition = null;
             canceledTransition.timeline.progress(0).pause();
@@ -2459,6 +2683,16 @@ function initProjectsShowcaseAnimation() {
             dragTargetX = 0;
             dragCurrentX = 0;
             dragVelocityX = 0;
+            phoneSwipeActive = shouldUseDirectProjectSwipe();
+            phoneSwipeX = 0;
+            if (phoneSwipeTween) {
+                phoneSwipeTween.kill();
+                phoneSwipeTween = null;
+            }
+            gsap.set(showcaseDragArea, {
+                x: 0,
+                clearProps: "transform"
+            });
             dragPointerId = event.pointerId;
             showcaseContainer.classList.add("is-dragging");
             showcaseDragArea.setPointerCapture(event.pointerId);
@@ -2479,6 +2713,16 @@ function initProjectsShowcaseAnimation() {
             lastDragX = event.clientX;
             dragVelocityX = pointerDeltaX * scrollSpeed;
 
+            if (phoneSwipeActive && shouldUseDirectProjectSwipe()) {
+                const stepDistance = getPhoneSwipeStepDistance();
+                const maxSwipeDistance = stepDistance * getMaxPhoneMomentumSlides();
+                const easedX = gsap.utils.clamp(-maxSwipeDistance, maxSwipeDistance, deltaX);
+
+                setPhoneSwipeX(easedX);
+                event.preventDefault();
+                return;
+            }
+
             if (!dragTransition && Math.abs(deltaX) >= dragStartDeadzone) {
                 startDragTransition(getDragProjectDirection(deltaX));
             }
@@ -2495,7 +2739,7 @@ function initProjectsShowcaseAnimation() {
                 }
 
                 const dragProgress = gsap.utils.clamp(0, 1, dragDistance / getDragStepThreshold());
-                dragTransition.timeline.progress(dragProgress).pause();
+                setDragTransitionProgress(dragProgress);
                 dragCurrentX = dragDistance;
                 dragTargetX = dragDistance;
                 liveDragX = dragDistance;
@@ -2524,28 +2768,36 @@ function initProjectsShowcaseAnimation() {
             dragPointerId = null;
 
             if (!dragTransition) {
+                if (phoneSwipeActive && completePhoneSwipe(deltaX, deltaY)) {
+                    return;
+                }
                 resetLiveDragX();
                 return;
             }
 
             const activeTransition = dragTransition;
+            if (dragProgressTween) {
+                dragProgressTween.kill();
+                dragProgressTween = null;
+            }
             const currentProgress = activeTransition.timeline.progress();
+            const decisionProgress = Math.max(currentProgress, dragTargetProgress);
             const directionVelocity = activeTransition.delta > 0 ? -dragVelocityX : dragVelocityX;
             const momentumProgress = gsap.utils.clamp(-0.22, 0.34, directionVelocity * dragMomentum);
-            const projectedProgress = gsap.utils.clamp(0, 1, currentProgress + momentumProgress);
+            const projectedProgress = gsap.utils.clamp(0, 1, decisionProgress + momentumProgress);
             const shouldCommit = projectedProgress >= dragCommitProgress || directionVelocity > dragReleaseVelocity;
             const targetProgress = shouldCommit ? 1 : 0;
             const remainingProgress = Math.abs(targetProgress - currentProgress);
             const releaseDuration = gsap.utils.clamp(
-                dragReleaseMinDuration,
-                dragReleaseMaxDuration,
-                0.18 + (remainingProgress * 0.18)
+                dragReleaseMinDuration + 0.06,
+                dragReleaseMaxDuration + 0.16,
+                0.24 + (remainingProgress * 0.24)
             );
 
             dragReleaseTween = gsap.to(activeTransition.timeline, {
                 progress: targetProgress,
                 duration: releaseDuration,
-                ease: "power2.out",
+                ease: shouldCommit ? "power3.out" : "back.out(1.2)",
                 onComplete: () => {
                     if (shouldCommit) {
                         activeTransition.commit();
@@ -2571,6 +2823,11 @@ function initProjectsShowcaseAnimation() {
                 showcaseDragArea.releasePointerCapture(event.pointerId);
             }
             dragPointerId = null;
+            if (dragProgressTween) {
+                dragProgressTween.kill();
+                dragProgressTween = null;
+            }
+            resetPhoneSwipe();
             if (dragReleaseTween) {
                 dragReleaseTween.kill();
                 dragReleaseTween = null;
@@ -2579,6 +2836,8 @@ function initProjectsShowcaseAnimation() {
             resetLiveDragX();
         });
     }
+
+    const isProjectsPhoneIntro = window.matchMedia("(max-width: 767px)").matches;
 
     if (reduceMotion) {
         gsap.set(showcaseLetters, { y: 0 });
@@ -2602,6 +2861,182 @@ function initProjectsShowcaseAnimation() {
         gsap.set(showcaseTitle, { bottom: "0.1em" });
         updateShowcaseControlPosition();
         return null;
+    }
+
+    if (isProjectsPhoneIntro) {
+        const phoneUiElements = [
+            navbar,
+            serviceNav,
+            projectsShowcase.querySelector(".projects-mobile-dots")
+        ].filter(Boolean);
+        const phoneImageWraps = gsap.utils.toArray(projectsShowcase.querySelectorAll(".projects-showcase-img"));
+        const createPhoneIntroWord = (wordElement, text) => {
+            if (!wordElement) {
+                return {
+                    chars: [],
+                    remove() {}
+                };
+            }
+
+            wordElement.querySelectorAll(".projects-phone-intro-word").forEach((node) => node.remove());
+            const wrapper = document.createElement("span");
+            wrapper.className = "projects-phone-intro-word";
+            const chars = [];
+
+            Array.from(text).forEach((letter) => {
+                const mask = document.createElement("span");
+                mask.className = "projects-phone-intro-char-mask";
+
+                const char = document.createElement("span");
+                char.className = "projects-phone-intro-char";
+                char.textContent = letter;
+
+                mask.appendChild(char);
+                wrapper.appendChild(mask);
+                chars.push(char);
+            });
+
+            wordElement.appendChild(wrapper);
+
+            return {
+                chars,
+                keep() {
+                    wrapper.classList.add("is-phone-intro-final");
+                },
+                remove() {
+                    wrapper.remove();
+                }
+            };
+        };
+        const leftIntro = createPhoneIntroWord(leftWord, "Our");
+        const rightIntro = createPhoneIntroWord(rightWord, "Work");
+        const leftIntroChars = leftIntro.chars;
+        const rightIntroChars = rightIntro.chars;
+        const allIntroChars = [...leftIntroChars, ...rightIntroChars];
+
+        showcaseTitle?.classList.add("is-phone-intro-active");
+        gsap.set(showcaseContainer, {
+            "--projects-bottom-title-opacity": 0,
+            "--projects-bottom-title-y": "1.25rem",
+            "--projects-final-word-opacity": 0
+        });
+        gsap.set(allIntroChars, {
+            "--projects-phone-letter-y": "140%"
+        });
+        gsap.set(phoneUiElements, {
+            autoAlpha: 0,
+            y: (index, target) => target === navbar ? -26 : 18
+        });
+        gsap.set(showcaseDragArea, {
+            autoAlpha: 1,
+            scale: 1,
+            clipPath: "none",
+            clearProps: "visibility"
+        });
+        gsap.set(phoneImageWraps, {
+            autoAlpha: 0,
+            scale: 0.74,
+            clipPath: "inset(18% 18% 18% 18%)",
+            transformOrigin: "center center",
+            force3D: true
+        });
+        gsap.set(showcaseTitle, {
+            autoAlpha: 1
+        });
+        gsap.set(leftWord, {
+            autoAlpha: 1,
+            y: "18.4svh",
+            scale: 0.94,
+            transformOrigin: "center center"
+        });
+        gsap.set(rightWord, {
+            autoAlpha: 1,
+            y: "-20.8svh",
+            scale: 0.94,
+            transformOrigin: "center center"
+        });
+        gsap.set([mainImage, ...sideImages], {
+            scale: 1,
+            clipPath: "polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)"
+        });
+        hideMainTitleMasks();
+        updateShowcaseControlPosition();
+
+        return gsap.timeline({
+            paused: true,
+            defaults: {
+                ease: "power4.out"
+            }
+        })
+            .to(leftIntroChars, {
+                "--projects-phone-letter-y": "0%",
+                duration: 0.8,
+                stagger: 0.05
+            })
+            .to(rightIntroChars, {
+                "--projects-phone-letter-y": "0%",
+                duration: 0.8,
+                stagger: 0.05
+            }, "-=0.34")
+            .to([leftWord, rightWord], {
+                y: (index) => index === 0 ? "13.2svh" : "-15.2svh",
+                duration: 0.72,
+                stagger: 0.08
+            }, "-=0.18")
+            .to(phoneImageWraps, {
+                autoAlpha: 1,
+                scale: 1,
+                clipPath: "inset(0% 0% 0% 0%)",
+                duration: 1.06,
+                stagger: 0.035,
+                ease: "expo.out"
+            }, "-=0.16")
+            .to(leftWord, {
+                y: 0,
+                scale: 1,
+                duration: 0.95,
+                ease: "expo.out"
+            }, "-=0.72")
+            .to(rightWord, {
+                y: 0,
+                scale: 1,
+                duration: 0.95,
+                ease: "expo.out"
+            }, "<")
+            .add(() => {
+                leftIntro.keep();
+                rightIntro.keep();
+            })
+            .to(showcaseContainer, {
+                "--projects-bottom-title-opacity": 1,
+                "--projects-bottom-title-y": "0rem",
+                duration: 0.58,
+                ease: "power3.out"
+            }, "-=0.24")
+            .to(projectsShowcase.querySelector(".projects-mobile-dots") || [], {
+                autoAlpha: 1,
+                y: 0,
+                duration: 0.48,
+                ease: "power3.out"
+            }, "<")
+            .to(navbar || [], {
+                autoAlpha: 1,
+                y: 0,
+                duration: 0.58,
+                ease: "power3.out"
+            }, ">-0.12")
+            .to(serviceNav || [], {
+                autoAlpha: 1,
+                y: 0,
+                duration: 0.58,
+                ease: "power3.out"
+            }, "<0.12")
+            .set(phoneImageWraps, {
+                autoAlpha: 1,
+                scale: 1,
+                clipPath: "inset(0% 0% 0% 0%)"
+            })
+            .call(updateShowcaseControlPosition);
     }
 
     gsap.set(showcaseLetters, { y: 400 });
@@ -3240,6 +3675,7 @@ function runPageLoadSequence() {
         }
 
         prepareNaturalWebCardHashLanding();
+        initMobilePageTextReveals();
         pageIsReady = true;
         ScrollTrigger.refresh();
         scrollToWebDevCardHashIfRequested();
@@ -3281,6 +3717,7 @@ function runPageLoadSequence() {
             startStandalonePageAnimation();
         }
 
+        initMobilePageTextReveals();
         pageIsReady = true;
         ScrollTrigger.refresh();
         syncNavState();
@@ -3315,6 +3752,7 @@ function runPageLoadSequence() {
             } else {
                 startStandalonePageAnimation();
             }
+            initMobilePageTextReveals();
             pageIsReady = true;
             ScrollTrigger.refresh();
             syncNavState();
