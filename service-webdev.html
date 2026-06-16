@@ -298,15 +298,16 @@
             width: min(100%, 15.3rem);
             aspect-ratio: 1 / 1.02;
             background-color: #806542;
-            overflow: visible;
+            overflow: hidden;
         }
 
         .webdev-included-visual img {
             position: absolute;
-            left: -0.28rem;
-            bottom: -0.8rem;
-            width: 124%;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             max-width: none;
+            object-fit: contain;
             display: block;
         }
 
@@ -467,16 +468,17 @@
             width: min(100%, 18.4rem);
             aspect-ratio: 1 / 1.13;
             background-color: #e6dac8;
+            overflow: hidden;
         }
 
         .webdev-responsive-visual img {
             position: absolute;
-            left: 50%;
-            bottom: 0.2rem;
-            width: 58%;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             max-width: none;
+            object-fit: contain;
             display: block;
-            transform: translateX(-50%);
         }
 
         .webdev-process-collage {
@@ -1135,7 +1137,7 @@
         <h2 class="webdev-included-title page-enter">What's included</h2>
         <div class="service-features-grid webdev-included-grid">
             <div class="webdev-included-visual page-enter" aria-hidden="true">
-                <img loading="lazy" decoding="async" src="./web_img/webp-output/web_elements_1.webp" alt="">
+                <img loading="lazy" decoding="async" src="./web_img/web_elements_1 (2).png" alt="">
             </div>
             <div class="service-feature page-enter">
                 <div class="service-feature-num">01</div>
@@ -1177,7 +1179,7 @@
             <p class="webdev-responsive-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.</p>
         </div>
         <div class="webdev-responsive-visual page-enter" aria-hidden="true">
-            <img loading="lazy" decoding="async" src="./web_img/webp-output/web_elements_2.webp" alt="">
+            <img loading="lazy" decoding="async" src="./web_img/web_elements_2 (2).png" alt="">
         </div>
     </section>
 

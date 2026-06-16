@@ -152,6 +152,7 @@ const aboutClientsRows = gsap.utils.toArray(".about-clients-track").map((track, 
     const row = {
         track,
         x: isReverseRow ? -50 : 0,
+        parallaxX: 0,
         direction: isReverseRow ? 1 : -1,
         baseDirection: isReverseRow ? 1 : -1,
         speed: 50 / (index === 1 ? 48 : 58)
@@ -192,7 +193,10 @@ if (aboutClientsRows.length) {
 
         aboutClientsRows.forEach((row) => {
             row.x = aboutClientsWrapX(row.x + (row.direction * row.speed * deltaSeconds));
-            gsap.set(row.track, { xPercent: row.x });
+            gsap.set(row.track, {
+                xPercent: row.x,
+                x: row.parallaxX
+            });
         });
     });
 }
@@ -340,6 +344,9 @@ function setBlueprintShellRuntimeActive(isActive) {
 let pageIsReady = false;
 const currentPageName = window.location.pathname.split("/").pop().toLowerCase();
 const isIndexPage = currentPageName === "" || currentPageName === "index.html";
+const isProjectsPage = currentPageName === "projects.html";
+const isApproachPage = currentPageName === "approach.html";
+const isAboutPage = currentPageName === "about.html";
 const linkLoaderStorageKey = "blueprintUseLinkLoader";
 const serviceDirectNavigationStorageKey = "blueprintServiceDirectNavigation";
 const webDevReverseReturnStorageKey = "blueprintWebDevReverseReturn";
@@ -385,15 +392,325 @@ function setLinkLoaderFlag() {
     }
 }
 
+function getBlueprintActiveFrame() {
+    const layer = blueprintFrameLayer || document.querySelector(".blueprint-frame-layer");
+
+    return layer ? layer.querySelector(".blueprint-page-frame.is-active") : null;
+}
+
+function getBlueprintShellTransitionTargets(loader) {
+    const container = document.querySelector('[data-barba="container"]');
+
+    if (!container) return [];
+
+    return Array.from(container.children).filter((child) => {
+        if (child === loader || child.id === "loader") return false;
+        if (child.tagName === "SCRIPT" || child.tagName === "STYLE") return false;
+        if (child.classList.contains("menu-overlay") && !child.classList.contains("is-open")) return false;
+
+        return true;
+    });
+}
+
+function createBlueprintSamePageFrameState(rawUrl) {
+    const url = normalizeBlueprintPageUrl(rawUrl);
+    const layer = ensureBlueprintFrameLayer();
+
+    if (!url) return null;
+
+    const frame = document.createElement("iframe");
+    const frameState = { frame, ready: false, readyPromise: null };
+
+    frame.className = "blueprint-page-frame";
+    frame.dataset.blueprintFrameUrl = url;
+    frame.dataset.blueprintTemporaryFrame = "true";
+    frame.loading = "eager";
+    frame.setAttribute("title", `Blueprint page ${new URL(url).pathname.split("/").pop() || "home"}`);
+
+    frameState.readyPromise = new Promise((resolve, reject) => {
+        let didResolve = false;
+        let readyCheckTimer = null;
+
+        const resolveFrameReady = () => {
+            if (didResolve) return;
+
+            didResolve = true;
+            window.clearInterval(readyCheckTimer);
+
+            window.setTimeout(() => {
+                primeBlueprintFrame(frame, url);
+                frameState.ready = true;
+                resolve(frameState);
+            }, 950);
+        };
+
+        readyCheckTimer = window.setInterval(() => {
+            try {
+                const frameDocument = frame.contentDocument;
+
+                if (frameDocument && frameDocument.readyState !== "loading") {
+                    resolveFrameReady();
+                }
+            } catch (error) {}
+        }, 50);
+
+        frame.addEventListener("load", resolveFrameReady, { once: true });
+        frame.addEventListener("error", () => {
+            window.clearInterval(readyCheckTimer);
+            reject(new Error(`Unable to preload frame ${url}`));
+        }, { once: true });
+    });
+
+    layer.appendChild(frame);
+    frame.src = url;
+
+    return frameState;
+}
+
+function prepareBlueprintTransitionFrames(frameState, loader) {
+    const layer = ensureBlueprintFrameLayer();
+    const incomingFrame = frameState && frameState.frame;
+    const currentFrame = getBlueprintActiveFrame();
+    const outgoingTargets = currentFrame && currentFrame !== incomingFrame
+        ? [currentFrame]
+        : getBlueprintShellTransitionTargets(loader);
+    const viewportHeight = getViewportHeight();
+    const previousLayerBackground = layer.style.background;
+
+    layer.classList.add("is-active");
+    layer.setAttribute("aria-hidden", "false");
+    layer.style.background = "transparent";
+
+    gsap.set(layer, {
+        opacity: 1,
+        visibility: "visible",
+        pointerEvents: "none"
+    });
+
+    if (currentFrame && currentFrame !== incomingFrame) {
+        gsap.set(currentFrame, {
+            y: 0,
+            zIndex: 1,
+            opacity: 1,
+            visibility: "visible",
+            pointerEvents: "none",
+            willChange: "transform",
+            force3D: true
+        });
+    }
+
+    if (incomingFrame) {
+        gsap.set(incomingFrame, {
+            y: viewportHeight,
+            zIndex: 0,
+            opacity: 1,
+            visibility: "visible",
+            pointerEvents: "none",
+            willChange: "transform",
+            force3D: true
+        });
+    }
+
+    if (outgoingTargets.length) {
+        gsap.set(outgoingTargets, {
+            y: 0,
+            willChange: "transform",
+            force3D: true
+        });
+    }
+
+    return {
+        layer,
+        incomingFrame,
+        currentFrame: currentFrame && currentFrame !== incomingFrame ? currentFrame : null,
+        outgoingTargets,
+        viewportHeight,
+        previousLayerBackground
+    };
+}
+
+function cleanupBlueprintPanelTransition(context, loader) {
+    if (!context) return;
+
+    const clearTargets = [
+        ...context.outgoingTargets,
+        context.currentFrame,
+        context.incomingFrame
+    ].filter(Boolean);
+
+    if (clearTargets.length) {
+        gsap.set(clearTargets, {
+            clearProps: "transform,y,zIndex,pointerEvents,willChange,opacity,visibility"
+        });
+    }
+
+    context.layer.style.background = context.previousLayerBackground;
+    gsap.set(context.layer, { clearProps: "opacity,visibility,pointerEvents" });
+
+    if (loader) {
+        loader.style.display = "none";
+        gsap.set(loader, { clearProps: "transform,y,yPercent,opacity,willChange" });
+    }
+}
+
+function activateBlueprintSamePageFrame(url, context, frameState) {
+    const normalizedUrl = normalizeBlueprintPageUrl(url);
+    const frame = context && context.incomingFrame;
+    const layer = context && context.layer;
+
+    if (!normalizedUrl || !frame || !layer) {
+        return Promise.reject(new Error("Invalid same-page transition frame"));
+    }
+
+    suppressBlueprintFrameLoader(frame);
+
+    Array.from(layer.children).forEach((child) => {
+        const isActiveFrame = child === frame;
+
+        child.classList.toggle("is-active", isActiveFrame);
+        setBlueprintFrameRuntime(child, isActiveFrame);
+
+        if (!isActiveFrame && child === context.currentFrame) {
+            child.remove();
+        }
+    });
+
+    layer.classList.add("is-active");
+    layer.setAttribute("aria-hidden", "false");
+    document.documentElement.classList.add("is-frame-page-active");
+    document.documentElement.classList.remove("is-link-transition");
+    document.documentElement.style.backgroundColor = "";
+    document.body.style.overflow = "hidden";
+    blueprintActiveFrameUrl = normalizedUrl;
+
+    frame.dataset.blueprintTemporaryFrame = "false";
+    frameState.ready = true;
+    frameState.readyPromise = Promise.resolve({ frame });
+    blueprintPageFrames.set(normalizedUrl, frameState);
+
+    if (window.location.href !== normalizedUrl) {
+        window.history.replaceState(window.history.state, "", normalizedUrl);
+    }
+
+    syncBlueprintFrameTitle(frame);
+    primeBlueprintFrame(frame, normalizedUrl);
+
+    try {
+        frame.contentWindow.scrollTo(0, 0);
+        frame.contentWindow.focus();
+    } catch (error) {}
+
+    setBlueprintShellRuntimeActive(false);
+
+    return Promise.resolve();
+}
+
+function playBlueprintPanelTransition(url, frameState, loader, options = {}) {
+    if (!frameState || !frameState.readyPromise) {
+        window.location.href = url;
+        return;
+    }
+
+    const context = prepareBlueprintTransitionFrames(frameState, loader);
+    const halfDistance = context.viewportHeight * 0.52;
+    const transitionEase = "power4.inOut";
+    const readyPromise = frameState.readyPromise;
+
+    gsap.killTweensOf([
+        loader,
+        ".loader-logo .char",
+        ".loader-progress",
+        ".loader-progress-bar",
+        ...context.outgoingTargets,
+        context.currentFrame,
+        context.incomingFrame
+    ].filter(Boolean));
+
+    gsap.set(loader, {
+        yPercent: 100,
+        opacity: 1,
+        willChange: "transform",
+        force3D: true
+    });
+    gsap.set(".loader-logo .char", { y: "140%" });
+    gsap.set(".loader-progress, .loader-progress-bar", { opacity: 0 });
+
+    gsap.timeline({
+        defaults: { ease: transitionEase },
+        onComplete: () => {
+            readyPromise
+                .then(() => {
+                    if (context.incomingFrame) {
+                        suppressBlueprintFrameLoader(context.incomingFrame);
+                    }
+
+                    gsap.timeline({
+                        defaults: { ease: transitionEase },
+                        onComplete: () => {
+                            const activation = options.samePage
+                                ? activateBlueprintSamePageFrame(url, context, frameState)
+                                : showPreloadedBlueprintFrame(url, { skipLoaderExit: true });
+
+                            activation
+                                .then(() => {
+                                    cleanupBlueprintPanelTransition(context, loader);
+                                })
+                                .catch(() => {
+                                    window.location.href = url;
+                                });
+                        }
+                    })
+                        .to(loader, {
+                            yPercent: -100,
+                            duration: 0.78
+                        }, 0)
+                        .to(context.outgoingTargets, {
+                            y: -context.viewportHeight,
+                            duration: 0.78
+                        }, 0)
+                        .to([context.incomingFrame].filter(Boolean), {
+                            y: 0,
+                            duration: 0.78
+                        }, 0);
+                })
+                .catch(() => {
+                    window.location.href = url;
+                });
+        }
+    })
+        .to(loader, {
+            yPercent: 0,
+            duration: 0.72
+        }, 0)
+        .to(context.outgoingTargets, {
+            y: -halfDistance,
+            duration: 0.72
+        }, 0)
+        .to([context.incomingFrame].filter(Boolean), {
+            y: context.viewportHeight - halfDistance,
+            duration: 0.72
+        }, 0)
+        .to(".loader-logo .char", {
+            y: 0,
+            stagger: 0.03,
+            duration: 0.58,
+            ease: "power4.out"
+        }, 0.22);
+}
+
 function navigateWithLinkLoader(url) {
     const loader = document.getElementById('loader');
+    const isSameTarget = isSameBlueprintNavigationTarget(url);
+    const frameState = isInsideBlueprintFrame
+        ? null
+        : isSameTarget
+            ? createBlueprintSamePageFrameState(url)
+            : getBlueprintPageFrame(url);
 
     setBlueprintShellRuntimeActive(true);
 
     if (isInsideBlueprintFrame) {
         prefetchBarbaPage(url);
-    } else {
-        getBlueprintPageFrame(url);
     }
     setLinkLoaderFlag();
     document.documentElement.classList.add("is-link-transition");
@@ -411,28 +728,7 @@ function navigateWithLinkLoader(url) {
     loader.classList.add("is-link-loader");
     loader.style.display = "flex";
 
-    gsap.killTweensOf(".loader, .loader-logo .char, .loader-progress, .loader-progress-bar");
-    gsap.set(".loader", { yPercent: 100, opacity: 1 });
-    gsap.set(".loader-logo .char", { y: "140%" });
-    gsap.set(".loader-progress, .loader-progress-bar", { opacity: 0 });
-
-    gsap.timeline({
-        onComplete: () => {
-            completeBarbaPageSwap(url);
-        }
-    })
-        .to(".loader", {
-            yPercent: 0,
-            duration: 0.65,
-            ease: "expo.inOut"
-        })
-        .to(".loader-logo .char", {
-            y: 0,
-            stagger: 0.035,
-            duration: 0.62,
-            ease: "power4.out"
-        }, "-=0.28")
-        .to({}, { duration: 0.18 });
+    playBlueprintPanelTransition(url, frameState, loader, { samePage: isSameTarget });
 }
 
 const blueprintPreloadPageList = [
@@ -487,6 +783,32 @@ function getBarbaInternalPageUrl(rawUrl) {
     if (isSameDocument) return null;
 
     return pageUrl;
+}
+
+function getBlueprintComparablePageUrl(rawUrl) {
+    const pageUrl = normalizeBlueprintPageUrl(rawUrl);
+
+    if (!pageUrl) return null;
+
+    const url = new URL(pageUrl);
+
+    if (url.pathname === "/" || url.pathname.endsWith("/")) {
+        url.pathname = `${url.pathname.replace(/\/?$/, "/")}index.html`;
+    }
+
+    return `${url.origin}${url.pathname}${url.search}`;
+}
+
+function isSameBlueprintNavigationTarget(rawUrl) {
+    const targetUrl = getBlueprintComparablePageUrl(rawUrl);
+
+    if (!targetUrl) return false;
+
+    if (blueprintActiveFrameUrl) {
+        return targetUrl === getBlueprintComparablePageUrl(blueprintActiveFrameUrl);
+    }
+
+    return targetUrl === getBlueprintComparablePageUrl(window.location.href);
 }
 
 function fetchBlueprintPage(rawUrl) {
@@ -1423,7 +1745,6 @@ function getCurrentServiceCardIndex() {
 window.handlePageTransition = function(e, url) {
     e.preventDefault();
     const clickedBtn = e.currentTarget;
-    let siblingsToHide = [];
     const redirectToTarget = () => {
         navigateWithLinkLoader(url);
     };
@@ -1438,28 +1759,7 @@ window.handlePageTransition = function(e, url) {
         return;
     }
 
-    if (clickedBtn.classList.contains('logo-button')) {
-        siblingsToHide = Array.from(document.querySelectorAll('.nav-links button, .menu-overlay-link'));
-    } else if (clickedBtn.classList.contains('menu-overlay-link')) {
-        siblingsToHide = Array.from(document.querySelectorAll('.menu-overlay-link')).filter(btn => btn !== clickedBtn);
-    } else {
-        siblingsToHide = Array.from(document.querySelectorAll('.nav-links button')).filter(btn => btn !== clickedBtn);
-    }
-
-    if (siblingsToHide.length > 0) {
-        gsap.to(siblingsToHide, {
-            opacity: 0,
-            y: -10,
-            duration: 0.3,
-            stagger: 0.05,
-            ease: "power2.in",
-            onComplete: () => {
-                redirectToTarget();
-            }
-        });
-    } else {
-        redirectToTarget();
-    }
+    redirectToTarget();
 };
 
 if (isIndexPage) {
@@ -1518,6 +1818,7 @@ function splitBlueprintText(root = document) {
             textElement.classList.contains('approach-copy') ||
             textElement.classList.contains('approach-step-title') ||
             textElement.classList.contains('approach-step-copy') ||
+            textElement.closest('.about-section-fact') ||
             textElement.closest('.service-hero') ||
             textElement.closest('.about-story-page');
 
@@ -1655,7 +1956,11 @@ if (shouldUseLinkLoader) {
 
 gsap.set(".approach-title .line-mask, .approach-copy .line-mask", { y: "-140%" });
 gsap.set(".masking-overlay-about-copy .line-mask, .about-laptop-services-word .line-mask", { y: "-140%" });
+gsap.set(".about-section-fact .line-mask", { y: "140%" });
 gsap.set(".about-section-link .line-mask", { y: "140%" });
+gsap.set(".about-laptop-media img", {
+    clipPath: "inset(0% 0% 100% 0%)"
+});
 
 function initMobileAboutScrollReveals() {
     if (!isIndexPage || !window.matchMedia("(max-width: 767px)").matches) return;
@@ -2251,7 +2556,7 @@ function initProjectsShowcaseAnimation() {
         };
 
         const getMaxPhoneMomentumSlides = () => Math.min(5, Math.max(1, getActiveProjects().length - 1));
-        const shouldUseDirectProjectSwipe = () => projectsPhoneSwipeQuery.matches || projectsLaptopSwipeQuery.matches;
+        const shouldUseDirectProjectSwipe = () => projectsPhoneSwipeQuery.matches;
 
         const setPhoneSwipeX = (x) => {
             phoneSwipeX = x;
@@ -3185,6 +3490,8 @@ function startStandalonePageAnimation() {
         const aboutPageHeroImage = document.querySelector(".about-page-hero-image");
         const aboutScrollTextItems = gsap.utils.toArray(".about-story-hero .reveal-text, .about-services-showcase .reveal-text, .about-clients-intro .reveal-text, .about-clients-bottom .reveal-text, .about-client-reasons .reveal-text, .about-team-showcase .reveal-text");
         const aboutScrollMediaItems = gsap.utils.toArray(".about-story-image-frame");
+        const aboutFrameRevealFrames = gsap.utils.toArray(".about-story-image-frame, .about-team-portrait");
+        const aboutFrameRevealImages = gsap.utils.toArray(".about-story-image-frame img, .about-team-portrait img");
         const aboutServiceRows = gsap.utils.toArray(".about-services-list article");
         const aboutTeamCategories = gsap.utils.toArray(".about-team-category");
         const aboutTeamCardDetails = gsap.utils.toArray(".about-team-card > div");
@@ -3216,7 +3523,10 @@ function startStandalonePageAnimation() {
         });
         gsap.set(aboutTeamCategories, { "--about-category-line-scale": "0%" });
         gsap.set(aboutTeamCardDetails, { "--about-team-card-line-scale": "0%" });
-        gsap.set(aboutScrollMediaItems, { y: 24, autoAlpha: 0 });
+        gsap.set(aboutFrameRevealImages, {
+            clipPath: "inset(0% 0% 100% 0%)",
+            transformOrigin: "center top"
+        });
 
         if (aboutScrollTextItems.length) {
             ScrollTrigger.batch(aboutScrollTextItems, {
@@ -3271,17 +3581,20 @@ function startStandalonePageAnimation() {
             });
         }
 
-        if (aboutScrollMediaItems.length) {
-            ScrollTrigger.batch(aboutScrollMediaItems, {
-                start: "top 88%",
+        if (aboutFrameRevealFrames.length) {
+            ScrollTrigger.batch(aboutFrameRevealFrames, {
+                start: "top 58%",
                 once: true,
-                onEnter: (batch) => {
-                    gsap.to(batch, {
-                        y: 0,
-                        autoAlpha: 1,
-                        stagger: 0.06,
-                        duration: 0.72,
-                        ease: "power3.out"
+                onEnter: (frames) => {
+                    const images = frames
+                        .map(frame => frame.querySelector("img"))
+                        .filter(Boolean);
+
+                    gsap.to(images, {
+                        clipPath: "inset(0% 0% 0% 0%)",
+                        stagger: 0.16,
+                        duration: 2.05,
+                        ease: "power4.out"
                     });
                 }
             });
@@ -3844,10 +4157,13 @@ function runPageLoadSequence() {
             }, "-=0.6")
             .fromTo(".hero-line", {
                 scaleX: 0,
+                opacity: 0,
                 transformOrigin: "left"
             }, {
                 scaleX: 1,
-                duration: 1.5,
+                opacity: 1,
+                transformOrigin: "left",
+                duration: 0.6,
                 ease: "expo.out"
             }, "-=0.6");
     }
@@ -4041,8 +4357,8 @@ const aboutReadDuration = getAboutReadDuration();
 const contactTransitionDuration = 1.25;
 const footerRevealDuration = 1.1;
 const scrollSpeed = 140;
-const approachPushedContentSelector = ".approach-fg-video, .approach-kicker, .approach-copy-block > hr, .approach-title, .approach-copy";
-const approachIntroLayerSelector = ".approach-fg-video, .approach-copy-block, .approach-eyebrow-cover";
+const approachPushedContentSelector = ".approach-fg-video";
+const approachIntroLayerSelector = ".approach-fg-video, .approach-eyebrow-cover";
 
 gsap.set(".masking-overlay-card", { y: () => getViewportHeight(), yPercent: 0 });
 gsap.set(".masking-overlay-copy", { y: () => getOverlayMetrics().startY });
@@ -4077,20 +4393,103 @@ overlayTextTl
 let overlayTextRevealed = false;
 let aboutTextRevealed = false;
 let contactTextRevealed = false;
+let aboutTopImageRevealed = false;
+let aboutProcessImageRevealed = false;
+let aboutProcessTextRevealed = false;
+let aboutFactsRevealed = false;
+let aboutProcessTextTl = null;
+let aboutFactsTl = null;
+
+function revealAboutLaptopImage(selector, flagName) {
+    if (flagName === "top" && aboutTopImageRevealed) return;
+    if (flagName === "process" && aboutProcessImageRevealed) return;
+
+    const image = document.querySelector(selector);
+    if (!image) return;
+
+    if (flagName === "top") {
+        aboutTopImageRevealed = true;
+    } else {
+        aboutProcessImageRevealed = true;
+    }
+
+    gsap.to(image, {
+        clipPath: "inset(0% 0% 0% 0%)",
+        duration: 1.05,
+        ease: "power4.out",
+        overwrite: true
+    });
+}
+
+function revealAboutProcessText(duration = 0.8) {
+    if (aboutProcessTextRevealed) return;
+
+    const masks = document.querySelectorAll(".about-laptop-services-word .line-mask");
+    if (!masks.length) return;
+
+    aboutProcessTextRevealed = true;
+
+    if (!aboutProcessTextTl) {
+        aboutProcessTextTl = gsap.timeline({ paused: true })
+            .to(masks, {
+                y: 0,
+                stagger: 0.08,
+                duration,
+                ease: "power4.out",
+                overwrite: true
+            });
+    }
+
+    aboutProcessTextTl.play();
+}
+
+function hideAboutProcessText() {
+    if (!aboutProcessTextRevealed || !aboutProcessTextTl) return;
+
+    aboutProcessTextRevealed = false;
+    aboutProcessTextTl.reverse();
+}
+
+function revealAboutFacts(duration = 0.62) {
+    if (aboutFactsRevealed) return;
+
+    const masks = document.querySelectorAll(".about-section-fact .line-mask");
+    if (!masks.length) return;
+
+    aboutFactsRevealed = true;
+
+    if (!aboutFactsTl) {
+        aboutFactsTl = gsap.timeline({ paused: true })
+            .to(masks, {
+                y: 0,
+                stagger: 0.055,
+                duration,
+                ease: "power4.out",
+                overwrite: true
+            });
+    }
+
+    aboutFactsTl.play();
+}
+
+function hideAboutFacts() {
+    if (!aboutFactsRevealed || !aboutFactsTl) return;
+
+    aboutFactsRevealed = false;
+    aboutFactsTl.reverse();
+}
 
 function getArchitectureCardImageBottomEdge() {
     const architecturePanel = document.querySelector(".service-card-architecture");
-    const architectureImage = architecturePanel ? architecturePanel.querySelector(".card-img-unified") : null;
+    const architectureImageFrame = architecturePanel ? architecturePanel.querySelector(".card-image-button") : null;
 
-    if (!architecturePanel || !architectureImage) {
+    if (!architecturePanel || !architectureImageFrame) {
         return window.innerHeight;
     }
 
-    const panelStyles = window.getComputedStyle(architecturePanel);
-    const imageStyles = window.getComputedStyle(architectureImage);
-    const panelPaddingTop = parseFloat(panelStyles.paddingTop) || 0;
-    const imageMarginTop = parseFloat(imageStyles.marginTop) || 0;
-    const imageBottom = panelPaddingTop + imageMarginTop + architectureImage.offsetHeight;
+    const panelRect = architecturePanel.getBoundingClientRect();
+    const imageFrameRect = architectureImageFrame.getBoundingClientRect();
+    const imageBottom = imageFrameRect.bottom - panelRect.top;
 
     return gsap.utils.clamp(0, window.innerHeight, imageBottom);
 }
@@ -4250,6 +4649,7 @@ function setApproachScrollable(isScrollable) {
 }
 
 const projectRevealItems = gsap.utils.toArray(".project-category-title, .project-list-link");
+const projectMediaItems = gsap.utils.toArray(".project-category-preview");
 let unrevealedProjectItems = projectRevealItems.slice();
 let projectRevealCheckQueued = false;
 const pointerPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2, active: false };
@@ -4431,6 +4831,46 @@ function scheduleProjectScrollHover() {
     gsap.ticker.add(syncProjectScrollHover, true);
 }
 
+function syncProjectMediaStickiness() {
+    if (!projectMediaItems.length) return;
+
+    if (mobileServiceCardQuery.matches) {
+        projectMediaItems.forEach(media => {
+            media.style.setProperty("--project-frame-y", "0px");
+        });
+        return;
+    }
+
+    const viewportHeight = getViewportHeight();
+    const stickyTop = gsap.utils.clamp(72, 132, viewportHeight * 0.14);
+
+    projectMediaItems.forEach((media) => {
+        const category = media.closest(".project-category");
+        const list = category ? category.querySelector(".project-category-list") : null;
+
+        if (!category || !list) return;
+
+        const categoryHeight = category.offsetHeight;
+        const listHeight = list.offsetHeight;
+        const frameHeight = media.offsetHeight;
+        const maxShift = Math.max(0, Math.min(categoryHeight, listHeight) - frameHeight);
+
+        if (maxShift <= 1) {
+            media.style.setProperty("--project-frame-y", "0px");
+            return;
+        }
+
+        const currentShift = parseFloat(media.style.getPropertyValue("--project-frame-y") || "0") || 0;
+        const frameRect = media.getBoundingClientRect();
+        const normalFrameTop = frameRect.top - currentShift;
+        const nextShift = gsap.utils.clamp(0, maxShift, stickyTop - normalFrameTop);
+        media.style.setProperty("--project-frame-y", `${nextShift.toFixed(2)}px`);
+    });
+}
+
+window.addEventListener("resize", syncProjectMediaStickiness, { passive: true });
+window.addEventListener("orientationchange", syncProjectMediaStickiness, { passive: true });
+
 document.addEventListener("pointermove", (event) => {
     pointerPosition.x = event.clientX;
     pointerPosition.y = event.clientY;
@@ -4452,6 +4892,8 @@ function setProjectPreviewImage(link) {
 
     if (!category || !state || !nextSrc) return;
 
+    if (nextKey === state.activeKey || nextKey === state.targetKey) return;
+
     if (state.enteringImage) {
         state.enteringImage.remove();
         state.enteringImage = null;
@@ -4460,22 +4902,30 @@ function setProjectPreviewImage(link) {
     if (state.tween) {
         state.tween.kill();
         state.tween = null;
+        state.targetKey = null;
     }
 
-    if (nextKey === state.activeKey) return;
+    gsap.set(state.activeImage, { clearProps: "yPercent,scale" });
 
     const nextImage = document.createElement("img");
     nextImage.className = "project-preview-image is-entering";
+    nextImage.setAttribute("data-parallax", "");
+    nextImage.dataset.parallaxSpeed = "0.12";
     nextImage.src = nextSrc;
     nextImage.alt = "";
     nextImage.decoding = "async";
     nextImage.style.objectPosition = nextPosition;
+    nextImage.style.setProperty("--parallax-x", state.activeImage.style.getPropertyValue("--parallax-x") || "0px");
+    nextImage.style.setProperty("--parallax-y", state.activeImage.style.getPropertyValue("--parallax-y") || "0px");
     state.preview.appendChild(nextImage);
     state.enteringImage = nextImage;
+    state.targetKey = nextKey;
+    homeParallaxItems.push(nextImage);
 
     gsap.set(nextImage, {
         clipPath: "inset(100% 0% 0% 0%)",
-        scale: 1.04
+        yPercent: 10,
+        scale: 1.035
     });
 
     state.tween = gsap.timeline({
@@ -4483,21 +4933,31 @@ function setProjectPreviewImage(link) {
             state.activeImage.remove();
             nextImage.classList.remove("is-entering");
             nextImage.classList.add("is-active");
-            gsap.set(nextImage, { clearProps: "clipPath,scale" });
+            gsap.set(nextImage, { clearProps: "clipPath,yPercent,scale" });
             state.activeImage = nextImage;
             state.activeSrc = nextSrc;
             state.activeKey = nextKey;
             state.enteringImage = null;
             state.tween = null;
+            state.targetKey = null;
+            scheduleHomeParallaxSync();
         }
     });
 
-    state.tween.to(nextImage, {
+    state.tween
+    .to(state.activeImage, {
+        yPercent: -3,
+        scale: 1.015,
+        duration: 0.82,
+        ease: "power3.out"
+    }, 0)
+    .to(nextImage, {
         clipPath: "inset(0% 0% 0% 0%)",
+        yPercent: 0,
         scale: 1,
-        duration: 0.16,
-        ease: "power4.inOut"
-    });
+        duration: 0.82,
+        ease: "power4.out"
+    }, 0);
 }
 
 function resetProjectPreviewImage(category) {
@@ -4534,6 +4994,7 @@ function initProjectPreviewImages() {
             activeSrc: activeImage.getAttribute("src"),
             activeKey: `${activeImage.getAttribute("src")}|${links[0].dataset.previewPosition}`,
             enteringImage: null,
+            targetKey: null,
             tween: null
         });
 
@@ -4547,6 +5008,7 @@ function initProjectPreviewImages() {
 }
 
 initProjectPreviewImages();
+syncProjectMediaStickiness();
 
 function initStandaloneProjectCursorPreview() {
     const preview = document.querySelector(".link-project-cursor-preview");
@@ -4894,6 +5356,12 @@ let navIsRevealed = false;
 const navRevealTime = 1;
 const logoButton = document.querySelector(".logo-button");
 
+function setLogoColor(color) {
+    if (!logoButton) return;
+
+    logoButton.style.setProperty("color", color, "important");
+}
+
 function getIntersectionRect(rectA, rectB) {
     const left = Math.max(rectA.left, rectB.left);
     const right = Math.min(rectA.right, rectB.right);
@@ -4909,7 +5377,7 @@ function syncLogoContrast() {
     if (!logoButton) return;
 
     if (document.body.classList.contains("menu-active") || document.body.classList.contains("menu-mask-active")) {
-        logoButton.style.color = "#ffffff";
+        setLogoColor("#ffffff");
         return;
     }
 
@@ -4919,8 +5387,13 @@ function syncLogoContrast() {
     const elementsAtLogo = document.elementsFromPoint(probeX, probeY);
     let backgroundColor = window.getComputedStyle(document.body).backgroundColor;
 
+    if (elementsAtLogo.some(element => element.closest && element.closest(".contact-card"))) {
+        setLogoColor("#ffffff");
+        return;
+    }
+
     if (elementsAtLogo.some(element => element.closest && element.closest(".masking-overlay-card-about"))) {
-        logoButton.style.color = "#000000";
+        setLogoColor("#000000");
         return;
     }
 
@@ -4944,14 +5417,14 @@ function syncLogoContrast() {
     const match = backgroundColor.match(/rgba?\(([^)]+)\)/);
 
     if (!match) {
-        logoButton.style.color = "#ffffff";
+        setLogoColor("#ffffff");
         return;
     }
 
     const [red, green, blue] = match[1].split(",").map(value => parseFloat(value.trim()));
     const luminance = ((0.2126 * red) + (0.7152 * green) + (0.0722 * blue)) / 255;
 
-    logoButton.style.color = luminance > 0.72 ? "#000000" : "#ffffff";
+    setLogoColor(luminance > 0.72 ? "#000000" : "#ffffff");
 }
 
 function revealNav() {
@@ -5030,6 +5503,233 @@ function syncApproachLayerState({ useScrollPosition = false, forceAboutVisible =
     }
 }
 
+const homeParallaxQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+const homeParallaxItems = isIndexPage
+    ? gsap.utils.toArray("[data-parallax], .project-category-title, .project-list-link")
+    : isProjectsPage
+        ? gsap.utils.toArray(".projects-template-container, .projects-bridge-section")
+        : isApproachPage
+            ? gsap.utils.toArray(".link-page-hero-approach > div, .link-page-hero-approach .link-page-hero-copy, .approach-hero-rule, .link-process-grid article")
+            : isAboutPage
+            ? gsap.utils.toArray(".about-page-hero, .about-page-hero-copy, .about-story-content, .about-story-image-frame, .about-services-intro, .about-services-list, .about-team-heading, .about-team-grid, .about-clients-intro, .about-clients-rule, .about-clients-marquee, .about-clients-bottom, .about-client-reasons-heading, .about-client-reasons-summary, .about-client-reasons-cta")
+        : [];
+let homeParallaxFrame = null;
+
+function syncHomeParallax() {
+    homeParallaxFrame = null;
+
+    if (!homeParallaxItems.length || homeParallaxQuery.matches) {
+        homeParallaxItems.forEach(item => {
+            item.style.setProperty("--parallax-x", "0px");
+            item.style.setProperty("--parallax-y", "0px");
+            if (isProjectsPage) {
+                gsap.set(item, { y: 0 });
+                item.style.setProperty("--projects-bridge-bg-y", "0px");
+            }
+            if (isApproachPage) {
+                gsap.set(item, { y: 0 });
+                item.style.setProperty("--approach-page-bg-y", "0px");
+            }
+            if (isAboutPage) {
+                gsap.set(item, { y: 0 });
+                item.style.setProperty("--about-page-bg-y", "0px");
+            }
+        });
+        if (isAboutPage) {
+            gsap.utils.toArray(".about-story-image-frame img, .about-team-portrait img").forEach(image => {
+                image.style.setProperty("--about-frame-image-y", "0px");
+            });
+        }
+        return;
+    }
+
+    if (isProjectsPage) {
+        homeParallaxItems.forEach(item => {
+            if (!item.isConnected) return;
+            const isBridgeSection = item.classList.contains("projects-bridge-section");
+            const rect = item.getBoundingClientRect();
+            const bridgeProgress = isBridgeSection
+                ? gsap.utils.clamp(0, 1, (getViewportHeight() - rect.top) / (getViewportHeight() + rect.height))
+                : 0;
+            const projectsOffset = isBridgeSection
+                ? gsap.utils.interpolate(0, -54, bridgeProgress)
+                : gsap.utils.clamp(-54, 0, window.scrollY * -0.075);
+
+            if (isBridgeSection) {
+                item.style.setProperty("--projects-bridge-bg-y", `${(projectsOffset * -0.55).toFixed(2)}px`);
+                gsap.set(item, {
+                    y: 0,
+                    overwrite: false
+                });
+                return;
+            }
+
+            gsap.set(item, {
+                y: projectsOffset,
+                overwrite: false
+            });
+        });
+        return;
+    }
+
+    if (isApproachPage) {
+        homeParallaxItems.forEach(item => {
+            if (!item.isConnected) return;
+            const isProcessCard = item.matches(".link-process-grid article");
+            const rect = item.getBoundingClientRect();
+            const progress = gsap.utils.clamp(0, 1, (getViewportHeight() - rect.top) / (getViewportHeight() + rect.height));
+
+            if (!isProcessCard) {
+                gsap.set(item, {
+                    y: gsap.utils.interpolate(18, -42, progress),
+                    overwrite: false
+                });
+                return;
+            }
+
+            item.style.setProperty("--approach-page-bg-y", `${gsap.utils.interpolate(24, -28, progress).toFixed(2)}px`);
+        });
+        return;
+    }
+
+    if (isAboutPage) {
+        homeParallaxItems.forEach(item => {
+            if (!item.isConnected) return;
+
+            const rect = item.getBoundingClientRect();
+            const isHeroSection = item.classList.contains("about-page-hero");
+            const isStoryMedia = item.classList.contains("about-story-image-frame");
+            const isMedia = isStoryMedia || item.classList.contains("about-team-grid");
+            const progress = gsap.utils.clamp(0, 1, (getViewportHeight() - rect.top) / (getViewportHeight() + rect.height));
+            const yOffset = isMedia
+                ? gsap.utils.interpolate(30, -54, progress)
+                : gsap.utils.interpolate(20, -42, progress);
+
+            if (isHeroSection) {
+                item.style.setProperty("--about-page-bg-y", `${gsap.utils.interpolate(24, -38, progress).toFixed(2)}px`);
+                gsap.set(item, {
+                    y: 0,
+                    overwrite: false
+                });
+                return;
+            }
+
+            if (item.classList.contains("about-clients-marquee")) {
+                const sideOffset = gsap.utils.interpolate(0, 150, progress);
+                aboutClientsRows.forEach(row => {
+                    row.parallaxX = row.baseDirection * sideOffset;
+                });
+            }
+
+            if (item.classList.contains("about-story-image-frame")) {
+                const image = item.querySelector("img");
+                if (image) {
+                    image.style.setProperty("--about-frame-image-y", `${gsap.utils.interpolate(18, -18, progress).toFixed(2)}px`);
+                }
+            }
+
+            if (item.classList.contains("about-team-grid")) {
+                const imageOffset = gsap.utils.interpolate(18, -18, progress);
+                item.querySelectorAll(".about-team-portrait img").forEach(image => {
+                    image.style.setProperty("--about-frame-image-y", `${imageOffset.toFixed(2)}px`);
+                });
+            }
+
+            gsap.set(item, {
+                y: yOffset,
+                overwrite: false
+            });
+        });
+        return;
+    }
+
+    const viewportHeight = getViewportHeight();
+    const viewportCenter = viewportHeight / 2;
+
+    homeParallaxItems.forEach((item) => {
+        if (!item.isConnected) return;
+
+        if (item.closest(".is-service-transitioning")) {
+            item.style.setProperty("--parallax-x", "0px");
+            item.style.setProperty("--parallax-y", "0px");
+            return;
+        }
+
+        const rect = item.getBoundingClientRect();
+
+        if (isIndexPage && window.matchMedia("(max-width: 767px)").matches) {
+            const isFramedImage = item.matches(".card-image-button .card-img-unified, .project-category-preview .project-preview-image, .about-laptop-media img");
+
+            if (!isFramedImage) {
+                item.style.setProperty("--parallax-x", "0px");
+                item.style.setProperty("--parallax-y", "0px");
+                gsap.set(item, { y: 0, overwrite: false });
+                return;
+            }
+        }
+
+        if (rect.bottom < -viewportHeight * 0.35 || rect.top > viewportHeight * 1.35) {
+            return;
+        }
+
+        const isProjectsContentLayer = isProjectsPage;
+        const isProjectTitle = item.classList.contains("project-category-title");
+        const isProjectLink = item.classList.contains("project-list-link");
+        const projectCategory = isProjectTitle || isProjectLink ? item.closest(".project-category") : null;
+        const categoryIndex = projectCategory
+            ? gsap.utils.toArray(".project-category").indexOf(projectCategory)
+            : -1;
+        const projectSideDirection = categoryIndex % 2 === 0 ? -1 : 1;
+        const defaultSpeed = isProjectsContentLayer ? "0.07" : isProjectTitle ? "0.075" : isProjectLink ? "0.038" : "0.12";
+        const defaultMaxOffset = isProjectsContentLayer ? "46" : isProjectTitle ? "48" : isProjectLink ? "24" : "72";
+        const defaultSideSpeed = isProjectTitle
+            ? `${projectSideDirection * 0.018}`
+            : isProjectLink
+                ? `${projectSideDirection * 0.008}`
+                : "0";
+        const defaultMaxSideOffset = isProjectTitle ? "18" : isProjectLink ? "10" : "24";
+        const speed = parseFloat(item.dataset.parallaxSpeed || defaultSpeed);
+        const maxOffset = parseFloat(item.dataset.parallaxMax || defaultMaxOffset);
+        const sideSpeed = parseFloat(item.dataset.parallaxSideSpeed || defaultSideSpeed);
+        const maxSideOffset = parseFloat(item.dataset.parallaxSideMax || defaultMaxSideOffset);
+        const itemCenter = rect.top + (rect.height / 2);
+        const distanceFromCenter = (itemCenter - viewportCenter) / viewportHeight;
+        const offset = gsap.utils.clamp(-maxOffset, maxOffset, distanceFromCenter * viewportHeight * -speed);
+        const sideOffset = gsap.utils.clamp(-maxSideOffset, maxSideOffset, distanceFromCenter * viewportHeight * -sideSpeed);
+
+        if (isProjectsContentLayer) {
+            gsap.set(item, {
+                y: offset,
+                overwrite: false
+            });
+            return;
+        }
+
+        item.style.setProperty("--parallax-x", `${sideOffset.toFixed(2)}px`);
+        item.style.setProperty("--parallax-y", `${offset.toFixed(2)}px`);
+    });
+}
+
+function scheduleHomeParallaxSync() {
+    if (!homeParallaxItems.length || homeParallaxFrame !== null) return;
+
+    homeParallaxFrame = window.requestAnimationFrame(syncHomeParallax);
+}
+
+if (homeParallaxItems.length) {
+    window.addEventListener("scroll", scheduleHomeParallaxSync, { passive: true });
+    window.addEventListener("resize", scheduleHomeParallaxSync, { passive: true });
+    window.addEventListener("orientationchange", scheduleHomeParallaxSync, { passive: true });
+
+    if (homeParallaxQuery.addEventListener) {
+        homeParallaxQuery.addEventListener("change", scheduleHomeParallaxSync);
+    } else if (homeParallaxQuery.addListener) {
+        homeParallaxQuery.addListener(scheduleHomeParallaxSync);
+    }
+
+    requestAnimationFrame(syncHomeParallax);
+}
+
 masterTl = gsap.timeline({
     scrollTrigger: {
         trigger: ".scroll-container",
@@ -5045,6 +5745,8 @@ masterTl = gsap.timeline({
             syncApproachMasks();
             scheduleProjectRevealCheck();
             scheduleProjectScrollHover();
+            syncProjectMediaStickiness();
+            scheduleHomeParallaxSync();
         },
         onRefresh: () => {
             gsap.set(".approach-steps", { y: 0 });
@@ -5060,6 +5762,8 @@ masterTl = gsap.timeline({
             resetProjectRevealItems();
             scheduleProjectRevealCheck();
             scheduleProjectScrollHover();
+            syncProjectMediaStickiness();
+            scheduleHomeParallaxSync();
         }
     }
 });
@@ -5345,6 +6049,7 @@ if (overlayReadDuration > 0) {
         onUpdate: () => {
             scheduleProjectRevealCheck();
             scheduleProjectScrollHover();
+            syncProjectMediaStickiness();
         }
     }, panels.length + projectTransitionDuration + overlayHoldDuration);
 }
@@ -5572,6 +6277,8 @@ masterTl.fromTo(".masking-overlay-card-about", {
     }
 }, aboutStartTime);
 
+masterTl.call(() => revealAboutLaptopImage(".about-laptop-media-top img", "top"), null, aboutStartTime + (aboutTransitionDuration * 0.9));
+
 if (aboutHoldDuration > 0) {
     masterTl.to({}, {
         duration: aboutHoldDuration
@@ -5579,25 +6286,39 @@ if (aboutHoldDuration > 0) {
 }
 
 if (aboutReadDuration > 0) {
-    masterTl.to(".about-laptop-services-word .line-mask", {
-        y: 0,
-        stagger: 0.08,
-        duration: Math.min(0.8, aboutReadDuration * 0.42),
-        ease: "power4.out"
-    }, aboutStartTime + aboutTransitionDuration + aboutHoldDuration + (aboutReadDuration * 0.34));
+    const aboutReadStartTime = aboutStartTime + aboutTransitionDuration + aboutHoldDuration;
+    const aboutProcessRevealProgress = 0.82;
+    const aboutProcessHideProgress = 0.7;
+    const aboutProcessRevealDuration = Math.min(0.8, Math.max(0.32, aboutReadDuration * 0.22));
+    const aboutFactsRevealDuration = Math.min(0.62, aboutReadDuration * 0.34);
+
+    masterTl.call(() => revealAboutLaptopImage(".about-laptop-media-services img", "process"), null, aboutStartTime + aboutTransitionDuration + aboutHoldDuration + (aboutReadDuration * 0.34));
 
     masterTl.to(".about-section-link .line-mask", {
         y: 0,
         stagger: 0.055,
         duration: Math.min(0.65, aboutReadDuration * 0.34),
         ease: "power4.out"
-    }, aboutStartTime + aboutTransitionDuration + aboutHoldDuration + (aboutReadDuration * 0.48));
+    }, aboutReadStartTime + (aboutReadDuration * 0.48));
 
     masterTl.to(".about-section-inner", {
         y: () => getAboutMetrics().endY,
         ease: "none",
-        duration: aboutReadDuration
-    }, aboutStartTime + aboutTransitionDuration + aboutHoldDuration);
+        duration: aboutReadDuration,
+        onUpdate: function () {
+            const progress = this.progress();
+
+            if (progress >= aboutProcessRevealProgress) {
+                revealAboutProcessText(aboutProcessRevealDuration);
+                revealAboutFacts(aboutFactsRevealDuration);
+            } else if (progress < aboutProcessHideProgress) {
+                hideAboutProcessText();
+                hideAboutFacts();
+            }
+        }
+    }, aboutReadStartTime);
+} else {
+    gsap.set(".about-laptop-services-word .line-mask, .about-section-fact .line-mask", { y: 0 });
 }
 
 const contactStartTime = aboutStartTime + aboutTransitionDuration + aboutHoldDuration + aboutReadDuration;
