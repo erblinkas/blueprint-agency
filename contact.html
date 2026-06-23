@@ -40,7 +40,7 @@
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Blueprint">
-    <meta property="og:title" content="Blueprint – Contact">
+    <meta property="og:title" content="Blueprint - Contact">
     <meta property="og:description" content="Get in touch with Blueprint. Let us discuss your next project.">
 </head>
 
@@ -112,29 +112,52 @@
         </div>
     </div>
 
-    <main class="link-page-main link-contact-page">
-        <div class="link-page-card contact-premium-page">
-        <section class="link-page-section link-contact-layout contact-premium-layout">
-            <form class="link-contact-form">
-                <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true"
-                    style="position:absolute;left:-9999px;opacity:0;height:0;width:0;">
-                <label><span>Name</span><input type="text" name="name" required></label>
-                <label><span>Email</span><input type="email" name="email" required></label>
-                <label><span>What does your business need?</span><textarea name="project" rows="6" required></textarea></label>
-                <button type="submit"><span>Send</span></button>
-            </form>
-            <div class="contact-thank-modal" role="dialog" aria-modal="true" aria-hidden="true"
-                aria-labelledby="contact-thank-title">
-                <div class="contact-thank-modal-panel">
-                    <p class="contact-thank-kicker">Message received</p>
-                    <h2 id="contact-thank-title">Thank you.</h2>
-                    <p>We will review your project details and get back to you soon.</p>
-                    <button class="contact-thank-close" type="button">
-                        <span>Close</span>
-                    </button>
+    <main class="link-page-main link-contact-page contact-standalone-page">
+        <div class="link-page-card contact-standalone-card">
+            <section class="contact-card contact-standalone-hero">
+                <div class="contact-section-inner">
+                    <p class="contact-section-eyebrow reveal-text" data-parallax data-parallax-speed="0.055" data-parallax-max="36">Contact</p>
+
+                    <p class="contact-section-statement reveal-text" data-parallax data-parallax-speed="0.04" data-parallax-max="30">
+                        Bring the idea, the deadline, or the messy first sketch. We will help turn it into a clear launch.
+                    </p>
+
+                    <form class="contact-section-form" data-parallax data-parallax-speed="0.03" data-parallax-max="24" data-parallax-side-speed="0.008" data-parallax-side-max="10">
+                        <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true"
+                            style="position:absolute;left:-9999px;opacity:0;height:0;width:0;">
+                        <label class="contact-form-field">
+                            <span>Name</span>
+                            <input type="text" name="name" autocomplete="name" required>
+                        </label>
+
+                        <label class="contact-form-field">
+                            <span>Email</span>
+                            <input type="email" name="email" autocomplete="email" required>
+                        </label>
+
+                        <label class="contact-form-field contact-form-field-message">
+                            <span>What do you want for your business?</span>
+                            <textarea name="project" rows="5" required></textarea>
+                        </label>
+
+                        <button class="contact-form-button" type="submit">
+                            <span>Send</span>
+                        </button>
+                    </form>
+
+                    <div class="contact-thank-modal" role="dialog" aria-modal="true" aria-hidden="true"
+                        aria-labelledby="contact-thank-title">
+                        <div class="contact-thank-modal-panel">
+                            <p class="contact-thank-kicker">Message received</p>
+                            <h2 id="contact-thank-title">Thank you.</h2>
+                            <p>We will review your project details and get back to you soon.</p>
+                            <button class="contact-thank-close" type="button">
+                                <span>Close</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
         </div>
 
         <footer class="site-footer link-page-reveal-footer">
@@ -171,7 +194,6 @@
         </footer>
     </main>
 
-    </div>
     </div>
     <script src="https://unpkg.com/split-type"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
