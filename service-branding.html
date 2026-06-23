@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="theme-color" content="#000000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blueprint - Branding & Identity</title>
+    <title>Blueprint - Branding &amp; Identity</title>
     <meta name="description" content="Memorable logos and complete brand identity packages. Blueprint's branding service.">
     <script>
         try {
@@ -28,30 +28,173 @@
     <link rel="icon" type="image/png" href="./favicon_2.png">
     <link rel="icon" type="image/webp" href="./webp-output/favicon_2.webp">
     <style>
-        body { background-color: #124559; color: #f4f1e8; }
+        /* -- SERVICE PAGE STYLES -- */
+        body { background-color: #4b3d24; color: #000000; }
+
+        [data-barba-namespace="service-branding"] {
+            padding-bottom: 86vh;
+        }
+
+        [data-barba-namespace="service-branding"] > section,
+        [data-barba-namespace="service-branding"] > .service-showcase {
+            position: relative;
+            z-index: 1;
+        }
 
         .service-hero {
+            width: 100%;
+            height: 100vh;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 8rem 4rem 4rem;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            display: block;
+            padding: 0;
             position: relative;
             overflow: hidden;
-            background-color: #124559;
+            box-sizing: border-box;
+            isolation: isolate;
+            background: #e6dac8;
+            --webdev-brown-x: 100%;
+        }
+
+        .webdev-reference-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 0 auto;
+            z-index: 0;
+            width: 50%;
+            background: #4b3d24;
+            transform: translateX(var(--webdev-brown-x));
+            will-change: transform;
+            pointer-events: none;
+        }
+
+        .webdev-reference-hero::after {
+            display: none;
         }
 
         .service-hero-bg {
-            position: absolute;
-            inset: 0;
-            object-fit: cover;
             width: 100%;
             height: 100%;
-            opacity: 0.18;
-            filter: grayscale(30%);
+            max-width: none;
+            display: block;
+            object-fit: cover;
+            object-position: center;
         }
 
-        .service-hero-content { position: relative; z-index: 2; max-width: 900px; }
+        .webdev-hero-media {
+            --webdev-hero-media-width: clamp(17.5rem, 35vw, 28rem);
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: 2;
+            width: var(--webdev-hero-media-width);
+            aspect-ratio: 16 / 9;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+        }
+
+        .webdev-hero-media img {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .service-hero .webdev-hero-content {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            max-width: none;
+            pointer-events: none;
+        }
+
+        .webdev-hero-title {
+            --webdev-title-frame-height: calc(clamp(17.5rem, 35vw, 28rem) * 0.5625);
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            z-index: 3;
+            transform: none;
+            display: block;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3.9rem, 8.6vw, 8.1rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            color: #000000;
+            white-space: nowrap;
+            overflow: visible;
+        }
+
+        .webdev-hero-title.is-brown-title {
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 4;
+            color: #ffffff !important;
+            clip-path: inset(0 0 0 50%);
+            -webkit-clip-path: inset(0 0 0 50%);
+            mix-blend-mode: normal;
+            pointer-events: none;
+        }
+
+        .webdev-hero-title:not(.is-brown-title),
+        .webdev-hero-title:not(.is-brown-title) .line,
+        .webdev-hero-title:not(.is-brown-title) .line-mask,
+        .webdev-hero-title:not(.is-brown-title) .webdev-hero-char {
+            color: #000000 !important;
+        }
+
+        .webdev-hero-title.is-brown-title,
+        .webdev-hero-title.is-brown-title .line,
+        .webdev-hero-title.is-brown-title .line-mask,
+        .webdev-hero-title.is-brown-title .webdev-hero-char {
+            color: #ffffff !important;
+        }
+
+        .webdev-hero-title .line {
+            position: absolute !important;
+            left: 50%;
+            width: max-content !important;
+            overflow: visible;
+            transform: translateX(-50%);
+        }
+
+        .webdev-hero-title .line-mask {
+            display: block;
+            overflow: hidden;
+            will-change: transform;
+        }
+
+        .webdev-title-line-web {
+            top: calc(50% - (var(--webdev-title-frame-height) * 0.5) - 1.08em);
+        }
+
+        .webdev-title-line-development {
+            top: calc(50% + (var(--webdev-title-frame-height) * 0.5) + 0.24em);
+        }
+
+        .webdev-hero-copy {
+            position: absolute;
+            left: clamp(2rem, 4vw, 4rem);
+            bottom: clamp(1.7rem, 6.8vh, 4.6rem);
+            z-index: 3;
+            width: min(40ch, 28vw);
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.78rem, 0.92vw, 0.95rem);
+            line-height: 1.14;
+            color: #000000;
+        }
 
         .service-eyebrow {
             font-family: 'CabinetGrotesk-regular', sans-serif;
@@ -77,6 +220,7 @@
             line-height: 1.6;
             max-width: 560px;
             color: rgba(244,241,232,0.75);
+            overflow: hidden;
         }
 
         .service-hero-line {
@@ -87,61 +231,825 @@
             transform-origin: left;
         }
 
+        /* -- WHAT WE DO -- */
         .service-section {
-            padding: 6rem 4rem;
-            background-color: #0d3545;
+            padding: clamp(7rem, 12vw, 12rem) 4rem clamp(8rem, 13vw, 13rem);
+            background-color: #4b3d24;
+            color: #ffffff;
+            overflow: hidden;
         }
 
         .service-section-label {
-            font-family: 'CabinetGrotesk-regular', sans-serif;
-            font-size: 0.75rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: rgba(244,241,232,0.45);
-            margin-bottom: 4rem;
+            font-family: 'CabinetGrotesk-bold', sans-serif;
+            font-size: clamp(3.6rem, 9vw, 9.5rem);
+            line-height: 0.9;
+            letter-spacing: 0;
+            text-transform: none;
+            color: rgba(244,241,232,0.9);
+            margin: 0 0 clamp(5rem, 10vw, 10rem);
+            overflow: hidden;
         }
 
         .service-features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: repeat(6, auto);
+            row-gap: clamp(3.5rem, 7vw, 7rem);
+            column-gap: clamp(3rem, 8vw, 9rem);
+            align-items: start;
         }
 
         .service-feature {
-            padding: 3rem 2.5rem;
-            background-color: rgba(244,241,232,0.03);
-            border: 1px solid rgba(244,241,232,0.07);
-            transition: background-color 0.3s ease;
+            padding: 0;
+            background-color: transparent;
+            border: 0;
+            max-width: 34rem;
+            transition: transform 0.45s ease, color 0.3s ease;
+            overflow: hidden;
         }
 
-        .service-feature:hover { background-color: rgba(244,241,232,0.07); }
+        .service-feature:hover {
+            transform: translateY(-0.7rem);
+        }
+
+        .service-feature:nth-child(1) {
+            grid-column: 1;
+            grid-row: 1;
+            justify-self: start;
+        }
+
+        .service-feature:nth-child(2) {
+            grid-column: 2;
+            grid-row: 2;
+            justify-self: end;
+        }
+
+        .service-feature:nth-child(3) {
+            grid-column: 1;
+            grid-row: 3;
+            justify-self: start;
+        }
+
+        .service-feature:nth-child(4) {
+            grid-column: 2;
+            grid-row: 4;
+            justify-self: end;
+        }
+
+        .service-feature:nth-child(5) {
+            grid-column: 1;
+            grid-row: 5;
+            justify-self: start;
+        }
+
+        .service-feature:nth-child(6) {
+            grid-column: 2;
+            grid-row: 6;
+            justify-self: end;
+        }
 
         .service-feature-num {
             font-family: 'Retro Qesmo', sans-serif;
-            font-size: 0.9rem;
-            color: rgba(244,241,232,0.3);
-            margin-bottom: 1.5rem;
+            font-size: clamp(1rem, 1.5vw, 1.35rem);
+            color: rgba(244,241,232,0.38);
+            margin-bottom: clamp(1rem, 2vw, 1.6rem);
             letter-spacing: 0.1em;
         }
 
         .service-feature-title {
-            font-family: 'CabinetGrotesk-bold', sans-serif;
-            font-size: 1.35rem;
-            margin-bottom: 1rem;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(2.35rem, 4.4vw, 5.2rem);
+            line-height: 0.94;
+            font-weight: 300;
+            letter-spacing: 0;
+            margin: 0 0 clamp(1rem, 1.8vw, 1.5rem);
+            overflow: hidden;
         }
 
         .service-feature-body {
             font-family: 'CabinetGrotesk-light', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.7;
-            color: rgba(244,241,232,0.6);
+            font-size: clamp(1.08rem, 1.35vw, 1.35rem);
+            line-height: 1.45;
+            color: rgba(244,241,232,0.68);
+            max-width: 28rem;
+        }
+
+        /* -- SHOWCASE IMAGE -- */
+        .webdev-included {
+            --included-wipe: 0%;
+            --included-fg: #000000;
+            --included-muted: #6e6356;
+            --included-copy: #5f5850;
+            position: relative;
+            z-index: 1;
+            height: 500vh;
+            min-height: 500vh;
+            height: 500svh;
+            min-height: 500svh;
+            padding: 0;
+            background-color: #e6dac8;
+            color: var(--included-fg);
+            border-bottom: none;
+            overflow: visible;
+        }
+
+        .webdev-included-sticky {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            min-height: 100vh;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            padding: 0;
+            background-color: #e6dac8;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .webdev-included-sticky::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            display: none;
+            background-color: var(--included-next-bg, #4b3d24);
+            clip-path: inset(calc(100% - var(--included-wipe)) 0 0 0);
+            will-change: clip-path;
+        }
+
+        .webdev-included-sticky > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .webdev-included-state-stack {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            margin: 0;
+            min-height: 0;
+        }
+
+        .webdev-included-state {
+            position: absolute;
+            inset: 0;
+            padding: clamp(4rem, 8.8vw, 7rem) clamp(2.6rem, 5.3vw, 4rem) clamp(3rem, 6vw, 4.8rem);
+            background-color: #e6dac8;
+            color: #000000;
+            clip-path: inset(0 0 100% 0);
+            will-change: clip-path;
+        }
+
+        .webdev-included-state:first-child {
+            position: absolute;
+            clip-path: inset(0 0 0 0);
+        }
+
+        .webdev-included-state.is-dark {
+            background-color: #4b3d24;
+            color: #ffffff;
+        }
+
+        .webdev-included-state-heading {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3.4rem, 6.2vw, 6.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            color: currentColor;
+        }
+
+        .webdev-included-state-grid {
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            grid-template-rows: auto;
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: 0;
+            align-items: center;
+            margin-top: clamp(2.6rem, 5.6vw, 4.8rem);
+        }
+
+        .webdev-included-state-visual {
+            position: relative;
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: center;
+            width: min(100%, 15.3rem);
+            aspect-ratio: 1 / 1.02;
+            background-color: #4b3d24;
+            overflow: hidden;
+        }
+
+        .webdev-included-state.is-dark .webdev-included-state-visual {
+            background-color: #e6dac8;
+        }
+
+        .webdev-included-state-visual img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            object-fit: contain;
+            display: block;
+        }
+
+        .webdev-included-state-copy {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            justify-self: stretch;
+            max-width: none;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: clamp(0.7rem, 1.3vw, 1.1rem);
+            align-items: center;
+            padding: 0;
+            overflow: visible;
+        }
+
+        .webdev-included-state-num {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            justify-self: end;
+            align-self: start;
+            margin: 0.28rem 0 0 clamp(1rem, 2.4vw, 2.8rem);
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            letter-spacing: 0;
+            line-height: 1;
+            color: #6e6356;
+        }
+
+        .webdev-included-state.is-dark .webdev-included-state-num {
+            color: rgba(247, 240, 223, 0.72);
+        }
+
+        .webdev-included-state-title {
+            grid-column: 1;
+            grid-row: 1 / span 2;
+            justify-self: start;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(2.9rem, 4.6vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: currentColor;
+            overflow: visible;
+        }
+
+        .webdev-included-state-body {
+            grid-column: 4;
+            grid-row: 1 / span 2;
+            justify-self: start;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: #5f5850;
+        }
+
+        .webdev-included-state.is-dark .webdev-included-state-body {
+            color: rgba(247, 240, 223, 0.78);
+        }
+
+        .webdev-included-base-mask {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            padding: clamp(4rem, 8.8vw, 7rem) clamp(2.6rem, 5.3vw, 4rem) clamp(3rem, 6vw, 4.8rem);
+            color: #000000;
+            pointer-events: none;
+            clip-path: inset(0 0 var(--included-wipe) 0);
+            will-change: clip-path;
+        }
+
+        .webdev-included-text-mask {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            padding: clamp(4rem, 8.8vw, 7rem) clamp(2.6rem, 5.3vw, 4rem) clamp(3rem, 6vw, 4.8rem);
+            color: #ffffff;
+            pointer-events: none;
+            clip-path: inset(calc(100% - var(--included-wipe)) 0 0 0);
+            will-change: clip-path;
+        }
+
+        .webdev-included-title {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3.4rem, 6.2vw, 6.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            color: #000000;
+        }
+
+        .webdev-included-mask-title {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3.4rem, 6.2vw, 6.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .webdev-included-base-title {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3.4rem, 6.2vw, 6.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            visibility: hidden;
+        }
+
+        .webdev-included-grid {
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            grid-template-rows: auto;
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: 0;
+            align-items: center;
+            margin-top: clamp(2.6rem, 5.6vw, 4.8rem);
+        }
+
+        .webdev-included-grid.service-features-grid {
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            grid-template-rows: auto;
+            row-gap: 0;
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+        }
+
+        .webdev-included-base-grid,
+        .webdev-included-mask-grid {
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            grid-template-rows: auto;
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: 0;
+            align-items: center;
+            margin-top: clamp(2.6rem, 5.6vw, 4.8rem);
+        }
+
+        .webdev-included-mask-visual {
+            position: relative;
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: center;
+            width: min(100%, 15.3rem);
+            aspect-ratio: 1 / 1.02;
+            background-color: #e6dac8;
+            overflow: hidden;
+        }
+
+        .webdev-included-mask-visual img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            object-fit: contain;
+            display: block;
+        }
+
+        .webdev-included-base-visual {
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: center;
+            width: min(100%, 15.3rem);
+            aspect-ratio: 1 / 1.02;
+        }
+
+        .webdev-included-base-feature {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            justify-self: stretch;
+            max-width: none;
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: clamp(0.7rem, 1.3vw, 1.1rem);
+            align-items: center;
+            padding: 0;
+            overflow: visible;
+        }
+
+        .webdev-included-visual {
+            position: relative;
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: center;
+            width: min(100%, 15.3rem);
+            aspect-ratio: 1 / 1.02;
+            background-color: #4b3d24;
+            overflow: hidden;
+        }
+
+        .webdev-included-visual img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            object-fit: contain;
+            display: block;
+            opacity: 1;
+        }
+
+        .webdev-included-content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            row-gap: clamp(2.8rem, 5.1vw, 4.8rem);
+            align-items: start;
+        }
+
+        .webdev-included .service-feature {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            justify-self: stretch;
+            max-width: none;
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: clamp(0.7rem, 1.3vw, 1.1rem);
+            align-items: center;
+            padding: 0;
+            overflow: visible;
+        }
+
+        .webdev-included .service-feature:nth-of-type(n + 4) {
+            display: none;
+        }
+
+        .webdev-included .service-feature:not(.is-active) {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+
+        .webdev-included .service-feature.is-active {
+            opacity: 0 !important;
+        }
+
+        .webdev-included .service-feature {
+            transition: none;
+        }
+
+        .webdev-included .service-feature:hover {
+            transform: none;
+        }
+
+        .webdev-included .page-enter {
+            opacity: 1;
+            transform: none;
+        }
+
+        .webdev-included-item-title {
+            grid-column: 1;
+            justify-self: end;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(2.9rem, 4.6vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: #000000;
+        }
+
+        .webdev-included .service-feature-title,
+        .webdev-included-base-feature-title {
+            grid-column: 1;
+            grid-row: 2;
+            justify-self: start;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(2.9rem, 4.6vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: #000000;
+            overflow: visible;
+        }
+
+        .webdev-included-base-num {
+            grid-column: 1;
+            grid-row: 1;
+            justify-self: start;
+            align-self: end;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            letter-spacing: 0;
+            line-height: 1;
+            color: #6e6356;
+        }
+
+        .webdev-included-base-body {
+            grid-column: 3;
+            grid-row: 1 / span 2;
+            justify-self: start;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: #5f5850;
+        }
+
+        .webdev-included-mask-feature {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            justify-self: stretch;
+            max-width: none;
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: clamp(0.7rem, 1.3vw, 1.1rem);
+            align-items: center;
+            padding: 0;
+            overflow: visible;
+            opacity: 1;
+        }
+
+        .webdev-included-mask-feature-title {
+            grid-column: 1;
+            grid-row: 2;
+            justify-self: start;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(2.9rem, 4.6vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: #ffffff;
+            overflow: visible;
+        }
+
+        .webdev-included-mask-num {
+            grid-column: 1;
+            grid-row: 1;
+            justify-self: start;
+            align-self: end;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            letter-spacing: 0;
+            line-height: 1;
+            color: rgba(247, 240, 223, 0.72);
+        }
+
+        .webdev-included-mask-body {
+            grid-column: 3;
+            grid-row: 1 / span 2;
+            justify-self: start;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: rgba(247, 240, 223, 0.78);
+        }
+
+        .webdev-included-num {
+            grid-column: 2;
+            justify-self: end;
+            margin-top: 0.28rem;
+            margin-left: clamp(2.5rem, 7vw, 8rem);
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            line-height: 1;
+            color: #6e6356;
+        }
+
+        .webdev-included .service-feature-num {
+            grid-column: 1;
+            grid-row: 1;
+            justify-self: start;
+            align-self: end;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            letter-spacing: 0;
+            line-height: 1;
+            color: #6e6356;
+        }
+
+        .webdev-included-copy {
+            grid-column: 1 / -1;
+            justify-self: end;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: #5f5850;
+        }
+
+        .webdev-included .service-feature-body {
+            grid-column: 3;
+            grid-row: 1 / span 2;
+            justify-self: start;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: #5f5850;
+        }
+
+        .webdev-responsive-mask {
+            position: relative;
+            z-index: 4;
+            height: 100vh;
+            min-height: 100vh;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            margin-top: -1px;
+            padding: clamp(4.2rem, 8.5vw, 6.7rem) clamp(2.8rem, 8vw, 5.3rem) clamp(3.2rem, 6.5vw, 5rem);
+            display: grid;
+            grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 0.78fr);
+            column-gap: clamp(3rem, 8vw, 8rem);
+            align-items: center;
+            background-color: #4b3d24;
+            color: #f7f0df;
+            overflow: hidden;
+        }
+
+        .webdev-responsive-copy {
+            align-self: stretch;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            min-height: 0;
+        }
+
+        .webdev-responsive-num {
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.78rem, 1vw, 0.96rem);
+            line-height: 1;
+            color: rgba(247, 240, 223, 0.72);
+        }
+
+        .webdev-responsive-title {
+            align-self: start;
+            margin: clamp(3.4rem, 6.7vw, 5.4rem) 0 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3rem, 4.9vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: #ffffff;
+        }
+
+        .webdev-responsive-text {
+            max-width: 38rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: rgba(247, 240, 223, 0.78);
+        }
+
+        .webdev-responsive-visual {
+            position: relative;
+            justify-self: center;
+            width: min(100%, 18.4rem);
+            aspect-ratio: 1 / 1.13;
+            background-color: #e6dac8;
+            overflow: hidden;
+        }
+
+        .webdev-responsive-visual img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            object-fit: contain;
+            display: block;
+        }
+
+        .webdev-process-collage {
+            position: relative;
+            z-index: 20;
+            margin-top: -100vh;
+            margin-top: -100svh;
+            height: 100vh;
+            min-height: 100vh;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            padding: clamp(2.2rem, 4.2vw, 3rem) clamp(2.8rem, 7.6vw, 5rem);
+            background-color: #e6dac8;
+            color: #000000;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .webdev-process-title {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            transform: none;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(5rem, 9vw, 9.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            white-space: nowrap;
+            color: #000000;
+        }
+
+        .webdev-process-title .word,
+        .webdev-process-title .line,
+        .webdev-process-title .line-mask {
+            display: inline-block;
+            width: auto;
+            white-space: nowrap !important;
+        }
+
+        .webdev-process-title .line {
+            flex: 0 0 auto;
+        }
+
+        .webdev-process-card {
+            position: absolute;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            row-gap: 0.45rem;
+            width: clamp(12rem, 24vw, 22.2rem);
+            color: #000000;
+            transform-origin: center center;
+            will-change: transform, opacity;
+        }
+
+        .webdev-process-card img {
+            grid-column: 1 / -1;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            display: block;
+            object-fit: cover;
+        }
+
+        .webdev-process-card strong,
+        .webdev-process-card span,
+        .webdev-process-title {
+            will-change: transform, opacity;
+        }
+
+        .webdev-process-card span,
+        .webdev-process-card strong {
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.2vw, 1.18rem);
+            font-weight: 300;
+            line-height: 0.95;
+        }
+
+        .webdev-process-card span {
+            color: rgba(0, 0, 0, 0.58);
+        }
+
+        .webdev-process-top-left {
+            left: 20%;
+            top: 7.4%;
+        }
+
+        .webdev-process-top-right {
+            right: 5%;
+            top: 10.5%;
+        }
+
+        .webdev-process-bottom-left {
+            left: 9.8%;
+            bottom: 5.8%;
+        }
+
+        .webdev-process-bottom-right {
+            right: 19%;
+            bottom: 5.6%;
+            width: clamp(10rem, 15.6vw, 15rem);
         }
 
         .service-showcase {
-            position: relative;
-            height: 60vh;
-            min-height: 400px;
-            overflow: hidden;
+            display: none;
         }
 
         .service-showcase img {
@@ -153,7 +1061,9 @@
             transition: transform 6s ease;
         }
 
-        .service-showcase:hover img { transform: scale(1); }
+        .service-showcase:hover img {
+            transform: scale(1);
+        }
 
         .service-showcase-label {
             position: absolute;
@@ -167,18 +1077,22 @@
             white-space: nowrap;
         }
 
+        /* -- PROCESS -- */
         .service-process {
-            padding: 6rem 4rem;
-            background-color: #124559;
+            display: none;
         }
 
         .service-process-title {
             font-family: 'CabinetGrotesk-bold', sans-serif;
             font-size: clamp(2rem, 4vw, 3.5rem);
             margin-bottom: 4rem;
+            overflow: hidden;
         }
 
-        .service-steps { display: grid; gap: 0; }
+        .service-steps {
+            display: grid;
+            gap: 0;
+        }
 
         .service-step {
             display: grid;
@@ -189,7 +1103,9 @@
             align-items: start;
         }
 
-        .service-step:last-child { border-bottom: 1px solid rgba(244,241,232,0.1); }
+        .service-step:last-child {
+            border-bottom: 1px solid rgba(244,241,232,0.1);
+        }
 
         .service-step-num {
             font-family: 'Retro Qesmo', sans-serif;
@@ -202,6 +1118,7 @@
             font-family: 'CabinetGrotesk-bold', sans-serif;
             font-size: 1.25rem;
             margin-bottom: 0.6rem;
+            overflow: hidden;
         }
 
         .service-step-content p {
@@ -211,10 +1128,13 @@
             color: rgba(244,241,232,0.6);
         }
 
+        /* -- CTA -- */
         .service-cta {
+            position: relative;
+            z-index: 5;
             padding: 8rem 4rem;
             background-color: #f4f1e8;
-            color: #124559;
+            color: #01161e;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
@@ -226,6 +1146,7 @@
             line-height: 1.05;
             max-width: 700px;
             margin-bottom: 3rem;
+            overflow: hidden;
         }
 
         .service-cta-btn {
@@ -233,7 +1154,7 @@
             font-size: 1rem;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            background-color: #124559;
+            background-color: #01161e;
             color: #f4f1e8;
             padding: 1.2rem 3rem;
             border: none;
@@ -241,13 +1162,545 @@
             transition: background-color 0.3s ease, transform 0.3s ease;
         }
 
-        .service-cta-btn:hover { background-color: #01161e; transform: translateY(-2px); }
+        .service-cta-btn:hover {
+            background-color: #124559;
+            transform: translateY(-2px);
+        }
 
+        /* -- FINAL PROCESS -- */
+        .webdev-final {
+            position: relative;
+            z-index: 7;
+            height: 100vh;
+            min-height: 100vh;
+            max-height: 100vh;
+            height: 100svh;
+            min-height: 100svh;
+            max-height: 100svh;
+            display: grid;
+            grid-template-columns: 42.8% 57.2%;
+            background-color: #e6dac8;
+            color: #000000;
+            overflow: hidden;
+        }
+
+        .webdev-final-media {
+            position: relative;
+            min-height: inherit;
+            background-color: #4b3d24;
+            display: grid;
+            place-items: center;
+            padding: clamp(2.7rem, 4.05vw, 3.25rem);
+        }
+
+        .webdev-final-image-cluster {
+            position: relative;
+            width: min(68%, 23rem);
+            aspect-ratio: 0.88 / 1;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .webdev-final.is-process-ready .webdev-final-image-cluster {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .webdev-final-image-frame {
+            position: absolute;
+            margin: 0;
+            overflow: hidden;
+            clip-path: inset(0% 0% 100% 0%);
+            box-shadow: 0 1.2rem 3.2rem rgba(36, 27, 16, 0.18);
+            will-change: clip-path;
+        }
+
+        .webdev-final-image-frame.is-primary {
+            left: 25%;
+            top: 14%;
+            width: 58%;
+            aspect-ratio: 0.82 / 1;
+            z-index: 3;
+        }
+
+        .webdev-final-image-frame.is-secondary {
+            left: 63%;
+            top: 62%;
+            width: 29%;
+            aspect-ratio: 0.96 / 1;
+            z-index: 2;
+        }
+
+        .webdev-final-image-frame.is-tertiary {
+            left: 6%;
+            top: 6%;
+            width: 30%;
+            aspect-ratio: 0.96 / 1;
+            z-index: 2;
+        }
+
+        .webdev-final-image-frame.is-quaternary {
+            left: 11%;
+            top: 67%;
+            width: 28%;
+            aspect-ratio: 1.04 / 1;
+            z-index: 1;
+        }
+
+        .webdev-final-image-frame img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            object-position: center;
+            transform: none;
+            transform-origin: center;
+            will-change: transform;
+        }
+
+        .webdev-process-image-placeholder {
+            display: block;
+            width: 100%;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .webdev-process-to-final-image {
+            position: fixed;
+            z-index: 80;
+            display: block;
+            object-fit: cover;
+            object-position: center;
+            pointer-events: none;
+            will-change: transform, left, top, width, height, opacity, clip-path;
+        }
+
+        .webdev-final-copy {
+            padding: clamp(2.55rem, 4vw, 3.1rem) clamp(5rem, 8.9vw, 6.2rem) clamp(2.5rem, 5vw, 3.8rem) clamp(1.55rem, 2.2vw, 1.8rem);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .webdev-final-step {
+            margin: 0;
+            padding: 0 0 clamp(1rem, 1.55vw, 1.18rem);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.58);
+        }
+
+        .webdev-final-step + .webdev-final-step {
+            margin-top: clamp(1.55rem, 2.35vw, 1.95rem);
+        }
+
+        .webdev-final-title {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(1.85rem, 2.45vw, 2.38rem);
+            font-weight: 300;
+            line-height: 0.94;
+            letter-spacing: 0;
+        }
+
+        .webdev-final-text {
+            max-width: 58rem;
+            margin: clamp(0.72rem, 1.05vw, 0.86rem) 0 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.78rem, 1.02vw, 0.95rem);
+            line-height: 1.18;
+            color: #625c54;
+        }
+
+        .webdev-final-cta {
+            margin-top: clamp(1.65rem, 2.8vw, 2.4rem);
+            min-width: 0;
+            width: fit-content;
+        }
+
+        .service-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: 'CabinetGrotesk-regular', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(244,241,232,0.5);
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 3rem;
+            transition: color 0.3s ease;
+        }
+
+        .service-back-btn:hover { color: #f4f1e8; }
+
+        /* page-enter animation */
         .page-enter { opacity: 0; transform: translateY(30px); }
 
-        @media (max-width: 760px) {
+        @media (max-width: 767px) {
+            [data-barba-namespace="service-branding"] {
+                padding-bottom: 0;
+            }
+
             .service-hero, .service-section, .service-process, .service-cta { padding-left: 2rem; padding-right: 2rem; }
-            .service-hero { padding-top: 7rem; }
+            .service-hero {
+                --webdev-mobile-media-top: 50svh;
+                display: block !important;
+                padding-left: 0;
+                padding-right: 0;
+                background: #e6dac8 !important;
+            }
+            .webdev-reference-hero {
+                display: block !important;
+                align-content: initial !important;
+                gap: 0 !important;
+                padding: 0 !important;
+            }
+            .service-hero-bg {
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none !important;
+            }
+            .webdev-hero-media {
+                --webdev-hero-media-width: min(72vw, 23rem);
+                position: absolute !important;
+                left: 50% !important;
+                top: var(--webdev-mobile-media-top) !important;
+                right: auto !important;
+                bottom: auto !important;
+                z-index: 2 !important;
+                width: var(--webdev-hero-media-width) !important;
+                max-width: none !important;
+                margin: 0 !important;
+                transform: translate(-50%, -50%) !important;
+            }
+            .service-hero .webdev-hero-content {
+                position: absolute !important;
+                inset: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                max-width: none !important;
+                transform: none !important;
+                z-index: 2 !important;
+                pointer-events: none !important;
+            }
+            .webdev-hero-title {
+                --webdev-title-frame-height: calc(min(72vw, 23rem) * 0.5625);
+                position: absolute !important;
+                inset: 0 !important;
+                left: 0 !important;
+                top: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none !important;
+                transform: none !important;
+                display: block !important;
+                font-size: clamp(2.45rem, 11.6vw, 4.85rem) !important;
+            }
+            .webdev-hero-title.is-brown-title {
+                color: #ffffff !important;
+                clip-path: inset(0 0 0 50%) !important;
+            }
+            .webdev-title-line-web {
+                top: calc(var(--webdev-mobile-media-top) - (var(--webdev-title-frame-height) * 0.5) - 1.18em) !important;
+            }
+            .webdev-title-line-development {
+                top: calc(var(--webdev-mobile-media-top) + (var(--webdev-title-frame-height) * 0.5) + 0.5em) !important;
+            }
+            .webdev-hero-copy {
+                position: absolute !important;
+                left: clamp(1.75rem, 7vw, 3.75rem) !important;
+                right: auto !important;
+                top: auto !important;
+                bottom: clamp(0.45rem, 1.4svh, 1rem) !important;
+                width: min(26ch, calc(50vw - clamp(1.75rem, 7vw, 3.75rem) - 0.9rem)) !important;
+                max-width: min(26ch, calc(50vw - clamp(1.75rem, 7vw, 3.75rem) - 0.9rem)) !important;
+                transform: none !important;
+                z-index: 3 !important;
+                color: #000000 !important;
+                font-size: clamp(0.66rem, 3vw, 0.82rem) !important;
+                line-height: 1.08 !important;
+            }
+            .service-section {
+                padding-top: 5rem;
+                padding-bottom: 6rem;
+            }
+            .service-section-label {
+                margin-bottom: 3.5rem;
+            }
+            .service-features-grid {
+                grid-template-columns: 1fr;
+                row-gap: 3.5rem;
+            }
+            .service-feature,
+            .service-feature:nth-child(n) {
+                grid-column: 1;
+                transform: none;
+            }
+            .service-feature:hover {
+                transform: translateY(-0.35rem);
+            }
+            .webdev-included {
+                height: 100vh !important;
+                min-height: 100vh !important;
+                max-height: 100vh !important;
+                height: 100svh !important;
+                min-height: 100svh !important;
+                max-height: 100svh !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+            .webdev-included-sticky {
+                position: relative;
+                top: auto;
+                height: 100vh !important;
+                min-height: 100vh !important;
+                max-height: 100vh !important;
+                height: 100svh !important;
+                min-height: 100svh !important;
+                max-height: 100svh !important;
+                padding: 0 !important;
+            }
+            .webdev-included-state {
+                height: 100vh;
+                min-height: 100vh;
+                max-height: 100vh;
+                height: 100svh;
+                min-height: 100svh;
+                max-height: 100svh;
+                display: grid;
+                grid-template-rows: auto minmax(0, 1fr);
+                padding: clamp(2.8rem, 8svh, 4rem) 1.25rem clamp(1.8rem, 5svh, 2.6rem);
+                box-sizing: border-box;
+            }
+            .webdev-included-base-mask,
+            .webdev-included-text-mask {
+                padding: clamp(2.8rem, 8svh, 4rem) 1.25rem clamp(1.8rem, 5svh, 2.6rem);
+            }
+            .webdev-included-title,
+            .webdev-included-base-title,
+            .webdev-included-mask-title {
+                font-size: clamp(2.45rem, 12vw, 4.2rem);
+            }
+            .webdev-included-grid,
+            .webdev-included-base-grid,
+            .webdev-included-mask-grid,
+            .webdev-included-state-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: minmax(6.8rem, 24svh) minmax(0, auto);
+                gap: clamp(1.15rem, 3svh, 1.8rem);
+                margin-top: clamp(1.6rem, 4.5svh, 2.5rem);
+            }
+            .webdev-included-state-stack {
+                margin-top: 0;
+                min-height: 0;
+            }
+            .webdev-included-state-grid {
+                height: auto;
+                min-height: 0;
+                margin-top: clamp(1.6rem, 4.5svh, 2.5rem);
+                align-content: start;
+            }
+            .webdev-included-grid.service-features-grid {
+                grid-template-columns: 1fr;
+                row-gap: 2.5rem;
+            }
+            .webdev-included-visual,
+            .webdev-included-base-visual,
+            .webdev-included-mask-visual,
+            .webdev-included-state-visual {
+                grid-column: 1;
+                grid-row: 1;
+                justify-self: start;
+                width: min(12.5rem, 58vw, 24svh);
+            }
+            .webdev-included-content {
+                grid-template-columns: 1fr auto;
+                row-gap: 2rem;
+            }
+            .webdev-included .service-feature,
+            .webdev-included-base-feature,
+            .webdev-included-mask-feature,
+            .webdev-included-state-copy {
+                grid-column: 1;
+                grid-row: auto;
+                grid-template-columns: minmax(0, 1fr) auto;
+                row-gap: clamp(0.75rem, 2.2svh, 1.25rem);
+                transform: none;
+            }
+            .webdev-included-item-title {
+                justify-self: start;
+                font-size: clamp(2.8rem, 12vw, 4.4rem);
+            }
+            .webdev-included .service-feature-title,
+            .webdev-included-base-feature-title,
+            .webdev-included-mask-feature-title,
+            .webdev-included-state-title {
+                grid-column: 1;
+                grid-row: 1;
+                justify-self: start;
+                font-size: clamp(2.1rem, 9.6vw, 3.35rem);
+                line-height: 0.9;
+            }
+            .webdev-included-num {
+                margin-left: 1rem;
+            }
+            .webdev-included .service-feature-num,
+            .webdev-included-base-num,
+            .webdev-included-mask-num,
+            .webdev-included-state-num {
+                grid-column: 2;
+                grid-row: 1;
+                align-self: start;
+                margin-left: 1rem;
+                font-size: 0.78rem;
+            }
+            .webdev-included-copy {
+                justify-self: start;
+                max-width: 100%;
+                font-size: 0.92rem;
+                line-height: 1.16;
+            }
+            .webdev-included .service-feature-body,
+            .webdev-included-base-body,
+            .webdev-included-mask-body,
+            .webdev-included-state-body {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                justify-self: start;
+                max-width: 100%;
+                font-size: clamp(0.78rem, 3.6vw, 0.9rem);
+                line-height: 1.12;
+            }
+            .webdev-responsive-mask {
+                height: 100vh;
+                min-height: 100vh;
+                max-height: 100vh;
+                height: 100svh;
+                min-height: 100svh;
+                max-height: 100svh;
+                padding: 4.8rem 1.5rem 3rem;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto minmax(0, 1fr);
+                row-gap: 2.8rem;
+                align-items: end;
+            }
+            .webdev-responsive-copy {
+                min-height: auto;
+                grid-template-rows: auto auto auto;
+                row-gap: 2rem;
+            }
+            .webdev-responsive-title {
+                margin: 1.8rem 0 0;
+                font-size: clamp(2.8rem, 12vw, 4.4rem);
+            }
+            .webdev-responsive-text {
+                max-width: 100%;
+                font-size: 0.92rem;
+                line-height: 1.16;
+            }
+            .webdev-responsive-visual {
+                width: min(15rem, 72vw);
+                justify-self: center;
+            }
+            .webdev-process-collage {
+                margin-top: -100vh !important;
+                margin-top: -100svh !important;
+                height: 100vh !important;
+                min-height: 100vh !important;
+                max-height: 100vh !important;
+                height: 100svh !important;
+                min-height: 100svh !important;
+                max-height: 100svh !important;
+                padding: clamp(7rem, 17svh, 8.5rem) 1.25rem clamp(1rem, 3svh, 1.6rem) !important;
+                display: grid !important;
+                grid-template-rows: repeat(4, minmax(0, auto)) !important;
+                align-content: space-between !important;
+                gap: clamp(0.45rem, 1.1svh, 0.75rem) !important;
+            }
+            .webdev-process-title {
+                position: absolute !important;
+                inset: auto 0 auto 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                top: clamp(1.35rem, 4.2svh, 2.4rem) !important;
+                bottom: auto !important;
+                z-index: 1 !important;
+                display: flex !important;
+                align-items: flex-start !important;
+                justify-content: center !important;
+                width: auto !important;
+                max-width: none !important;
+                transform: none !important;
+                order: initial !important;
+                text-align: center !important;
+                font-size: clamp(2.1rem, 9.5vw, 3.5rem) !important;
+                white-space: nowrap !important;
+            }
+            .webdev-process-card,
+            .webdev-process-top-left,
+            .webdev-process-top-right,
+            .webdev-process-bottom-left,
+            .webdev-process-bottom-right {
+                position: relative;
+                left: auto;
+                right: auto;
+                top: auto;
+                bottom: auto;
+                width: min(100%, 18rem);
+                justify-self: center;
+                row-gap: 0.18rem;
+            }
+            .webdev-process-card img {
+                aspect-ratio: 16 / 5.8;
+                max-height: 12.5svh;
+            }
+            .webdev-process-card strong,
+            .webdev-process-card span {
+                font-size: clamp(0.72rem, 3.1vw, 0.86rem);
+                line-height: 0.95;
+            }
+            .webdev-process-top-left {
+                order: 1;
+            }
+            .webdev-process-top-right {
+                order: 3;
+            }
+            .webdev-process-bottom-left {
+                order: 4;
+            }
+            .webdev-process-bottom-right {
+                order: 5;
+            }
+            .webdev-final {
+                height: auto;
+                min-height: 100svh;
+                max-height: none;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+            }
+            .webdev-final-media {
+                min-height: 47svh;
+                padding: 1.5rem;
+            }
+            .webdev-final-image-cluster {
+                width: min(70vw, 18rem);
+            }
+            .webdev-final-copy {
+                min-height: 0;
+                padding: 2.4rem 1.5rem 3.2rem;
+            }
+            .webdev-final-title {
+                font-size: clamp(2rem, 9vw, 3.2rem);
+            }
+            .webdev-final-step + .webdev-final-step {
+                margin-top: 1.55rem;
+            }
             .service-step { grid-template-columns: 50px 1fr; }
         }
     </style>
@@ -263,21 +1716,26 @@
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Blueprint">
-    <meta property="og:title" content="Blueprint – Branding & Identity">
+    <meta property="og:title" content="Blueprint - Branding &amp; Identity">
     <meta property="og:description" content="Memorable logos and complete brand identity packages. Blueprint's branding service.">
 </head>
 
 <body data-barba="wrapper">
     <div data-barba="container" data-barba-namespace="service-branding">
+    <!-- LOADING SCREEN -->
     <div id="loader" class="loader">
         <div class="loader-content">
             <div class="loader-logo reveal-text">BLUEPRINT</div>
-            <div class="loader-progress"><div class="loader-progress-bar"></div></div>
+            <div class="loader-progress">
+                <div class="loader-progress-bar"></div>
+            </div>
         </div>
     </div>
 
     <header class="navbar">
-        <button class="logo-button" type="button" onclick="handlePageTransition(event, 'index.html')" data-label="BLUEPRINT" aria-label="Back to home">BLUEPRINT</button>
+        <button class="logo-button" type="button" onclick="handlePageTransition(event, 'index.html')" data-label="BLUEPRINT" aria-label="Back to home">
+            BLUEPRINT
+        </button>
         <button class="menu-button" type="button" aria-label="Open menu">
             <svg class="menu-icon" fill="none" width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <line class="menu-icon-line menu-icon-line-top" x1="4" y1="9.5" x2="20" y2="9.5" />
@@ -300,7 +1758,7 @@
                     <button class="menu-overlay-link menu-line-reveal" type="button" onclick="handlePageTransition(event, 'contact.html')"><span>Contact</span></button>
                 </nav>
                 <div class="menu-image-frame" aria-hidden="true">
-                    <img loading="lazy" decoding="async" class="menu-image" src="./web_img/webp-output/web_6.webp" alt="">
+                    <img loading="lazy" decoding="async" class="menu-image" src="./branding_img/webp-output/branding_6.webp" alt="">
                 </div>
                 <div class="menu-overlay-info">
                     <div class="menu-info-group">
@@ -322,95 +1780,202 @@
         </div>
     </div>
 
-    <section class="service-hero">
-        <img decoding="async" fetchpriority="high" width="1448" height="1086" class="service-hero-bg" src="./branding_img/webp-output/branding_main.webp" alt="">
-        <div class="service-hero-content">
-            <p class="service-eyebrow page-enter">Service — 02</p>
-            <h1 class="service-hero-title page-enter">Branding<br>& Identity</h1>
-            <hr class="service-hero-line">
-            <p class="service-hero-desc page-enter">Memorable logos and complete brand identity packages that tell your story at a glance. We build visual languages that last.</p>
+    <!-- HERO -->
+    <section class="service-hero webdev-reference-hero" id="service-hero" aria-label="Branding &amp; Identity">
+        <div class="webdev-hero-media">
+            <img class="service-hero-bg" src="./branding_img/webp-output/branding_main.webp" alt="" fetchpriority="high">
+        </div>
+        <div class="service-hero-content webdev-hero-content">
+            <h1 class="webdev-hero-title reveal-text">Branding<br>&amp; Identity</h1>
+            <h1 class="webdev-hero-title is-brown-title reveal-text" aria-hidden="true">Branding<br>&amp; Identity</h1>
+            <p class="webdev-hero-copy reveal-text">Memorable logos and complete brand identity packages that tell your story at a glance. We build visual languages that last.</p>
         </div>
     </section>
 
-    <section class="service-section">
-        <p class="service-section-label page-enter">What's Included</p>
-        <div class="service-features-grid">
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">01</div>
-                <h3 class="service-feature-title">Logo Design</h3>
-                <p class="service-feature-body">Bespoke mark crafted in multiple formats — wordmark, icon, and combination variants.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">02</div>
-                <h3 class="service-feature-title">Colour System</h3>
-                <p class="service-feature-body">A curated palette with primary, secondary, and accent tones built for consistency.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">03</div>
-                <h3 class="service-feature-title">Typography</h3>
-                <p class="service-feature-body">Typeface selection and pairing that carries your brand voice across every touchpoint.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">04</div>
-                <h3 class="service-feature-title">Brand Guidelines</h3>
-                <p class="service-feature-body">A comprehensive style guide your team can use to maintain brand integrity anywhere.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">05</div>
-                <h3 class="service-feature-title">Collateral Design</h3>
-                <p class="service-feature-body">Business cards, letterheads, and presentation templates — ready to use on day one.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">06</div>
-                <h3 class="service-feature-title">Social Kit</h3>
-                <p class="service-feature-body">Profile assets, post templates, and story formats sized for every major platform.</p>
+    <!-- FEATURES -->
+    <section class="service-section webdev-included" aria-label="What's included">
+        <div class="webdev-included-sticky">
+            <div class="webdev-included-state-stack page-enter">
+                <article class="webdev-included-state">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_elements_1.webp" alt="">
+                        </div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">01</div>
+                            <h3 class="webdev-included-state-title">Logo Design</h3>
+                            <p class="webdev-included-state-body">Bespoke mark crafted in multiple formats — wordmark, icon, and combination variants.</p>
+                        </div>
+                    </div>
+                </article>
+                <article class="webdev-included-state is-dark">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_elements_2.webp" alt="">
+                        </div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">02</div>
+                            <h3 class="webdev-included-state-title">Colour System</h3>
+                            <p class="webdev-included-state-body">A curated palette with primary, secondary, and accent tones built for consistency.</p>
+                        </div>
+                    </div>
+                </article>
+                <article class="webdev-included-state">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_elements_3.webp" alt="">
+                        </div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">03</div>
+                            <h3 class="webdev-included-state-title">Typography</h3>
+                            <p class="webdev-included-state-body">Typeface selection and pairing that carries your brand voice across every touchpoint.</p>
+                        </div>
+                    </div>
+                </article>
+                <article class="webdev-included-state is-dark">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_elements_4.webp" alt="">
+                        </div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">04</div>
+                            <h3 class="webdev-included-state-title">Brand Guidelines</h3>
+                            <p class="webdev-included-state-body">A comprehensive style guide your team can use to maintain brand integrity anywhere.</p>
+                        </div>
+                    </div>
+                </article>
+                <article class="webdev-included-state">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_elements_1.webp" alt="">
+                        </div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">05</div>
+                            <h3 class="webdev-included-state-title">Collateral Design</h3>
+                            <p class="webdev-included-state-body">Business cards, letterheads, and presentation templates — ready to use on day one.</p>
+                        </div>
+                    </div>
+                </article>
+                <article class="webdev-included-state is-dark">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_elements_2.webp" alt="">
+                        </div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">06</div>
+                            <h3 class="webdev-included-state-title">Social Kit</h3>
+                            <p class="webdev-included-state-body">Profile assets, post templates, and story formats sized for every major platform.</p>
+                        </div>
+                    </div>
+                </article>
             </div>
         </div>
     </section>
 
+    <!-- PROCESS -->
+    <section class="webdev-process-collage" aria-label="How it works">
+        <article class="webdev-process-card webdev-process-top-left">
+            <strong>Brand Audit</strong>
+            <span>01</span>
+            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_7.webp" alt="">
+        </article>
+        <article class="webdev-process-card webdev-process-top-right">
+            <strong>Concept Development</strong>
+            <span>02</span>
+            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_2.webp" alt="">
+        </article>
+        <h2 class="webdev-process-title" data-blueprint-split="true">
+            <span class="line"><span class="line-mask">How&nbsp;it&nbsp;works</span></span>
+        </h2>
+        <article class="webdev-process-card webdev-process-bottom-left">
+            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_4.webp" alt="">
+            <strong>Refinement</strong>
+            <span>03</span>
+        </article>
+        <article class="webdev-process-card webdev-process-bottom-right">
+            <img loading="lazy" decoding="async" src="./branding_img/webp-output/branding_5.webp" alt="">
+            <strong>Delivery &amp; Guidelines</strong>
+            <span>04</span>
+        </article>
+    </section>
+
+    <!-- SHOWCASE -->
     <div class="service-showcase">
         <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1800&q=80" alt="Branding showcase" loading="lazy">
         <div class="service-showcase-label">BRAND</div>
     </div>
 
-    <section class="service-process">
-        <h2 class="service-process-title page-enter">How it works</h2>
-        <div class="service-steps">
-            <div class="service-step page-enter">
-                <span class="service-step-num">01</span>
-                <div class="service-step-content">
-                    <h3>Brand Audit</h3>
-                    <p>We assess your current position, competitors, and audience to find the white space your brand should own.</p>
-                </div>
+    <!-- FINAL -->
+    <section class="webdev-final" aria-label="Branding &amp; Identity process">
+        <div class="webdev-final-media page-enter">
+            <div class="webdev-final-image-cluster" aria-hidden="true">
+                <figure class="webdev-final-image-frame is-tertiary" data-webdev-image="branding_7.webp"></figure>
+                <figure class="webdev-final-image-frame is-primary" data-webdev-image="branding_5.webp"></figure>
+                <figure class="webdev-final-image-frame is-quaternary" data-webdev-image="branding_4.webp"></figure>
+                <figure class="webdev-final-image-frame is-secondary" data-webdev-image="branding_2.webp"></figure>
             </div>
-            <div class="service-step page-enter">
-                <span class="service-step-num">02</span>
-                <div class="service-step-content">
-                    <h3>Concept Development</h3>
-                    <p>Two or three distinct directions presented — each grounded in strategy, not just aesthetics.</p>
-                </div>
-            </div>
-            <div class="service-step page-enter">
-                <span class="service-step-num">03</span>
-                <div class="service-step-content">
-                    <h3>Refinement</h3>
-                    <p>We iterate on the chosen direction until every element feels intentional and complete.</p>
-                </div>
-            </div>
-            <div class="service-step page-enter">
-                <span class="service-step-num">04</span>
-                <div class="service-step-content">
-                    <h3>Delivery & Guidelines</h3>
-                    <p>Final files in every format you need, packaged with a brand guide your whole team can follow.</p>
-                </div>
-            </div>
+        </div>
+        <div class="webdev-final-copy page-enter">
+            <article class="webdev-final-step">
+                <h2 class="webdev-final-title">Brand Audit</h2>
+                <p class="webdev-final-text">We assess your current position, competitors, and audience to find the white space your brand should own.</p>
+            </article>
+            <article class="webdev-final-step">
+                <h2 class="webdev-final-title">Concept Development</h2>
+                <p class="webdev-final-text">Two or three distinct directions presented — each grounded in strategy, not just aesthetics.</p>
+            </article>
+            <article class="webdev-final-step">
+                <h2 class="webdev-final-title">Refinement</h2>
+                <p class="webdev-final-text">We iterate on the chosen direction until every element feels intentional and complete.</p>
+            </article>
+            <article class="webdev-final-step">
+                <h2 class="webdev-final-title">Delivery &amp; Guidelines</h2>
+                <p class="webdev-final-text">Final files in every format you need, packaged with a brand guide your whole team can follow.</p>
+            </article>
+            <button class="link-page-cta webdev-final-cta" type="button" onclick="handlePageTransition(event, 'contact.html')">
+                <span>Start a project</span>
+            </button>
         </div>
     </section>
 
-    <section class="service-cta">
-        <h2 class="service-cta-title page-enter">Ready to build a brand that lasts?</h2>
-        <button class="service-cta-btn" onclick="handlePageTransition(event, 'contact.html')">Start a project</button>
-    </section>
+        <footer class="site-footer link-page-reveal-footer">
+            <div class="site-footer-inner">
+                <nav class="site-footer-links" aria-label="Footer links">
+                    <div class="site-footer-group">
+                        <p class="site-footer-label">Quick links</p>
+                        <button type="button" onclick="handlePageTransition(event, 'projects.html')">Projects</button>
+                        <button type="button" onclick="handlePageTransition(event, 'approach.html')">Approach</button>
+                        <button type="button" onclick="handlePageTransition(event, 'about.html')">About</button>
+                        <button type="button" onclick="handlePageTransition(event, 'contact.html')">Contact</button>
+                    </div>
+
+                    <div class="site-footer-group">
+                        <p class="site-footer-label">Social</p>
+                        <a href="#">Instagram</a>
+                        <a href="#">Facebook</a>
+                        <a href="#">LinkedIn</a>
+                    </div>
+
+                    <div class="site-footer-group">
+                        <p class="site-footer-label">Email</p>
+                        <a href="mailto:hello@blueprint.studio">hello@blueprint.studio</a>
+                    </div>
+                </nav>
+
+                <p class="site-footer-title">BLUEPRINT</p>
+
+                <div class="site-footer-meta">
+                    <p>Creative systems for new businesses.</p>
+                    <p>Blueprint Studio</p>
+                </div>
+            </div>
+        </footer>
 
     </div>
     </div>
@@ -421,13 +1986,580 @@
     <script src="https://unpkg.com/@barba/core"></script>
     <script src="script.js"></script>
     <script>
-        window.addEventListener('load', () => {
-            gsap.to('.page-enter', { opacity: 1, y: 0, duration: 0.9, stagger: 0.12, ease: 'power3.out', delay: 0.5 });
-            gsap.to('.service-hero-line', { scaleX: 1, duration: 1.2, ease: 'expo.out', delay: 0.9 });
+        const webdevTextRevealTargets = gsap.utils.toArray([
+            '.webdev-process-title',
+            '.webdev-process-card strong',
+            '.webdev-process-card span',
+            '.service-showcase-label',
+            '.service-step-num',
+            '.service-step-content h3',
+            '.service-step-content p',
+            '.webdev-final-title',
+            '.webdev-final-text',
+            '.webdev-final-cta'
+        ].join(','));
+
+        webdevTextRevealTargets.forEach((target) => {
+            target.classList.add('reveal-text', 'webdev-text-reveal');
         });
-        gsap.utils.toArray('.service-section .page-enter, .service-process .page-enter, .service-cta .page-enter').forEach(el => {
-            gsap.fromTo(el, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%', once: true } });
+
+        if (typeof splitBlueprintText === 'function') {
+            splitBlueprintText(document);
+        }
+
+        if (window.ScrollTrigger) {
+            ScrollTrigger.config({ ignoreMobileResize: true });
+        }
+
+        const serviceHero = document.querySelector('#service-hero');
+        if (serviceHero && window.gsap) {
+            const heroMedia = serviceHero.querySelector('.webdev-hero-media');
+            const heroTitleMasks = serviceHero.querySelectorAll('.webdev-hero-title .line-mask');
+            const heroCopyMasks = serviceHero.querySelectorAll('.webdev-hero-copy .line-mask');
+            const heroTitleChars = [];
+            let heroIntroPlayed = false;
+
+            serviceHero.querySelectorAll('.webdev-hero-title').forEach((title) => {
+                const titleLines = title.querySelectorAll('.line');
+
+                if (titleLines.length === 1) {
+                    titleLines[0].classList.add('webdev-title-line-development');
+                } else {
+                    titleLines[0]?.classList.add('webdev-title-line-web');
+                    titleLines[1]?.classList.add('webdev-title-line-development');
+                }
+            });
+
+            heroTitleMasks.forEach((mask, maskIndex) => {
+                if (mask.dataset.webdevCharsReady === 'true') {
+                    mask.querySelectorAll('.webdev-hero-char').forEach((span) => heroTitleChars.push(span));
+                    return;
+                }
+
+                const label = mask.textContent;
+                mask.textContent = '';
+                mask.dataset.webdevCharsReady = 'true';
+
+                Array.from(label).forEach((char, charIndex) => {
+                    const span = document.createElement('span');
+                    const groupIndex = (maskIndex % 2) * 32 + charIndex;
+
+                    span.className = 'char webdev-hero-char';
+                    span.textContent = char === ' ' ? '\u00a0' : char;
+                    span.style.display = 'inline-block';
+                    span.style.willChange = 'transform';
+                    span.dataset.webdevRevealIndex = groupIndex;
+                    mask.appendChild(span);
+                    heroTitleChars.push(span);
+                });
+            });
+            const heroTitleRevealStagger = (index, target) => {
+                return (Number(target.dataset.webdevRevealIndex) || 0) * 0.025;
+            };
+
+            gsap.set(heroTitleMasks, { y: 0 });
+            gsap.set(heroTitleChars, { y: '140%' });
+            gsap.set(heroCopyMasks, { y: '140%' });
+            gsap.set(heroMedia, { autoAlpha: 0, clipPath: 'inset(0 0 100% 0)' });
+            gsap.set(serviceHero, { '--webdev-brown-x': '100%' });
+
+            window.blueprintPlayWebDevHeroIntro = (options = {}) => {
+                if (heroIntroPlayed) return;
+
+                heroIntroPlayed = true;
+                const heroTl = gsap.timeline();
+                const imageAlreadyPlaced = options.imageAlreadyPlaced === true;
+
+                gsap.killTweensOf([heroMedia, heroTitleMasks, heroTitleChars, heroCopyMasks]);
+                gsap.killTweensOf(serviceHero);
+                gsap.set(heroTitleMasks, { y: 0 });
+                gsap.set(heroTitleChars, { y: '140%' });
+                gsap.set(heroCopyMasks, { y: '140%' });
+                gsap.set(serviceHero, { '--webdev-brown-x': '100%' });
+
+                if (imageAlreadyPlaced) {
+                    gsap.set(heroMedia, { autoAlpha: 1, clipPath: 'inset(0 0 0% 0)' });
+                    heroTl
+                    .to(serviceHero, {
+                        '--webdev-brown-x': '0%',
+                        duration: 0.92,
+                        ease: 'power4.inOut'
+                    }, 0)
+                    .to(heroTitleChars, {
+                        y: 0,
+                        stagger: heroTitleRevealStagger,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    }, '>')
+                    .to(heroCopyMasks, {
+                        y: 0,
+                        stagger: 0.08,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    }, '-=0.58');
+
+                    return;
+                }
+
+                heroTl
+                    .to(serviceHero, {
+                        '--webdev-brown-x': '0%',
+                        duration: 0.92,
+                        ease: 'power4.inOut'
+                    }, 0)
+                    .to(heroMedia, {
+                        autoAlpha: 1,
+                        clipPath: 'inset(0 0 0% 0)',
+                        duration: 0.95,
+                        ease: 'power4.inOut'
+                    }, 0.18)
+                    .to(heroTitleChars, {
+                        y: 0,
+                        stagger: heroTitleRevealStagger,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    }, '>')
+                    .to(heroCopyMasks, {
+                        y: 0,
+                        stagger: 0.08,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    }, '-=0.58');
+            };
+
+            window.blueprintScheduleWebDevHeroIntro = () => {
+                if (window.self !== window.top) return;
+
+                const loader = document.getElementById('loader');
+                const loaderVisible = loader && window.getComputedStyle(loader).display !== 'none';
+
+                if (loaderVisible) {
+                    requestAnimationFrame(window.blueprintScheduleWebDevHeroIntro);
+                    return;
+                }
+
+                window.blueprintPlayWebDevHeroIntro();
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', window.blueprintScheduleWebDevHeroIntro, { once: true });
+            } else {
+                window.blueprintScheduleWebDevHeroIntro();
+            }
+        }
+
+        webdevTextRevealTargets.forEach((target) => {
+            if (target.closest('.webdev-process-collage')) return;
+
+            const masks = target.querySelectorAll('.line-mask');
+
+            if (!masks.length) return;
+
+            gsap.set(masks, { y: '140%' });
+
+            ScrollTrigger.create({
+                trigger: target,
+                start: 'top 88%',
+                once: true,
+                onEnter: () => {
+                    gsap.to(masks, {
+                        y: 0,
+                        stagger: 0.08,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    });
+                }
+            });
         });
+
+        const webdevIncluded = document.querySelector('.webdev-included');
+        if (webdevIncluded && window.gsap && window.ScrollTrigger) {
+            const includedStates = gsap.utils.toArray('.webdev-included-state');
+
+            const renderIncludedState = (progress = 0) => {
+                if (!includedStates.length) return;
+
+                const maxIndex = includedStates.length - 1;
+                const revealProgress = Math.min(progress / 0.75, 1);
+                const scaled = Math.min(revealProgress * maxIndex, maxIndex);
+                const activeIndex = Math.min(Math.floor(scaled), maxIndex);
+                const nextIndex = Math.min(activeIndex + 1, maxIndex);
+                const wipe = activeIndex === maxIndex ? 100 : (scaled - activeIndex) * 100;
+
+                includedStates.forEach((state, index) => {
+                    const isCurrent = index === activeIndex;
+                    const isNext = index === nextIndex && activeIndex !== maxIndex;
+
+                    state.style.zIndex = isNext ? '2' : isCurrent ? '1' : '0';
+
+                    if (isCurrent) {
+                        state.style.clipPath = 'inset(0% 0 0% 0)';
+                    } else if (isNext) {
+                        state.style.clipPath = `inset(${100 - wipe}% 0 0 0)`;
+                    } else {
+                        state.style.clipPath = 'inset(0 0 100% 0)';
+                    }
+                });
+            };
+
+            renderIncludedState(0);
+
+            const setupIncludedTrigger = (isMobile = false) => {
+                const includedTrigger = ScrollTrigger.create({
+                    trigger: webdevIncluded,
+                    start: 'top top',
+                    end: isMobile ? () => `+=${window.innerHeight * includedStates.length}` : 'bottom bottom',
+                    scrub: true,
+                    pin: isMobile,
+                    anticipatePin: isMobile ? 1 : 0,
+                    invalidateOnRefresh: true,
+                    onUpdate: (self) => renderIncludedState(self.progress),
+                    onLeave: () => renderIncludedState(1),
+                    onLeaveBack: () => renderIncludedState(0)
+                });
+
+                return () => includedTrigger.kill();
+            };
+
+            if (window.gsap.matchMedia) {
+                const includedMatchMedia = gsap.matchMedia();
+                includedMatchMedia.add('(max-width: 767px)', () => setupIncludedTrigger(true));
+                includedMatchMedia.add('(min-width: 768px)', () => setupIncludedTrigger(false));
+            } else {
+                setupIncludedTrigger(window.matchMedia('(max-width: 767px)').matches);
+            }
+        }
+
+        const webdevProcess = document.querySelector('.webdev-process-collage');
+        const webdevFinalSection = document.querySelector('.webdev-final');
+        const markWebdevFinalProcessReady = () => {
+            if (!webdevFinalSection) return;
+            webdevFinalSection.classList.add('is-process-ready');
+            if (typeof window.blueprintSetupWebdevProcessImageHandoff === 'function') {
+                window.blueprintSetupWebdevProcessImageHandoff();
+            }
+            if (window.ScrollTrigger) {
+                ScrollTrigger.refresh();
+            }
+        };
+
+        if (webdevProcess && window.gsap && window.ScrollTrigger) {
+            const processCards = gsap.utils.toArray('.webdev-process-card', webdevProcess);
+            const processTitle = webdevProcess.querySelector('.webdev-process-title');
+            const processTitleMasks = processTitle ? processTitle.querySelectorAll('.line-mask') : [];
+            const processTextMasks = webdevProcess.querySelectorAll('.webdev-process-card strong .line-mask, .webdev-process-card span .line-mask');
+            const processIsMobile = window.matchMedia('(max-width: 767px)').matches;
+
+            const stackProcessCards = () => {
+                const sectionRect = webdevProcess.getBoundingClientRect();
+                const centerX = sectionRect.left + sectionRect.width / 2;
+                const centerY = sectionRect.top + sectionRect.height / 2;
+
+                processCards.forEach((card, index) => {
+                    gsap.set(card, { clearProps: 'x,y,xPercent,yPercent,rotation,scale,autoAlpha' });
+
+                    const rect = card.getBoundingClientRect();
+                    const cardCenterX = rect.left + rect.width / 2;
+                    const cardCenterY = rect.top + rect.height / 2;
+
+                    gsap.set(card, {
+                        x: centerX - cardCenterX,
+                        y: centerY - cardCenterY,
+                        rotation: processIsMobile ? ([-2, 1.4, -1, 1.8][index] || 0) : ([-5, 3, -2, 5][index] || 0),
+                        scale: processIsMobile ? ([0.98, 0.965, 0.95, 0.935][index] || 0.96) : ([0.94, 0.9, 0.86, 0.82][index] || 0.9),
+                        autoAlpha: 0
+                    });
+                });
+            };
+
+            stackProcessCards();
+            gsap.set(processTitle, { y: 34, autoAlpha: 0 });
+            gsap.set(processTitleMasks, { y: '140%' });
+            gsap.set(processTextMasks, { y: '140%' });
+
+            const processTl = gsap.timeline({
+                paused: true,
+                defaults: { ease: processIsMobile ? 'power3.out' : 'power4.out' },
+                onComplete: markWebdevFinalProcessReady
+            });
+
+            processTl
+                .to(processCards, {
+                    autoAlpha: 1,
+                    scale: (index) => processIsMobile ? ([1, 0.985, 0.97, 0.955][index] || 0.97) : ([1, 0.97, 0.94, 0.91][index] || 0.95),
+                    rotation: (index) => processIsMobile ? ([-1.6, 1.2, -0.8, 1.5][index] || 0) : ([-4, 2.5, -1.5, 4][index] || 0),
+                    stagger: processIsMobile ? 0.055 : 0.08,
+                    duration: processIsMobile ? 0.72 : 0.58
+                })
+                .to(processCards, {
+                    x: 0,
+                    y: 0,
+                    rotation: 0,
+                    scale: 1,
+                    duration: processIsMobile ? 1.18 : 1.05,
+                    stagger: processIsMobile ? 0.04 : 0.055,
+                    ease: processIsMobile ? 'power3.inOut' : 'expo.out'
+                }, '+=0.06')
+                .to(processTitle, {
+                    y: 0,
+                    autoAlpha: 1,
+                    duration: 0.82,
+                    ease: 'power4.out'
+                }, '-=0.4')
+                .to(processTitleMasks, {
+                    y: 0,
+                    stagger: 0.08,
+                    duration: 0.82,
+                    ease: 'power4.out'
+                }, '-=0.72')
+                .to(processTextMasks, {
+                    y: 0,
+                    stagger: 0.045,
+                    duration: 0.72,
+                    ease: 'power4.out'
+                }, '-=0.48');
+
+            const processTriggerStart = processIsMobile ? 'top 75%' : 'top top';
+
+            ScrollTrigger.create({
+                trigger: webdevProcess,
+                start: processTriggerStart,
+                once: true,
+                onEnter: () => processTl.play(0)
+            });
+
+            requestAnimationFrame(() => {
+                if (processTl.progress() > 0) return;
+                if (processIsMobile) return;
+
+                const rect = webdevProcess.getBoundingClientRect();
+                const viewportEntry = rect.top < window.innerHeight * 0.92;
+
+                if (viewportEntry) {
+                    processTl.play(0);
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (processTl.progress() > 0) return;
+                stackProcessCards();
+            }, { passive: true });
+        } else {
+            markWebdevFinalProcessReady();
+        }
+
+        // Page-enter staggered reveal
+        const revealWebdevPageEnter = () => {
+            gsap.to('.page-enter', {
+                opacity: 1,
+                y: 0,
+                duration: 0.9,
+                stagger: 0.12,
+                ease: 'power3.out',
+                delay: 0.5
+            });
+            gsap.to('.service-hero-line', {
+                scaleX: 1,
+                duration: 1.2,
+                ease: 'expo.out',
+                delay: 0.9
+            });
+            if (window.ScrollTrigger) {
+                ScrollTrigger.refresh();
+            }
+        };
+
+        if (document.readyState === 'complete') {
+            revealWebdevPageEnter();
+        } else {
+            window.addEventListener('load', revealWebdevPageEnter, { once: true });
+        }
+
+        // Scroll-reveal for sections below the hero
+        gsap.utils.toArray('.service-section:not(.webdev-included) .page-enter, .webdev-final .page-enter').forEach(el => {
+            gsap.fromTo(el,
+                { opacity: 0, y: 40 },
+                {
+                    opacity: 1, y: 0,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    scrollTrigger: {
+                        trigger: el,
+                        start: 'top 85%',
+                        once: true
+                    }
+                }
+            );
+        });
+
+        window.blueprintSetupWebdevProcessImageHandoff = () => {
+            if (!window.gsap || !window.ScrollTrigger || !webdevProcess || !webdevFinalSection) return;
+            if (webdevFinalSection.dataset.handoffReady === 'true') return;
+
+            const processImages = gsap.utils.toArray('.webdev-process-card img', webdevProcess);
+            const finalFrames = gsap.utils.toArray('.webdev-final-image-frame');
+
+            if (!processImages.length || !finalFrames.length) return;
+
+            webdevFinalSection.dataset.handoffReady = 'true';
+            gsap.set(finalFrames, {
+                clipPath: 'inset(0% 0% 0% 0%)',
+                xPercent: 0,
+                yPercent: 0
+            });
+
+            const getFileName = (src = '') => src.split('/').pop();
+            const finalFrameByFile = new Map(
+                finalFrames.map((frame) => {
+                    return [frame.dataset.webdevImage, frame];
+                })
+            );
+
+            const handoffItems = processImages
+                .map((sourceImage) => {
+                    const targetFrame = finalFrameByFile.get(getFileName(sourceImage.currentSrc || sourceImage.src));
+                    if (!targetFrame) return null;
+                    const sourceRect = sourceImage.getBoundingClientRect();
+
+                    return {
+                        image: sourceImage,
+                        sourceParent: sourceImage.parentNode,
+                        sourceNextSibling: sourceImage.nextSibling,
+                        sourceRect,
+                        sourceHeight: sourceRect.height,
+                        placeholder: null,
+                        targetFrame,
+                        state: 'source'
+                    };
+                })
+                .filter(Boolean);
+
+            if (!handoffItems.length) return;
+
+            const viewportRectAtProgress = (item, positionProgress, shapeProgress = positionProgress) => {
+                const sourceRect = item.sourceRect || item.image.getBoundingClientRect();
+                const targetRect = item.targetFrame.getBoundingClientRect();
+
+                return {
+                    left: gsap.utils.interpolate(sourceRect.left, targetRect.left, positionProgress),
+                    top: gsap.utils.interpolate(sourceRect.top, targetRect.top, positionProgress),
+                    width: gsap.utils.interpolate(sourceRect.width, targetRect.width, shapeProgress),
+                    height: gsap.utils.interpolate(sourceRect.height, targetRect.height, shapeProgress)
+                };
+            };
+
+            const ensurePlaceholder = (item) => {
+                if (item.placeholder) return;
+
+                item.placeholder = document.createElement('span');
+                item.placeholder.className = 'webdev-process-image-placeholder';
+                item.placeholder.style.height = `${item.sourceHeight}px`;
+
+                const referenceNode = item.sourceNextSibling && item.sourceNextSibling.parentNode === item.sourceParent
+                    ? item.sourceNextSibling
+                    : null;
+
+                item.sourceParent.insertBefore(item.placeholder, referenceNode);
+            };
+
+            const moveToBody = (item, positionProgress = 0, shapeProgress = positionProgress) => {
+                ensurePlaceholder(item);
+                if (item.image.parentNode !== document.body) {
+                    document.body.appendChild(item.image);
+                }
+
+                const rect = viewportRectAtProgress(item, positionProgress, shapeProgress);
+
+                item.image.classList.add('webdev-process-to-final-image');
+                gsap.set(item.image, {
+                    position: 'fixed',
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: rect.height,
+                    margin: 0,
+                    autoAlpha: 1,
+                    clearProps: 'transform'
+                });
+                item.state = 'body';
+            };
+
+            const moveToSource = (item) => {
+                if (item.image.parentNode !== item.sourceParent) {
+                    const referenceNode = item.placeholder && item.placeholder.parentNode === item.sourceParent
+                        ? item.placeholder
+                        : item.sourceNextSibling && item.sourceNextSibling.parentNode === item.sourceParent
+                        ? item.sourceNextSibling
+                        : null;
+
+                    item.sourceParent.insertBefore(item.image, referenceNode);
+                }
+                item.image.classList.remove('webdev-process-to-final-image');
+                gsap.set(item.image, { clearProps: 'all' });
+                item.sourceRect = item.image.getBoundingClientRect();
+                item.sourceHeight = item.sourceRect.height;
+                if (item.placeholder) {
+                    item.placeholder.remove();
+                    item.placeholder = null;
+                }
+                item.state = 'source';
+            };
+
+            const moveToFinal = (item) => {
+                if (item.image.parentNode !== item.targetFrame) {
+                    item.targetFrame.appendChild(item.image);
+                }
+                item.image.classList.remove('webdev-process-to-final-image');
+                gsap.set(item.image, { clearProps: 'all' });
+                if (item.placeholder) {
+                    item.placeholder.remove();
+                    item.placeholder = null;
+                }
+                item.state = 'final';
+            };
+
+            const easeHandoff = gsap.parseEase('power2.inOut');
+            const easeShapeHandoff = gsap.parseEase('power3.inOut');
+
+            ScrollTrigger.create({
+                trigger: webdevFinalSection,
+                start: 'top bottom',
+                endTrigger: webdevFinalSection,
+                end: 'top top',
+                scrub: 1.15,
+                invalidateOnRefresh: true,
+                onUpdate: (self) => {
+                    if (self.progress <= 0.001) {
+                        handoffItems.forEach(moveToSource);
+                        return;
+                    }
+
+                    if (self.progress >= 0.999) {
+                        handoffItems.forEach(moveToFinal);
+                        return;
+                    }
+
+                    const delay = 0.08;
+                    const travel = 1 - (delay * (handoffItems.length - 1));
+
+                    handoffItems.forEach((item, index) => {
+                        const rawProgress = gsap.utils.clamp(0, 1, (self.progress - (index * delay)) / travel);
+                        const positionProgress = easeHandoff(rawProgress);
+                        const shapeProgress = easeShapeHandoff(gsap.utils.clamp(0, 1, (rawProgress - 0.18) / 0.82));
+                        moveToBody(item, positionProgress, shapeProgress);
+                    });
+                },
+                onLeave: () => handoffItems.forEach(moveToFinal),
+                onLeaveBack: () => {
+                    handoffItems.forEach(moveToSource);
+                }
+            });
+        };
+
+        if (webdevFinalSection && webdevFinalSection.classList.contains('is-process-ready')) {
+            window.blueprintSetupWebdevProcessImageHandoff();
+        }
     </script>
 </body>
 </html>
+

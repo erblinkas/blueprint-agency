@@ -9961,6 +9961,80 @@ body:has(.about-story-page) .menu-icon {
     display: grid !important;
   }
 
+  .webdev-included {
+    height: 200svh !important;
+    min-height: 200svh !important;
+    max-height: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow: visible !important;
+  }
+
+  .webdev-included-sticky {
+    position: sticky !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100svh !important;
+    min-height: 100svh !important;
+    max-height: 100svh !important;
+    padding: 4.8rem var(--phone-pad) 3rem !important;
+    overflow: hidden !important;
+  }
+
+  .webdev-included-base-mask,
+  .webdev-included-text-mask {
+    padding: 4.8rem var(--phone-pad) 3rem !important;
+  }
+
+  .webdev-included-base-title {
+    font-size: clamp(3.2rem, 15vw, 5.4rem) !important;
+  }
+
+  .webdev-included-base-grid,
+  .webdev-included-mask-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+    gap: 2.5rem !important;
+    margin-top: 3.4rem !important;
+  }
+
+  .webdev-included-base-visual,
+  .webdev-included-mask-visual {
+    width: min(15.3rem, 70vw) !important;
+  }
+
+  .webdev-included-base-feature,
+  .webdev-included-mask-feature {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    grid-template-columns: 1fr auto !important;
+    row-gap: 2rem !important;
+    transform: none !important;
+  }
+
+  .webdev-included-base-feature-title,
+  .webdev-included-mask-feature-title {
+    justify-self: start !important;
+    font-size: clamp(2.8rem, 12vw, 4.4rem) !important;
+  }
+
+  .webdev-included-base-num,
+  .webdev-included-mask-num {
+    margin-left: 1rem !important;
+  }
+
+  .webdev-included-base-body,
+  .webdev-included-mask-body {
+    justify-self: start !important;
+    max-width: 100% !important;
+    font-size: 0.92rem !important;
+    line-height: 1.16 !important;
+  }
+
+  .webdev-included .service-feature:nth-of-type(n + 4) {
+    display: none !important;
+  }
+
   .webdev-responsive-copy,
   .webdev-final-copy {
     width: 100% !important;

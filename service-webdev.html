@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -28,8 +28,18 @@
     <link rel="icon" type="image/png" href="./favicon_2.png">
     <link rel="icon" type="image/webp" href="./webp-output/favicon_2.webp">
     <style>
-        /* ── SERVICE PAGE STYLES ── */
-        body { background-color: #806542; color: #000000; }
+        /* -- SERVICE PAGE STYLES -- */
+        body { background-color: #2c2416; color: #000000; }
+
+        [data-barba-namespace="service-webdev"] {
+            padding-bottom: 86vh;
+        }
+
+        [data-barba-namespace="service-webdev"] > section,
+        [data-barba-namespace="service-webdev"] > .service-showcase {
+            position: relative;
+            z-index: 1;
+        }
 
         .service-hero {
             width: 100%;
@@ -45,25 +55,50 @@
             overflow: hidden;
             box-sizing: border-box;
             isolation: isolate;
-            background: linear-gradient(90deg, #e6dac8 0 50%, #806542 50% 100%);
+            background: #e6dac8;
+            --webdev-brown-x: 100%;
+        }
+
+        .webdev-reference-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 0 auto;
+            z-index: 0;
+            width: 50%;
+            background: #2c2416;
+            transform: translateX(var(--webdev-brown-x));
+            will-change: transform;
+            pointer-events: none;
         }
 
         .webdev-reference-hero::after {
             display: none;
         }
 
+        .service-hero-bg {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            display: block;
+            object-fit: cover;
+            object-position: center;
+        }
+
         .webdev-hero-media {
+            --webdev-hero-media-width: clamp(17.5rem, 35vw, 28rem);
             position: absolute;
             left: 50%;
             top: 50%;
-            z-index: 1;
-            width: clamp(17.5rem, 35vw, 28rem);
+            z-index: 2;
+            width: var(--webdev-hero-media-width);
             aspect-ratio: 16 / 9;
-            transform: translate(-50%, -47%);
+            transform: translate(-50%, -50%);
             overflow: hidden;
         }
 
         .webdev-hero-media img {
+            position: relative;
+            z-index: 1;
             width: 100%;
             height: 100%;
             display: block;
@@ -80,35 +115,85 @@
         }
 
         .webdev-hero-title {
+            --webdev-title-frame-height: calc(clamp(17.5rem, 35vw, 28rem) * 0.5625);
             position: absolute;
-            left: 50%;
-            top: 50%;
-            width: max-content;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             margin: 0;
-            transform: translate(-50%, -42%);
+            z-index: 3;
+            transform: none;
+            display: block;
             font-family: 'CabinetGrotesk-Light', sans-serif;
-            font-size: clamp(4.6rem, 9.8vw, 9.4rem);
+            font-size: clamp(3.9rem, 8.6vw, 8.1rem);
             font-weight: 300;
-            line-height: 0.82;
+            line-height: 0.86;
             letter-spacing: 0;
+            text-align: center;
             color: #000000;
             white-space: nowrap;
+            overflow: visible;
+        }
+
+        .webdev-hero-title.is-brown-title {
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 4;
+            color: #ffffff !important;
+            clip-path: inset(0 0 0 50%);
+            -webkit-clip-path: inset(0 0 0 50%);
+            mix-blend-mode: normal;
+            pointer-events: none;
+        }
+
+        .webdev-hero-title:not(.is-brown-title),
+        .webdev-hero-title:not(.is-brown-title) .line,
+        .webdev-hero-title:not(.is-brown-title) .line-mask,
+        .webdev-hero-title:not(.is-brown-title) .webdev-hero-char {
+            color: #000000 !important;
+        }
+
+        .webdev-hero-title.is-brown-title,
+        .webdev-hero-title.is-brown-title .line,
+        .webdev-hero-title.is-brown-title .line-mask,
+        .webdev-hero-title.is-brown-title .webdev-hero-char {
+            color: #ffffff !important;
         }
 
         .webdev-hero-title .line {
+            position: absolute !important;
+            left: 50%;
+            width: max-content !important;
             overflow: visible;
+            transform: translateX(-50%);
+        }
+
+        .webdev-hero-title .line-mask {
+            display: block;
+            overflow: hidden;
+            will-change: transform;
+        }
+
+        .webdev-title-line-web {
+            top: calc(50% - (var(--webdev-title-frame-height) * 0.5) - 1.08em);
+        }
+
+        .webdev-title-line-development {
+            top: calc(50% + (var(--webdev-title-frame-height) * 0.5) + 0.24em);
         }
 
         .webdev-hero-copy {
             position: absolute;
             left: clamp(2rem, 4vw, 4rem);
-            bottom: clamp(2.35rem, 8.4vh, 5.4rem);
-            width: min(27ch, 26vw);
+            bottom: clamp(1.7rem, 6.8vh, 4.6rem);
+            z-index: 3;
+            width: min(40ch, 28vw);
             margin: 0;
             font-family: 'CabinetGrotesk-Light', sans-serif;
-            font-size: clamp(0.78rem, 1vw, 1rem);
-            line-height: 1.12;
-            color: #3e3933;
+            font-size: clamp(0.78rem, 0.92vw, 0.95rem);
+            line-height: 1.14;
+            color: #000000;
         }
 
         .service-eyebrow {
@@ -146,10 +231,11 @@
             transform-origin: left;
         }
 
-        /* ── WHAT WE DO ── */
+        /* -- WHAT WE DO -- */
         .service-section {
             padding: clamp(7rem, 12vw, 12rem) 4rem clamp(8rem, 13vw, 13rem);
             background-color: #2c2416;
+            color: #ffffff;
             overflow: hidden;
         }
 
@@ -248,22 +334,211 @@
             max-width: 28rem;
         }
 
-        /* ── SHOWCASE IMAGE ── */
+        /* -- SHOWCASE IMAGE -- */
         .webdev-included {
+            --included-wipe: 0%;
+            --included-fg: #000000;
+            --included-muted: #6e6356;
+            --included-copy: #5f5850;
+            position: relative;
+            z-index: 1;
+            height: 500vh;
+            min-height: 500vh;
+            height: 500svh;
+            min-height: 500svh;
+            padding: 0;
+            background-color: #e6dac8;
+            color: var(--included-fg);
+            border-bottom: none;
+            overflow: visible;
+        }
+
+        .webdev-included-sticky {
             position: sticky;
             top: 0;
-            z-index: 1;
             height: 100vh;
             min-height: 100vh;
             max-height: 100vh;
             height: 100svh;
             min-height: 100svh;
             max-height: 100svh;
+            padding: 0;
+            background-color: #e6dac8;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .webdev-included-sticky::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            display: none;
+            background-color: var(--included-next-bg, #2c2416);
+            clip-path: inset(calc(100% - var(--included-wipe)) 0 0 0);
+            will-change: clip-path;
+        }
+
+        .webdev-included-sticky > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .webdev-included-state-stack {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            margin: 0;
+            min-height: 0;
+        }
+
+        .webdev-included-state {
+            position: absolute;
+            inset: 0;
             padding: clamp(4rem, 8.8vw, 7rem) clamp(2.6rem, 5.3vw, 4rem) clamp(3rem, 6vw, 4.8rem);
             background-color: #e6dac8;
             color: #000000;
-            border-bottom: 2px solid #000000;
+            clip-path: inset(0 0 100% 0);
+            will-change: clip-path;
+        }
+
+        .webdev-included-state:first-child {
+            position: absolute;
+            clip-path: inset(0 0 0 0);
+        }
+
+        .webdev-included-state.is-dark {
+            background-color: #2c2416;
+            color: #ffffff;
+        }
+
+        .webdev-included-state-heading {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3.4rem, 6.2vw, 6.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            color: currentColor;
+        }
+
+        .webdev-included-state-grid {
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            grid-template-rows: auto;
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: 0;
+            align-items: center;
+            margin-top: clamp(2.6rem, 5.6vw, 4.8rem);
+        }
+
+        .webdev-included-state-visual {
+            position: relative;
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: center;
+            width: min(100%, 15.3rem);
+            aspect-ratio: 1 / 1.02;
+            background-color: #2c2416;
             overflow: hidden;
+        }
+
+        .webdev-included-state.is-dark .webdev-included-state-visual {
+            background-color: #e6dac8;
+        }
+
+        .webdev-included-state-visual img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            object-fit: contain;
+            display: block;
+        }
+
+        .webdev-included-state-copy {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            justify-self: stretch;
+            max-width: none;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: clamp(0.7rem, 1.3vw, 1.1rem);
+            align-items: center;
+            padding: 0;
+            overflow: visible;
+        }
+
+        .webdev-included-state-num {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            justify-self: end;
+            align-self: start;
+            margin: 0.28rem 0 0 clamp(1rem, 2.4vw, 2.8rem);
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            letter-spacing: 0;
+            line-height: 1;
+            color: #6e6356;
+        }
+
+        .webdev-included-state.is-dark .webdev-included-state-num {
+            color: rgba(247, 240, 223, 0.72);
+        }
+
+        .webdev-included-state-title {
+            grid-column: 1;
+            grid-row: 1 / span 2;
+            justify-self: start;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(2.9rem, 4.6vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: currentColor;
+            overflow: visible;
+        }
+
+        .webdev-included-state-body {
+            grid-column: 4;
+            grid-row: 1 / span 2;
+            justify-self: start;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: #5f5850;
+        }
+
+        .webdev-included-state.is-dark .webdev-included-state-body {
+            color: rgba(247, 240, 223, 0.78);
+        }
+
+        .webdev-included-base-mask {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            padding: clamp(4rem, 8.8vw, 7rem) clamp(2.6rem, 5.3vw, 4rem) clamp(3rem, 6vw, 4.8rem);
+            color: #000000;
+            pointer-events: none;
+            clip-path: inset(0 0 var(--included-wipe) 0);
+            will-change: clip-path;
+        }
+
+        .webdev-included-text-mask {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            padding: clamp(4rem, 8.8vw, 7rem) clamp(2.6rem, 5.3vw, 4rem) clamp(3rem, 6vw, 4.8rem);
+            color: #ffffff;
+            pointer-events: none;
+            clip-path: inset(calc(100% - var(--included-wipe)) 0 0 0);
+            will-change: clip-path;
         }
 
         .webdev-included-title {
@@ -273,31 +548,111 @@
             font-weight: 300;
             line-height: 0.86;
             letter-spacing: 0;
+            text-align: center;
             color: #000000;
+        }
+
+        .webdev-included-mask-title {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3.4rem, 6.2vw, 6.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .webdev-included-base-title {
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(3.4rem, 6.2vw, 6.2rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            text-align: center;
+            visibility: hidden;
         }
 
         .webdev-included-grid {
             display: grid;
-            grid-template-columns: minmax(13rem, 0.74fr) minmax(0, 1.64fr);
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
             grid-template-rows: auto;
-            column-gap: clamp(3rem, 7vw, 7rem);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
             row-gap: 0;
-            align-items: end;
-            margin-top: clamp(4.2rem, 8.4vw, 7.2rem);
+            align-items: center;
+            margin-top: clamp(2.6rem, 5.6vw, 4.8rem);
         }
 
         .webdev-included-grid.service-features-grid {
-            grid-template-columns: minmax(13rem, 0.74fr) minmax(0, 1.64fr);
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
             grid-template-rows: auto;
             row-gap: 0;
-            column-gap: clamp(3rem, 7vw, 7rem);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+        }
+
+        .webdev-included-base-grid,
+        .webdev-included-mask-grid {
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            grid-template-rows: auto;
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: 0;
+            align-items: center;
+            margin-top: clamp(2.6rem, 5.6vw, 4.8rem);
+        }
+
+        .webdev-included-mask-visual {
+            position: relative;
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: center;
+            width: min(100%, 15.3rem);
+            aspect-ratio: 1 / 1.02;
+            background-color: #e6dac8;
+            overflow: hidden;
+        }
+
+        .webdev-included-mask-visual img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            object-fit: contain;
+            display: block;
+        }
+
+        .webdev-included-base-visual {
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: center;
+            width: min(100%, 15.3rem);
+            aspect-ratio: 1 / 1.02;
+        }
+
+        .webdev-included-base-feature {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            justify-self: stretch;
+            max-width: none;
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: clamp(0.7rem, 1.3vw, 1.1rem);
+            align-items: center;
+            padding: 0;
+            overflow: visible;
         }
 
         .webdev-included-visual {
             position: relative;
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: center;
             width: min(100%, 15.3rem);
             aspect-ratio: 1 / 1.02;
-            background-color: #806542;
+            background-color: #2c2416;
             overflow: hidden;
         }
 
@@ -309,33 +664,53 @@
             max-width: none;
             object-fit: contain;
             display: block;
+            opacity: 1;
         }
 
         .webdev-included-content {
             display: grid;
             grid-template-columns: minmax(0, 1fr) auto;
-            row-gap: clamp(4.8rem, 7.8vw, 7rem);
+            row-gap: clamp(2.8rem, 5.1vw, 4.8rem);
             align-items: start;
         }
 
         .webdev-included .service-feature {
-            grid-column: 2;
+            grid-column: 1 / -1;
             grid-row: 1;
             justify-self: stretch;
             max-width: none;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            row-gap: clamp(4.8rem, 7.8vw, 7rem);
-            align-items: start;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: clamp(0.7rem, 1.3vw, 1.1rem);
+            align-items: center;
             padding: 0;
             overflow: visible;
         }
 
-        .webdev-included .service-feature:nth-of-type(n + 3) {
+        .webdev-included .service-feature:nth-of-type(n + 4) {
             display: none;
         }
 
+        .webdev-included .service-feature:not(.is-active) {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+
+        .webdev-included .service-feature.is-active {
+            opacity: 0 !important;
+        }
+
+        .webdev-included .service-feature {
+            transition: none;
+        }
+
         .webdev-included .service-feature:hover {
+            transform: none;
+        }
+
+        .webdev-included .page-enter {
+            opacity: 1;
             transform: none;
         }
 
@@ -351,9 +726,11 @@
             color: #000000;
         }
 
-        .webdev-included .service-feature-title {
+        .webdev-included .service-feature-title,
+        .webdev-included-base-feature-title {
             grid-column: 1;
-            justify-self: end;
+            grid-row: 2;
+            justify-self: start;
             margin: 0;
             font-family: 'CabinetGrotesk-Light', sans-serif;
             font-size: clamp(2.9rem, 4.6vw, 5rem);
@@ -362,6 +739,85 @@
             letter-spacing: 0;
             color: #000000;
             overflow: visible;
+        }
+
+        .webdev-included-base-num {
+            grid-column: 1;
+            grid-row: 1;
+            justify-self: start;
+            align-self: end;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            letter-spacing: 0;
+            line-height: 1;
+            color: #6e6356;
+        }
+
+        .webdev-included-base-body {
+            grid-column: 3;
+            grid-row: 1 / span 2;
+            justify-self: start;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: #5f5850;
+        }
+
+        .webdev-included-mask-feature {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            justify-self: stretch;
+            max-width: none;
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            column-gap: clamp(2.4rem, 5vw, 5.5rem);
+            row-gap: clamp(0.7rem, 1.3vw, 1.1rem);
+            align-items: center;
+            padding: 0;
+            overflow: visible;
+            opacity: 1;
+        }
+
+        .webdev-included-mask-feature-title {
+            grid-column: 1;
+            grid-row: 2;
+            justify-self: start;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(2.9rem, 4.6vw, 5rem);
+            font-weight: 300;
+            line-height: 0.86;
+            letter-spacing: 0;
+            color: #ffffff;
+            overflow: visible;
+        }
+
+        .webdev-included-mask-num {
+            grid-column: 1;
+            grid-row: 1;
+            justify-self: start;
+            align-self: end;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.82rem, 1vw, 1rem);
+            letter-spacing: 0;
+            line-height: 1;
+            color: rgba(247, 240, 223, 0.72);
+        }
+
+        .webdev-included-mask-body {
+            grid-column: 3;
+            grid-row: 1 / span 2;
+            justify-self: start;
+            max-width: 37.8rem;
+            margin: 0;
+            font-family: 'CabinetGrotesk-Light', sans-serif;
+            font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+            line-height: 1.12;
+            color: rgba(247, 240, 223, 0.78);
         }
 
         .webdev-included-num {
@@ -376,9 +832,11 @@
         }
 
         .webdev-included .service-feature-num {
-            grid-column: 2;
-            justify-self: end;
-            margin: 0.28rem 0 0 clamp(2.5rem, 7vw, 8rem);
+            grid-column: 1;
+            grid-row: 1;
+            justify-self: start;
+            align-self: end;
+            margin: 0;
             font-family: 'CabinetGrotesk-Light', sans-serif;
             font-size: clamp(0.82rem, 1vw, 1rem);
             letter-spacing: 0;
@@ -398,8 +856,9 @@
         }
 
         .webdev-included .service-feature-body {
-            grid-column: 1 / -1;
-            justify-self: end;
+            grid-column: 3;
+            grid-row: 1 / span 2;
+            justify-self: start;
             max-width: 37.8rem;
             margin: 0;
             font-family: 'CabinetGrotesk-Light', sans-serif;
@@ -423,7 +882,7 @@
             grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 0.78fr);
             column-gap: clamp(3rem, 8vw, 8rem);
             align-items: center;
-            background-color: #806542;
+            background-color: #2c2416;
             color: #f7f0df;
             overflow: hidden;
         }
@@ -483,7 +942,9 @@
 
         .webdev-process-collage {
             position: relative;
-            z-index: 6;
+            z-index: 20;
+            margin-top: -100vh;
+            margin-top: -100svh;
             height: 100vh;
             min-height: 100vh;
             max-height: 100vh;
@@ -494,14 +955,16 @@
             background-color: #e6dac8;
             color: #000000;
             overflow: hidden;
+            isolation: isolate;
         }
 
         .webdev-process-title {
             position: absolute;
             inset: 0;
             z-index: 1;
-            display: grid;
-            place-items: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin: 0;
             transform: none;
             font-family: 'CabinetGrotesk-Light', sans-serif;
@@ -514,6 +977,18 @@
             color: #000000;
         }
 
+        .webdev-process-title .word,
+        .webdev-process-title .line,
+        .webdev-process-title .line-mask {
+            display: inline-block;
+            width: auto;
+            white-space: nowrap !important;
+        }
+
+        .webdev-process-title .line {
+            flex: 0 0 auto;
+        }
+
         .webdev-process-card {
             position: absolute;
             z-index: 2;
@@ -522,6 +997,8 @@
             row-gap: 0.45rem;
             width: clamp(12rem, 24vw, 22.2rem);
             color: #000000;
+            transform-origin: center center;
+            will-change: transform, opacity;
         }
 
         .webdev-process-card img {
@@ -530,6 +1007,12 @@
             aspect-ratio: 16 / 9;
             display: block;
             object-fit: cover;
+        }
+
+        .webdev-process-card strong,
+        .webdev-process-card span,
+        .webdev-process-title {
+            will-change: transform, opacity;
         }
 
         .webdev-process-card span,
@@ -594,7 +1077,7 @@
             white-space: nowrap;
         }
 
-        /* ── PROCESS ── */
+        /* -- PROCESS -- */
         .service-process {
             display: none;
         }
@@ -645,7 +1128,7 @@
             color: rgba(244,241,232,0.6);
         }
 
-        /* ── CTA ── */
+        /* -- CTA -- */
         .service-cta {
             position: relative;
             z-index: 5;
@@ -684,7 +1167,7 @@
             transform: translateY(-2px);
         }
 
-        /* ── BACK BUTTON ── */
+        /* -- FINAL PROCESS -- */
         .webdev-final {
             position: relative;
             z-index: 7;
@@ -704,54 +1187,133 @@
         .webdev-final-media {
             position: relative;
             min-height: inherit;
-            background-color: #806542;
+            background-color: #2c2416;
+            display: grid;
+            place-items: center;
+            padding: clamp(2.7rem, 4.05vw, 3.25rem);
         }
 
-        .webdev-final-media img {
+        .webdev-final-image-cluster {
+            position: relative;
+            width: min(68%, 23rem);
+            aspect-ratio: 0.88 / 1;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .webdev-final.is-process-ready .webdev-final-image-cluster {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .webdev-final-image-frame {
             position: absolute;
-            left: 22.6%;
-            top: 7.3%;
-            width: 53.4%;
-            aspect-ratio: 1 / 1.2;
+            margin: 0;
+            overflow: hidden;
+            clip-path: inset(0% 0% 100% 0%);
+            box-shadow: 0 1.2rem 3.2rem rgba(36, 27, 16, 0.18);
+            will-change: clip-path;
+        }
+
+        .webdev-final-image-frame.is-primary {
+            left: 25%;
+            top: 14%;
+            width: 58%;
+            aspect-ratio: 0.82 / 1;
+            z-index: 3;
+        }
+
+        .webdev-final-image-frame.is-secondary {
+            left: 63%;
+            top: 62%;
+            width: 29%;
+            aspect-ratio: 0.96 / 1;
+            z-index: 2;
+        }
+
+        .webdev-final-image-frame.is-tertiary {
+            left: 6%;
+            top: 6%;
+            width: 30%;
+            aspect-ratio: 0.96 / 1;
+            z-index: 2;
+        }
+
+        .webdev-final-image-frame.is-quaternary {
+            left: 11%;
+            top: 67%;
+            width: 28%;
+            aspect-ratio: 1.04 / 1;
+            z-index: 1;
+        }
+
+        .webdev-final-image-frame img {
+            width: 100%;
+            height: 100%;
             display: block;
             object-fit: cover;
+            object-position: center;
+            transform: none;
+            transform-origin: center;
+            will-change: transform;
+        }
+
+        .webdev-process-image-placeholder {
+            display: block;
+            width: 100%;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .webdev-process-to-final-image {
+            position: fixed;
+            z-index: 80;
+            display: block;
+            object-fit: cover;
+            object-position: center;
+            pointer-events: none;
+            will-change: transform, left, top, width, height, opacity, clip-path;
         }
 
         .webdev-final-copy {
-            padding: clamp(2.2rem, 4.1vw, 3.1rem) clamp(3rem, 8.8vw, 5.8rem);
-            display: grid;
-            grid-template-rows: auto auto 1fr;
-            align-content: start;
+            padding: clamp(2.55rem, 4vw, 3.1rem) clamp(5rem, 8.9vw, 6.2rem) clamp(2.5rem, 5vw, 3.8rem) clamp(1.55rem, 2.2vw, 1.8rem);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .webdev-final-step {
+            margin: 0;
+            padding: 0 0 clamp(1rem, 1.55vw, 1.18rem);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.58);
+        }
+
+        .webdev-final-step + .webdev-final-step {
+            margin-top: clamp(1.55rem, 2.35vw, 1.95rem);
         }
 
         .webdev-final-title {
             margin: 0;
             font-family: 'CabinetGrotesk-Light', sans-serif;
-            font-size: clamp(1.8rem, 2.6vw, 2.6rem);
+            font-size: clamp(1.85rem, 2.45vw, 2.38rem);
             font-weight: 300;
-            line-height: 0.92;
+            line-height: 0.94;
             letter-spacing: 0;
         }
 
-        .webdev-final-lede,
-        .webdev-final-note {
-            margin: 0;
+        .webdev-final-text {
+            max-width: 58rem;
+            margin: clamp(0.72rem, 1.05vw, 0.86rem) 0 0;
             font-family: 'CabinetGrotesk-Light', sans-serif;
-            font-size: clamp(0.78rem, 0.98vw, 0.95rem);
+            font-size: clamp(0.78rem, 1.02vw, 0.95rem);
             line-height: 1.18;
             color: #625c54;
         }
 
-        .webdev-final-lede {
-            max-width: 52rem;
-            margin-top: clamp(0.75rem, 1.3vw, 1rem);
-            padding-bottom: clamp(0.8rem, 1.5vw, 1.1rem);
-            border-bottom: 1px solid #000000;
-        }
-
-        .webdev-final-note {
-            align-self: center;
-            max-width: 46rem;
+        .webdev-final-cta {
+            margin-top: clamp(1.65rem, 2.8vw, 2.4rem);
+            min-width: 0;
+            width: fit-content;
         }
 
         .service-back-btn {
@@ -772,72 +1334,97 @@
 
         .service-back-btn:hover { color: #f4f1e8; }
 
-        .service-hero-return {
-            position: fixed;
-            top: 2.5rem;
-            left: 50%;
-            z-index: 1290;
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background-color: #ffffff;
-            color: #000000;
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-            opacity: 1;
-            transform: translate3d(-50%, -160%, 0);
-            transition: background-color 0.35s ease, color 0.35s ease;
-            will-change: transform, opacity;
-            isolation: isolate;
-        }
-
-        .service-hero-return.is-visible {
-            pointer-events: all;
-        }
-
-        .service-hero-return:hover,
-        .service-hero-return:focus-visible {
-            background-color: #000000;
-            color: #ffffff;
-        }
-
-        .service-hero-return svg {
-            width: 24px;
-            height: 24px;
-            stroke: currentColor;
-            stroke-width: 1.8;
-            position: relative;
-            z-index: 1;
-        }
-
         /* page-enter animation */
         .page-enter { opacity: 0; transform: translateY(30px); }
 
-        @media (max-width: 760px) {
+        @media (max-width: 767px) {
+            [data-barba-namespace="service-webdev"] {
+                padding-bottom: 0;
+            }
+
             .service-hero, .service-section, .service-process, .service-cta { padding-left: 2rem; padding-right: 2rem; }
             .service-hero {
+                --webdev-mobile-media-top: 50svh;
+                display: block !important;
                 padding-left: 0;
                 padding-right: 0;
-                background: linear-gradient(90deg, #e6dac8 0 50%, #806542 50% 100%);
+                background: #e6dac8 !important;
+            }
+            .webdev-reference-hero {
+                display: block !important;
+                align-content: initial !important;
+                gap: 0 !important;
+                padding: 0 !important;
+            }
+            .service-hero-bg {
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none !important;
             }
             .webdev-hero-media {
-                width: min(72vw, 23rem);
-                transform: translate(-50%, -58%);
+                --webdev-hero-media-width: min(72vw, 23rem);
+                position: absolute !important;
+                left: 50% !important;
+                top: var(--webdev-mobile-media-top) !important;
+                right: auto !important;
+                bottom: auto !important;
+                z-index: 2 !important;
+                width: var(--webdev-hero-media-width) !important;
+                max-width: none !important;
+                margin: 0 !important;
+                transform: translate(-50%, -50%) !important;
+            }
+            .service-hero .webdev-hero-content {
+                position: absolute !important;
+                inset: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                max-width: none !important;
+                transform: none !important;
+                z-index: 2 !important;
+                pointer-events: none !important;
             }
             .webdev-hero-title {
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -42%);
-                font-size: clamp(3.2rem, 15vw, 6.2rem);
+                --webdev-title-frame-height: calc(min(72vw, 23rem) * 0.5625);
+                position: absolute !important;
+                inset: 0 !important;
+                left: 0 !important;
+                top: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none !important;
+                transform: none !important;
+                display: block !important;
+                font-size: clamp(2.45rem, 11.6vw, 4.85rem) !important;
+            }
+            .webdev-hero-title.is-brown-title {
+                color: #ffffff !important;
+                clip-path: inset(0 0 0 50%) !important;
+            }
+            .webdev-title-line-web {
+                top: calc(var(--webdev-mobile-media-top) - (var(--webdev-title-frame-height) * 0.5) - 1.18em) !important;
+            }
+            .webdev-title-line-development {
+                top: calc(var(--webdev-mobile-media-top) + (var(--webdev-title-frame-height) * 0.5) + 0.5em) !important;
             }
             .webdev-hero-copy {
-                left: 1.5rem;
-                bottom: 2.4rem;
-                width: min(26ch, calc(100vw - 3rem));
-                font-size: 0.82rem;
+                position: absolute !important;
+                left: clamp(1.75rem, 7vw, 3.75rem) !important;
+                right: auto !important;
+                top: auto !important;
+                bottom: clamp(0.45rem, 1.4svh, 1rem) !important;
+                width: min(26ch, calc(50vw - clamp(1.75rem, 7vw, 3.75rem) - 0.9rem)) !important;
+                max-width: min(26ch, calc(50vw - clamp(1.75rem, 7vw, 3.75rem) - 0.9rem)) !important;
+                transform: none !important;
+                z-index: 3 !important;
+                color: #000000 !important;
+                font-size: clamp(0.66rem, 3vw, 0.82rem) !important;
+                line-height: 1.08 !important;
             }
             .service-section {
                 padding-top: 5rem;
@@ -859,53 +1446,119 @@
                 transform: translateY(-0.35rem);
             }
             .webdev-included {
+                height: 100vh !important;
+                min-height: 100vh !important;
+                max-height: 100vh !important;
+                height: 100svh !important;
+                min-height: 100svh !important;
+                max-height: 100svh !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+            .webdev-included-sticky {
+                position: relative;
+                top: auto;
+                height: 100vh !important;
+                min-height: 100vh !important;
+                max-height: 100vh !important;
+                height: 100svh !important;
+                min-height: 100svh !important;
+                max-height: 100svh !important;
+                padding: 0 !important;
+            }
+            .webdev-included-state {
                 height: 100vh;
                 min-height: 100vh;
                 max-height: 100vh;
                 height: 100svh;
                 min-height: 100svh;
                 max-height: 100svh;
-                padding: 4.8rem 1.5rem 3rem;
+                display: grid;
+                grid-template-rows: auto minmax(0, 1fr);
+                padding: clamp(2.8rem, 8svh, 4rem) 1.25rem clamp(1.8rem, 5svh, 2.6rem);
+                box-sizing: border-box;
             }
-            .webdev-included-title {
-                font-size: clamp(3.2rem, 15vw, 5.4rem);
+            .webdev-included-base-mask,
+            .webdev-included-text-mask {
+                padding: clamp(2.8rem, 8svh, 4rem) 1.25rem clamp(1.8rem, 5svh, 2.6rem);
             }
-            .webdev-included-grid {
+            .webdev-included-title,
+            .webdev-included-base-title,
+            .webdev-included-mask-title {
+                font-size: clamp(2.45rem, 12vw, 4.2rem);
+            }
+            .webdev-included-grid,
+            .webdev-included-base-grid,
+            .webdev-included-mask-grid,
+            .webdev-included-state-grid {
                 grid-template-columns: 1fr;
-                gap: 2.5rem;
-                margin-top: 3.4rem;
+                grid-template-rows: minmax(6.8rem, 24svh) minmax(0, auto);
+                gap: clamp(1.15rem, 3svh, 1.8rem);
+                margin-top: clamp(1.6rem, 4.5svh, 2.5rem);
+            }
+            .webdev-included-state-stack {
+                margin-top: 0;
+                min-height: 0;
+            }
+            .webdev-included-state-grid {
+                height: auto;
+                min-height: 0;
+                margin-top: clamp(1.6rem, 4.5svh, 2.5rem);
+                align-content: start;
             }
             .webdev-included-grid.service-features-grid {
                 grid-template-columns: 1fr;
                 row-gap: 2.5rem;
             }
-            .webdev-included-visual {
-                width: min(15.3rem, 70vw);
+            .webdev-included-visual,
+            .webdev-included-base-visual,
+            .webdev-included-mask-visual,
+            .webdev-included-state-visual {
+                grid-column: 1;
+                grid-row: 1;
+                justify-self: start;
+                width: min(12.5rem, 58vw, 24svh);
             }
             .webdev-included-content {
                 grid-template-columns: 1fr auto;
                 row-gap: 2rem;
             }
-            .webdev-included .service-feature {
+            .webdev-included .service-feature,
+            .webdev-included-base-feature,
+            .webdev-included-mask-feature,
+            .webdev-included-state-copy {
                 grid-column: 1;
                 grid-row: auto;
-                grid-template-columns: 1fr auto;
-                row-gap: 2rem;
+                grid-template-columns: minmax(0, 1fr) auto;
+                row-gap: clamp(0.75rem, 2.2svh, 1.25rem);
                 transform: none;
             }
             .webdev-included-item-title {
                 justify-self: start;
                 font-size: clamp(2.8rem, 12vw, 4.4rem);
             }
-            .webdev-included .service-feature-title {
+            .webdev-included .service-feature-title,
+            .webdev-included-base-feature-title,
+            .webdev-included-mask-feature-title,
+            .webdev-included-state-title {
+                grid-column: 1;
+                grid-row: 1;
                 justify-self: start;
-                font-size: clamp(2.8rem, 12vw, 4.4rem);
+                font-size: clamp(2.1rem, 9.6vw, 3.35rem);
+                line-height: 0.9;
             }
             .webdev-included-num {
                 margin-left: 1rem;
             }
-            .webdev-included .service-feature-num {
+            .webdev-included .service-feature-num,
+            .webdev-included-base-num,
+            .webdev-included-mask-num,
+            .webdev-included-state-num {
+                grid-column: 2;
+                grid-row: 1;
+                align-self: start;
                 margin-left: 1rem;
+                font-size: 0.78rem;
             }
             .webdev-included-copy {
                 justify-self: start;
@@ -913,11 +1566,16 @@
                 font-size: 0.92rem;
                 line-height: 1.16;
             }
-            .webdev-included .service-feature-body {
+            .webdev-included .service-feature-body,
+            .webdev-included-base-body,
+            .webdev-included-mask-body,
+            .webdev-included-state-body {
+                grid-column: 1 / -1;
+                grid-row: 2;
                 justify-self: start;
                 max-width: 100%;
-                font-size: 0.92rem;
-                line-height: 1.16;
+                font-size: clamp(0.78rem, 3.6vw, 0.9rem);
+                line-height: 1.12;
             }
             .webdev-responsive-mask {
                 height: 100vh;
@@ -951,25 +1609,38 @@
                 justify-self: center;
             }
             .webdev-process-collage {
-                height: 100vh;
-                min-height: 100vh;
-                max-height: 100vh;
-                height: 100svh;
-                min-height: 100svh;
-                max-height: 100svh;
-                padding: 4.8rem 1.5rem 3rem;
-                display: grid;
-                grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-                gap: 0.7rem;
+                margin-top: -100vh !important;
+                margin-top: -100svh !important;
+                height: 100vh !important;
+                min-height: 100vh !important;
+                max-height: 100vh !important;
+                height: 100svh !important;
+                min-height: 100svh !important;
+                max-height: 100svh !important;
+                padding: clamp(7rem, 17svh, 8.5rem) 1.25rem clamp(1rem, 3svh, 1.6rem) !important;
+                display: grid !important;
+                grid-template-rows: repeat(4, minmax(0, auto)) !important;
+                align-content: space-between !important;
+                gap: clamp(0.45rem, 1.1svh, 0.75rem) !important;
             }
             .webdev-process-title {
-                position: relative;
-                left: auto;
-                top: auto;
-                transform: none;
-                order: 2;
-                font-size: clamp(3.4rem, 15vw, 5.4rem);
-                white-space: normal;
+                position: absolute !important;
+                inset: auto 0 auto 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                top: clamp(1.35rem, 4.2svh, 2.4rem) !important;
+                bottom: auto !important;
+                z-index: 1 !important;
+                display: flex !important;
+                align-items: flex-start !important;
+                justify-content: center !important;
+                width: auto !important;
+                max-width: none !important;
+                transform: none !important;
+                order: initial !important;
+                text-align: center !important;
+                font-size: clamp(2.1rem, 9.5vw, 3.5rem) !important;
+                white-space: nowrap !important;
             }
             .webdev-process-card,
             .webdev-process-top-left,
@@ -981,10 +1652,18 @@
                 right: auto;
                 top: auto;
                 bottom: auto;
-                width: 100%;
+                width: min(100%, 18rem);
+                justify-self: center;
+                row-gap: 0.18rem;
             }
             .webdev-process-card img {
-                aspect-ratio: 16 / 8.6;
+                aspect-ratio: 16 / 5.8;
+                max-height: 12.5svh;
+            }
+            .webdev-process-card strong,
+            .webdev-process-card span {
+                font-size: clamp(0.72rem, 3.1vw, 0.86rem);
+                line-height: 0.95;
             }
             .webdev-process-top-left {
                 order: 1;
@@ -999,39 +1678,28 @@
                 order: 5;
             }
             .webdev-final {
-                height: 100vh;
-                min-height: 100vh;
-                max-height: 100vh;
-                height: 100svh;
+                height: auto;
                 min-height: 100svh;
-                max-height: 100svh;
+                max-height: none;
                 grid-template-columns: 1fr;
-                grid-template-rows: 48% 52%;
+                grid-template-rows: auto auto;
             }
             .webdev-final-media {
-                min-height: 0;
+                min-height: 47svh;
+                padding: 1.5rem;
             }
-            .webdev-final-media img {
-                left: 50%;
-                top: 3rem;
-                width: min(68vw, 18rem);
-                transform: translateX(-50%);
+            .webdev-final-image-cluster {
+                width: min(70vw, 18rem);
             }
             .webdev-final-copy {
                 min-height: 0;
-                padding: 2.4rem 1.5rem 3rem;
+                padding: 2.4rem 1.5rem 3.2rem;
             }
             .webdev-final-title {
                 font-size: clamp(2rem, 9vw, 3.2rem);
             }
-            .webdev-final-note {
-                align-self: start;
-                margin-top: 5rem;
-            }
-            .service-hero-return {
-                top: max(1rem, env(safe-area-inset-top));
-                width: 48px;
-                height: 48px;
+            .webdev-final-step + .webdev-final-step {
+                margin-top: 1.55rem;
             }
             .service-step { grid-template-columns: 50px 1fr; }
         }
@@ -1080,13 +1748,6 @@
         </button>
     </header>
 
-    <button class="service-hero-return" type="button" aria-label="Back to web development hero">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-        </svg>
-    </button>
-
     <div class="menu-overlay" aria-hidden="true">
         <div class="menu-overlay-content">
             <div class="menu-overlay-main">
@@ -1120,88 +1781,94 @@
     </div>
 
     <!-- HERO -->
-    <section class="service-hero about-page-hero" id="service-hero" aria-label="Web Development">
-        <img class="service-hero-bg" src="./web_img/webp-output/web_main.webp" alt="" fetchpriority="high">
-        <div class="service-hero-content about-page-hero-copy">
-            <p class="about-page-kicker">
-                <span class="about-page-kicker-word about-page-kicker-word-about reveal-text">Web</span>
-                <span class="about-hero-rule" aria-hidden="true"></span>
-                <span class="about-page-kicker-word about-page-kicker-word-blueprint reveal-text">Development</span>
-            </p>
-            <h1 class="about-page-title reveal-text">Custom, responsive websites that convert visitors into customers. We build fast, accessible, and visually stunning digital experiences from the ground up.</h1>
+    <section class="service-hero webdev-reference-hero" id="service-hero" aria-label="Web Development">
+        <div class="webdev-hero-media">
+            <img class="service-hero-bg" src="./web_img/webp-output/web_main.webp" alt="" fetchpriority="high">
+        </div>
+        <div class="service-hero-content webdev-hero-content">
+            <h1 class="webdev-hero-title reveal-text">Web<br>Development</h1>
+            <h1 class="webdev-hero-title is-brown-title reveal-text" aria-hidden="true">Web<br>Development</h1>
+            <p class="webdev-hero-copy reveal-text">Custom, responsive websites that convert visitors into customers. We build fast, accessible, and visually stunning digital experiences from the ground up.</p>
         </div>
     </section>
 
     <!-- FEATURES -->
     <section class="service-section webdev-included" aria-label="What's included">
-        <h2 class="webdev-included-title page-enter">What's included</h2>
-        <div class="service-features-grid webdev-included-grid">
-            <div class="webdev-included-visual page-enter" aria-hidden="true">
-                <img loading="lazy" decoding="async" src="./web_img/web_elements_1 (2).png" alt="">
+        <div class="webdev-included-sticky">
+            <div class="webdev-included-state-stack page-enter">
+                <article class="webdev-included-state">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" src="./web_img/web_elements_1 (2).png" alt="">
+                        </div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">01</div>
+                            <h3 class="webdev-included-state-title">Custom Design</h3>
+                            <p class="webdev-included-state-body">Interface design shaped around your brand, audience, and conversion goals.</p>
+                        </div>
+                    </div>
+                </article>
+                <article class="webdev-included-state is-dark">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" src="./web_img/web_elements_2 (2).png" alt="">
+                        </div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">02</div>
+                            <h3 class="webdev-included-state-title">Responsive Build</h3>
+                            <p class="webdev-included-state-body">Pixel-perfect across every screen size, from ultra-wide desktops to mobile devices.</p>
+                        </div>
+                    </div>
+                </article>
+                <article class="webdev-included-state">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true"></div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">03</div>
+                            <h3 class="webdev-included-state-title">Performance</h3>
+                            <p class="webdev-included-state-body">Optimised assets, clean structure, and fast-loading pages built around Core Web Vitals.</p>
+                        </div>
+                    </div>
+                </article>
+                <article class="webdev-included-state is-dark">
+                    <h2 class="webdev-included-state-heading">What's included</h2>
+                    <div class="webdev-included-state-grid">
+                        <div class="webdev-included-state-visual" aria-hidden="true"></div>
+                        <div class="webdev-included-state-copy">
+                            <div class="webdev-included-state-num">04</div>
+                            <h3 class="webdev-included-state-title">CMS Setup</h3>
+                            <p class="webdev-included-state-body">A simple editing workflow so your team can update pages without touching code.</p>
+                        </div>
+                    </div>
+                </article>
             </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">01</div>
-                <h3 class="service-feature-title">Custom Design</h3>
-                <p class="service-feature-body">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">02</div>
-                <h3 class="service-feature-title">Responsive Build</h3>
-                <p class="service-feature-body">Pixel-perfect across every screen size, from ultra-wide desktops to mobile devices.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">03</div>
-                <h3 class="service-feature-title">Performance</h3>
-                <p class="service-feature-body">Optimised for speed and Core Web Vitals — fast loading means better conversions.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">04</div>
-                <h3 class="service-feature-title">CMS Integration</h3>
-                <p class="service-feature-body">Edit your content with ease using a headless CMS tailored to your workflow.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">05</div>
-                <h3 class="service-feature-title">SEO Foundation</h3>
-                <p class="service-feature-body">Built-in on-page SEO architecture so search engines can find and rank your site.</p>
-            </div>
-            <div class="service-feature page-enter">
-                <div class="service-feature-num">06</div>
-                <h3 class="service-feature-title">Ongoing Support</h3>
-                <p class="service-feature-body">Post-launch care, performance monitoring, and iterative improvements.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="webdev-responsive-mask" aria-label="Responsive Build">
-        <div class="webdev-responsive-copy page-enter">
-            <span class="webdev-responsive-num">02</span>
-            <h2 class="webdev-responsive-title">Responsive Build</h2>
-            <p class="webdev-responsive-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.</p>
-        </div>
-        <div class="webdev-responsive-visual page-enter" aria-hidden="true">
-            <img loading="lazy" decoding="async" src="./web_img/web_elements_2 (2).png" alt="">
         </div>
     </section>
 
     <!-- PROCESS -->
     <section class="webdev-process-collage" aria-label="How it works">
-        <article class="webdev-process-card webdev-process-top-left page-enter">
+        <article class="webdev-process-card webdev-process-top-left">
             <strong>Discovery Call</strong>
             <span>01</span>
             <img loading="lazy" decoding="async" src="./web_img/webp-output/web_7.webp" alt="">
         </article>
-        <article class="webdev-process-card webdev-process-top-right page-enter">
+        <article class="webdev-process-card webdev-process-top-right">
             <strong>Wireframes &amp; Prototype</strong>
             <span>02</span>
             <img loading="lazy" decoding="async" src="./web_img/webp-output/web_2.webp" alt="">
         </article>
-        <h2 class="webdev-process-title page-enter">How it works</h2>
-        <article class="webdev-process-card webdev-process-bottom-left page-enter">
+        <h2 class="webdev-process-title" data-blueprint-split="true">
+            <span class="line"><span class="line-mask">How&nbsp;it&nbsp;works</span></span>
+        </h2>
+        <article class="webdev-process-card webdev-process-bottom-left">
             <img loading="lazy" decoding="async" src="./web_img/webp-output/web_4.webp" alt="">
             <strong>Design &amp; Build</strong>
             <span>03</span>
         </article>
-        <article class="webdev-process-card webdev-process-bottom-right page-enter">
+        <article class="webdev-process-card webdev-process-bottom-right">
             <img loading="lazy" decoding="async" src="./web_img/webp-output/web_5.webp" alt="">
             <strong>Launch &amp; Hand-off</strong>
             <span>04</span>
@@ -1214,52 +1881,71 @@
         <div class="service-showcase-label">WEB</div>
     </div>
 
-    <!-- PROCESS -->
-    <section class="service-process">
-        <h2 class="service-process-title page-enter">How it works</h2>
-        <div class="service-steps">
-            <div class="service-step page-enter">
-                <span class="service-step-num">01</span>
-                <div class="service-step-content">
-                    <h3>Discovery Call</h3>
-                    <p>We learn your goals, audience, and visual direction so every decision is rooted in real context.</p>
-                </div>
+    <!-- FINAL -->
+    <section class="webdev-final" aria-label="Web development process">
+        <div class="webdev-final-media page-enter">
+            <div class="webdev-final-image-cluster" aria-hidden="true">
+                <figure class="webdev-final-image-frame is-tertiary" data-webdev-image="web_7.webp"></figure>
+                <figure class="webdev-final-image-frame is-primary" data-webdev-image="web_5.webp"></figure>
+                <figure class="webdev-final-image-frame is-quaternary" data-webdev-image="web_4.webp"></figure>
+                <figure class="webdev-final-image-frame is-secondary" data-webdev-image="web_2.webp"></figure>
             </div>
-            <div class="service-step page-enter">
-                <span class="service-step-num">02</span>
-                <div class="service-step-content">
-                    <h3>Wireframes & Prototype</h3>
-                    <p>We map out the full site structure, user journeys, and key layouts before touching a line of code.</p>
-                </div>
-            </div>
-            <div class="service-step page-enter">
-                <span class="service-step-num">03</span>
-                <div class="service-step-content">
-                    <h3>Design & Build</h3>
-                    <p>High-fidelity designs become a living, breathing website — tested across browsers and devices.</p>
-                </div>
-            </div>
-            <div class="service-step page-enter">
-                <span class="service-step-num">04</span>
-                <div class="service-step-content">
-                    <h3>Launch & Hand-off</h3>
-                    <p>We deploy, configure, and hand over full documentation. You're never left in the dark.</p>
-                </div>
-            </div>
+        </div>
+        <div class="webdev-final-copy page-enter">
+            <article class="webdev-final-step">
+                <h2 class="webdev-final-title">Discovery Call</h2>
+                <p class="webdev-final-text">We learn your goals, audience, and visual direction so every decision is rooted in real context.</p>
+            </article>
+            <article class="webdev-final-step">
+                <h2 class="webdev-final-title">Wireframes &amp; Prototype</h2>
+                <p class="webdev-final-text">We map out the full site structure, user journeys, and key layouts before touching a line of code.</p>
+            </article>
+            <article class="webdev-final-step">
+                <h2 class="webdev-final-title">Design &amp; Build</h2>
+                <p class="webdev-final-text">High-fidelity designs become a living, breathing website - tested across browsers and devices.</p>
+            </article>
+            <article class="webdev-final-step">
+                <h2 class="webdev-final-title">Launch &amp; Hand-off</h2>
+                <p class="webdev-final-text">We deploy, configure, and hand over full documentation. You're never left in the dark.</p>
+            </article>
+            <button class="link-page-cta webdev-final-cta" type="button" onclick="handlePageTransition(event, 'contact.html')">
+                <span>Start a project</span>
+            </button>
         </div>
     </section>
 
-    <!-- FINAL -->
-    <section class="webdev-final" aria-label="Discovery Call">
-        <div class="webdev-final-media page-enter">
-            <img loading="lazy" decoding="async" src="./web_img/webp-output/web_5.webp" alt="">
-        </div>
-        <div class="webdev-final-copy page-enter">
-            <h2 class="webdev-final-title">Discovery Call</h2>
-            <p class="webdev-final-lede">We learn your goals, audience, and visual direction so every decision is rooted in real context.</p>
-            <p class="webdev-final-note">High-fidelity designs become a living, breathing website — tested across browsers and devices.</p>
-        </div>
-    </section>
+        <footer class="site-footer link-page-reveal-footer">
+            <div class="site-footer-inner">
+                <nav class="site-footer-links" aria-label="Footer links">
+                    <div class="site-footer-group">
+                        <p class="site-footer-label">Quick links</p>
+                        <button type="button" onclick="handlePageTransition(event, 'projects.html')">Projects</button>
+                        <button type="button" onclick="handlePageTransition(event, 'approach.html')">Approach</button>
+                        <button type="button" onclick="handlePageTransition(event, 'about.html')">About</button>
+                        <button type="button" onclick="handlePageTransition(event, 'contact.html')">Contact</button>
+                    </div>
+
+                    <div class="site-footer-group">
+                        <p class="site-footer-label">Social</p>
+                        <a href="#">Instagram</a>
+                        <a href="#">Facebook</a>
+                        <a href="#">LinkedIn</a>
+                    </div>
+
+                    <div class="site-footer-group">
+                        <p class="site-footer-label">Email</p>
+                        <a href="mailto:hello@blueprint.studio">hello@blueprint.studio</a>
+                    </div>
+                </nav>
+
+                <p class="site-footer-title">BLUEPRINT</p>
+
+                <div class="site-footer-meta">
+                    <p>Creative systems for new businesses.</p>
+                    <p>Blueprint Studio</p>
+                </div>
+            </div>
+        </footer>
 
     </div>
     </div>
@@ -1270,166 +1956,366 @@
     <script src="https://unpkg.com/@barba/core"></script>
     <script src="script.js"></script>
     <script>
-        const serviceHero = document.querySelector('#service-hero');
-        if (serviceHero && window.gsap) {
-            const heroRule = serviceHero.querySelector('.about-hero-rule');
-            const heroRevealTargets = serviceHero.querySelectorAll('.char, .line-mask');
+        const webdevTextRevealTargets = gsap.utils.toArray([
+            '.webdev-process-title',
+            '.webdev-process-card strong',
+            '.webdev-process-card span',
+            '.service-showcase-label',
+            '.service-step-num',
+            '.service-step-content h3',
+            '.service-step-content p',
+            '.webdev-final-title',
+            '.webdev-final-text',
+            '.webdev-final-cta'
+        ].join(','));
 
-            if (heroRule) {
-                gsap.set(heroRule, {
-                    scaleX: 0,
-                    transformOrigin: 'center'
-                });
-            }
-            gsap.set(serviceHero.querySelectorAll('.about-page-kicker-word-about .line-mask'), { y: '140%' });
-            gsap.set(serviceHero.querySelectorAll('.about-page-kicker-word-blueprint .line-mask'), { y: '-140%' });
-            gsap.set(serviceHero.querySelectorAll('.about-page-title .line-mask'), { y: '140%' });
+        webdevTextRevealTargets.forEach((target) => {
+            target.classList.add('reveal-text', 'webdev-text-reveal');
+        });
 
-            window.addEventListener('load', () => {
-                const heroTl = gsap.timeline();
-
-                heroTl.to(heroRule, {
-                    scaleX: 1,
-                    duration: 1.2,
-                    ease: 'expo.inOut'
-                }, 0);
-
-                if (heroRevealTargets.length) {
-                    heroTl.to(heroRevealTargets, {
-                        y: 0,
-                        stagger: 0.04,
-                        duration: 1.02,
-                        ease: 'power4.out'
-                    }, '-=0.5');
-                }
-            });
+        if (typeof splitBlueprintText === 'function') {
+            splitBlueprintText(document);
         }
 
-        const serviceHeroReturn = document.querySelector('.service-hero-return');
-        if (serviceHeroReturn && serviceHero) {
-            let serviceReturnVisible = false;
+        if (window.ScrollTrigger) {
+            ScrollTrigger.config({ ignoreMobileResize: true });
+        }
 
-            gsap.set(serviceHeroReturn, {
-                x: '-50%',
-                y: -140,
-                autoAlpha: 1
+        const serviceHero = document.querySelector('#service-hero');
+        if (serviceHero && window.gsap) {
+            const heroMedia = serviceHero.querySelector('.webdev-hero-media');
+            const heroTitleMasks = serviceHero.querySelectorAll('.webdev-hero-title .line-mask');
+            const heroCopyMasks = serviceHero.querySelectorAll('.webdev-hero-copy .line-mask');
+            const heroTitleChars = [];
+            let heroIntroPlayed = false;
+
+            serviceHero.querySelectorAll('.webdev-hero-title').forEach((title) => {
+                const titleLines = title.querySelectorAll('.line');
+
+                titleLines[0]?.classList.add('webdev-title-line-web');
+                titleLines[1]?.classList.add('webdev-title-line-development');
             });
 
-            const showServiceHeroReturn = () => {
-                if (serviceReturnVisible) return;
-
-                serviceReturnVisible = true;
-                serviceHeroReturn.classList.add('is-visible');
-                gsap.to(serviceHeroReturn, {
-                    x: '-50%',
-                    y: 0,
-                    duration: 0.78,
-                    ease: 'expo.out',
-                    overwrite: true
-                });
-            };
-
-            const hideServiceHeroReturn = () => {
-                if (!serviceReturnVisible) return;
-
-                serviceReturnVisible = false;
-                serviceHeroReturn.classList.remove('is-visible');
-                gsap.to(serviceHeroReturn, {
-                    x: '-50%',
-                    y: -140,
-                    duration: 0.5,
-                    ease: 'power3.inOut',
-                    overwrite: true
-                });
-            };
-
-            const updateServiceHeroReturn = () => {
-                if (window.scrollY > 120) {
-                    showServiceHeroReturn();
-                } else {
-                    hideServiceHeroReturn();
+            heroTitleMasks.forEach((mask, maskIndex) => {
+                if (mask.dataset.webdevCharsReady === 'true') {
+                    mask.querySelectorAll('.webdev-hero-char').forEach((span) => heroTitleChars.push(span));
+                    return;
                 }
-            };
 
-            serviceHeroReturn.addEventListener('click', () => {
-                serviceHeroReturn.disabled = true;
-                serviceReturnVisible = false;
-                serviceHeroReturn.classList.remove('is-visible');
-                gsap.to(serviceHeroReturn, {
-                    x: '-50%',
-                    y: -140,
-                    duration: 0.42,
-                    ease: 'power3.inOut',
-                    overwrite: true
-                });
+                const label = mask.textContent;
+                mask.textContent = '';
+                mask.dataset.webdevCharsReady = 'true';
 
-                const navigateToWebDevCard = () => {
-                    window.location.href = 'index.html#webdev-card';
-                };
+                Array.from(label).forEach((char, charIndex) => {
+                    const span = document.createElement('span');
+                    const groupIndex = (maskIndex % 2) * 32 + charIndex;
 
-                try {
-                    sessionStorage.removeItem('blueprintWebDevReverseReturn');
-                } catch (error) {}
-
-                const growHeroImageOut = () => {
-                    const heroMedia = serviceHero.querySelector('.webdev-hero-media');
-                    const heroImage = heroMedia ? heroMedia.querySelector('img') : null;
-                    const heroImageRect = heroImage ? heroImage.getBoundingClientRect() : null;
-                    const transitionImage = heroImage && heroImageRect ? heroImage.cloneNode(true) : null;
-
-                    if (!transitionImage) {
-                        navigateToWebDevCard();
-                        return;
-                    }
-
-                    transitionImage.style.position = 'fixed';
-                    transitionImage.style.left = `${heroImageRect.left}px`;
-                    transitionImage.style.top = `${heroImageRect.top}px`;
-                    transitionImage.style.width = `${heroImageRect.width}px`;
-                    transitionImage.style.height = `${heroImageRect.height}px`;
-                    transitionImage.style.margin = '0';
-                    transitionImage.style.objectFit = 'cover';
-                    transitionImage.style.objectPosition = 'center';
-                    transitionImage.style.pointerEvents = 'none';
-                    transitionImage.style.zIndex = '13000';
-                    transitionImage.style.transformOrigin = 'center center';
-                    transitionImage.style.willChange = 'transform,width,height,left,top';
-                    transitionImage.classList.add('webdev-service-transition-image');
-                    document.body.appendChild(transitionImage);
-                    gsap.set(heroMedia, { autoAlpha: 0 });
-                    gsap.set(document.body, { overflow: 'hidden' });
-
-                    gsap.to(transitionImage, {
-                        left: 0,
-                        top: 0,
-                        width: window.innerWidth,
-                        height: window.innerHeight,
-                        duration: 0.92,
-                        ease: 'power3.inOut',
-                        onComplete: navigateToWebDevCard
-                    });
-                };
-
-                const startY = window.scrollY;
-                const heroTop = serviceHero.getBoundingClientRect().top + window.scrollY;
-                const scrollDuration = Math.abs(startY - heroTop) > 8 ? 0.92 : 0.08;
-                const scrollState = { y: startY };
-
-                gsap.to(scrollState, {
-                    y: heroTop,
-                    duration: scrollDuration,
-                    ease: 'power3.inOut',
-                    onUpdate: () => window.scrollTo(0, scrollState.y),
-                    onComplete: growHeroImageOut
+                    span.className = 'char webdev-hero-char';
+                    span.textContent = char === ' ' ? '\u00a0' : char;
+                    span.style.display = 'inline-block';
+                    span.style.willChange = 'transform';
+                    span.dataset.webdevRevealIndex = groupIndex;
+                    mask.appendChild(span);
+                    heroTitleChars.push(span);
                 });
             });
+            const heroTitleRevealStagger = (index, target) => {
+                return (Number(target.dataset.webdevRevealIndex) || 0) * 0.025;
+            };
 
-            updateServiceHeroReturn();
-            window.addEventListener('scroll', updateServiceHeroReturn, { passive: true });
+            gsap.set(heroTitleMasks, { y: 0 });
+            gsap.set(heroTitleChars, { y: '140%' });
+            gsap.set(heroCopyMasks, { y: '140%' });
+            gsap.set(heroMedia, { autoAlpha: 0, clipPath: 'inset(0 0 100% 0)' });
+            gsap.set(serviceHero, { '--webdev-brown-x': '100%' });
+
+            window.blueprintPlayWebDevHeroIntro = (options = {}) => {
+                if (heroIntroPlayed) return;
+
+                heroIntroPlayed = true;
+                const heroTl = gsap.timeline();
+                const imageAlreadyPlaced = options.imageAlreadyPlaced === true;
+
+                gsap.killTweensOf([heroMedia, heroTitleMasks, heroTitleChars, heroCopyMasks]);
+                gsap.killTweensOf(serviceHero);
+                gsap.set(heroTitleMasks, { y: 0 });
+                gsap.set(heroTitleChars, { y: '140%' });
+                gsap.set(heroCopyMasks, { y: '140%' });
+                gsap.set(serviceHero, { '--webdev-brown-x': '100%' });
+
+                if (imageAlreadyPlaced) {
+                    gsap.set(heroMedia, { autoAlpha: 1, clipPath: 'inset(0 0 0% 0)' });
+                    heroTl
+                    .to(serviceHero, {
+                        '--webdev-brown-x': '0%',
+                        duration: 0.92,
+                        ease: 'power4.inOut'
+                    }, 0)
+                    .to(heroTitleChars, {
+                        y: 0,
+                        stagger: heroTitleRevealStagger,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    }, '>')
+                    .to(heroCopyMasks, {
+                        y: 0,
+                        stagger: 0.08,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    }, '-=0.58');
+
+                    return;
+                }
+
+                heroTl
+                    .to(serviceHero, {
+                        '--webdev-brown-x': '0%',
+                        duration: 0.92,
+                        ease: 'power4.inOut'
+                    }, 0)
+                    .to(heroMedia, {
+                        autoAlpha: 1,
+                        clipPath: 'inset(0 0 0% 0)',
+                        duration: 0.95,
+                        ease: 'power4.inOut'
+                    }, 0.18)
+                    .to(heroTitleChars, {
+                        y: 0,
+                        stagger: heroTitleRevealStagger,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    }, '>')
+                    .to(heroCopyMasks, {
+                        y: 0,
+                        stagger: 0.08,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    }, '-=0.58');
+            };
+
+            window.blueprintScheduleWebDevHeroIntro = () => {
+                if (window.self !== window.top) return;
+
+                const loader = document.getElementById('loader');
+                const loaderVisible = loader && window.getComputedStyle(loader).display !== 'none';
+
+                if (loaderVisible) {
+                    requestAnimationFrame(window.blueprintScheduleWebDevHeroIntro);
+                    return;
+                }
+
+                window.blueprintPlayWebDevHeroIntro();
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', window.blueprintScheduleWebDevHeroIntro, { once: true });
+            } else {
+                window.blueprintScheduleWebDevHeroIntro();
+            }
+        }
+
+        webdevTextRevealTargets.forEach((target) => {
+            if (target.closest('.webdev-process-collage')) return;
+
+            const masks = target.querySelectorAll('.line-mask');
+
+            if (!masks.length) return;
+
+            gsap.set(masks, { y: '140%' });
+
+            ScrollTrigger.create({
+                trigger: target,
+                start: 'top 88%',
+                once: true,
+                onEnter: () => {
+                    gsap.to(masks, {
+                        y: 0,
+                        stagger: 0.08,
+                        duration: 0.82,
+                        ease: 'power4.out'
+                    });
+                }
+            });
+        });
+
+        const webdevIncluded = document.querySelector('.webdev-included');
+        if (webdevIncluded && window.gsap && window.ScrollTrigger) {
+            const includedStates = gsap.utils.toArray('.webdev-included-state');
+
+            const renderIncludedState = (progress = 0) => {
+                if (!includedStates.length) return;
+
+                const maxIndex = includedStates.length - 1;
+                const revealProgress = Math.min(progress / 0.75, 1);
+                const scaled = Math.min(revealProgress * maxIndex, maxIndex);
+                const activeIndex = Math.min(Math.floor(scaled), maxIndex);
+                const nextIndex = Math.min(activeIndex + 1, maxIndex);
+                const wipe = activeIndex === maxIndex ? 100 : (scaled - activeIndex) * 100;
+
+                includedStates.forEach((state, index) => {
+                    const isCurrent = index === activeIndex;
+                    const isNext = index === nextIndex && activeIndex !== maxIndex;
+
+                    state.style.zIndex = isNext ? '2' : isCurrent ? '1' : '0';
+
+                    if (isCurrent) {
+                        state.style.clipPath = 'inset(0% 0 0% 0)';
+                    } else if (isNext) {
+                        state.style.clipPath = `inset(${100 - wipe}% 0 0 0)`;
+                    } else {
+                        state.style.clipPath = 'inset(0 0 100% 0)';
+                    }
+                });
+            };
+
+            renderIncludedState(0);
+
+            const setupIncludedTrigger = (isMobile = false) => {
+                const includedTrigger = ScrollTrigger.create({
+                    trigger: webdevIncluded,
+                    start: 'top top',
+                    end: isMobile ? () => `+=${window.innerHeight * includedStates.length}` : 'bottom bottom',
+                    scrub: true,
+                    pin: isMobile,
+                    anticipatePin: isMobile ? 1 : 0,
+                    invalidateOnRefresh: true,
+                    onUpdate: (self) => renderIncludedState(self.progress),
+                    onLeave: () => renderIncludedState(1),
+                    onLeaveBack: () => renderIncludedState(0)
+                });
+
+                return () => includedTrigger.kill();
+            };
+
+            if (window.gsap.matchMedia) {
+                const includedMatchMedia = gsap.matchMedia();
+                includedMatchMedia.add('(max-width: 767px)', () => setupIncludedTrigger(true));
+                includedMatchMedia.add('(min-width: 768px)', () => setupIncludedTrigger(false));
+            } else {
+                setupIncludedTrigger(window.matchMedia('(max-width: 767px)').matches);
+            }
+        }
+
+        const webdevProcess = document.querySelector('.webdev-process-collage');
+        const webdevFinalSection = document.querySelector('.webdev-final');
+        const markWebdevFinalProcessReady = () => {
+            if (!webdevFinalSection) return;
+            webdevFinalSection.classList.add('is-process-ready');
+            if (typeof window.blueprintSetupWebdevProcessImageHandoff === 'function') {
+                window.blueprintSetupWebdevProcessImageHandoff();
+            }
+            if (window.ScrollTrigger) {
+                ScrollTrigger.refresh();
+            }
+        };
+
+        if (webdevProcess && window.gsap && window.ScrollTrigger) {
+            const processCards = gsap.utils.toArray('.webdev-process-card', webdevProcess);
+            const processTitle = webdevProcess.querySelector('.webdev-process-title');
+            const processTitleMasks = processTitle ? processTitle.querySelectorAll('.line-mask') : [];
+            const processTextMasks = webdevProcess.querySelectorAll('.webdev-process-card strong .line-mask, .webdev-process-card span .line-mask');
+            const processIsMobile = window.matchMedia('(max-width: 767px)').matches;
+
+            const stackProcessCards = () => {
+                const sectionRect = webdevProcess.getBoundingClientRect();
+                const centerX = sectionRect.left + sectionRect.width / 2;
+                const centerY = sectionRect.top + sectionRect.height / 2;
+
+                processCards.forEach((card, index) => {
+                    gsap.set(card, { clearProps: 'x,y,xPercent,yPercent,rotation,scale,autoAlpha' });
+
+                    const rect = card.getBoundingClientRect();
+                    const cardCenterX = rect.left + rect.width / 2;
+                    const cardCenterY = rect.top + rect.height / 2;
+
+                    gsap.set(card, {
+                        x: centerX - cardCenterX,
+                        y: centerY - cardCenterY,
+                        rotation: processIsMobile ? ([-2, 1.4, -1, 1.8][index] || 0) : ([-5, 3, -2, 5][index] || 0),
+                        scale: processIsMobile ? ([0.98, 0.965, 0.95, 0.935][index] || 0.96) : ([0.94, 0.9, 0.86, 0.82][index] || 0.9),
+                        autoAlpha: 0
+                    });
+                });
+            };
+
+            stackProcessCards();
+            gsap.set(processTitle, { y: 34, autoAlpha: 0 });
+            gsap.set(processTitleMasks, { y: '140%' });
+            gsap.set(processTextMasks, { y: '140%' });
+
+            const processTl = gsap.timeline({
+                paused: true,
+                defaults: { ease: processIsMobile ? 'power3.out' : 'power4.out' },
+                onComplete: markWebdevFinalProcessReady
+            });
+
+            processTl
+                .to(processCards, {
+                    autoAlpha: 1,
+                    scale: (index) => processIsMobile ? ([1, 0.985, 0.97, 0.955][index] || 0.97) : ([1, 0.97, 0.94, 0.91][index] || 0.95),
+                    rotation: (index) => processIsMobile ? ([-1.6, 1.2, -0.8, 1.5][index] || 0) : ([-4, 2.5, -1.5, 4][index] || 0),
+                    stagger: processIsMobile ? 0.055 : 0.08,
+                    duration: processIsMobile ? 0.72 : 0.58
+                })
+                .to(processCards, {
+                    x: 0,
+                    y: 0,
+                    rotation: 0,
+                    scale: 1,
+                    duration: processIsMobile ? 1.18 : 1.05,
+                    stagger: processIsMobile ? 0.04 : 0.055,
+                    ease: processIsMobile ? 'power3.inOut' : 'expo.out'
+                }, '+=0.06')
+                .to(processTitle, {
+                    y: 0,
+                    autoAlpha: 1,
+                    duration: 0.82,
+                    ease: 'power4.out'
+                }, '-=0.4')
+                .to(processTitleMasks, {
+                    y: 0,
+                    stagger: 0.08,
+                    duration: 0.82,
+                    ease: 'power4.out'
+                }, '-=0.72')
+                .to(processTextMasks, {
+                    y: 0,
+                    stagger: 0.045,
+                    duration: 0.72,
+                    ease: 'power4.out'
+                }, '-=0.48');
+
+            const processTriggerStart = processIsMobile ? 'top 75%' : 'top top';
+
+            ScrollTrigger.create({
+                trigger: webdevProcess,
+                start: processTriggerStart,
+                once: true,
+                onEnter: () => processTl.play(0)
+            });
+
+            requestAnimationFrame(() => {
+                if (processTl.progress() > 0) return;
+                if (processIsMobile) return;
+
+                const rect = webdevProcess.getBoundingClientRect();
+                const viewportEntry = rect.top < window.innerHeight * 0.92;
+
+                if (viewportEntry) {
+                    processTl.play(0);
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (processTl.progress() > 0) return;
+                stackProcessCards();
+            }, { passive: true });
+        } else {
+            markWebdevFinalProcessReady();
         }
 
         // Page-enter staggered reveal
-        window.addEventListener('load', () => {
+        const revealWebdevPageEnter = () => {
             gsap.to('.page-enter', {
                 opacity: 1,
                 y: 0,
@@ -1444,10 +2330,19 @@
                 ease: 'expo.out',
                 delay: 0.9
             });
-        });
+            if (window.ScrollTrigger) {
+                ScrollTrigger.refresh();
+            }
+        };
+
+        if (document.readyState === 'complete') {
+            revealWebdevPageEnter();
+        } else {
+            window.addEventListener('load', revealWebdevPageEnter, { once: true });
+        }
 
         // Scroll-reveal for sections below the hero
-        gsap.utils.toArray('.service-section .page-enter, .webdev-responsive-mask .page-enter, .webdev-process-collage .page-enter, .webdev-final .page-enter').forEach(el => {
+        gsap.utils.toArray('.service-section:not(.webdev-included) .page-enter, .webdev-final .page-enter').forEach(el => {
             gsap.fromTo(el,
                 { opacity: 0, y: 40 },
                 {
@@ -1462,6 +2357,175 @@
                 }
             );
         });
+
+        window.blueprintSetupWebdevProcessImageHandoff = () => {
+            if (!window.gsap || !window.ScrollTrigger || !webdevProcess || !webdevFinalSection) return;
+            if (webdevFinalSection.dataset.handoffReady === 'true') return;
+
+            const processImages = gsap.utils.toArray('.webdev-process-card img', webdevProcess);
+            const finalFrames = gsap.utils.toArray('.webdev-final-image-frame');
+
+            if (!processImages.length || !finalFrames.length) return;
+
+            webdevFinalSection.dataset.handoffReady = 'true';
+            gsap.set(finalFrames, {
+                clipPath: 'inset(0% 0% 0% 0%)',
+                xPercent: 0,
+                yPercent: 0
+            });
+
+            const getFileName = (src = '') => src.split('/').pop();
+            const finalFrameByFile = new Map(
+                finalFrames.map((frame) => {
+                    return [frame.dataset.webdevImage, frame];
+                })
+            );
+
+            const handoffItems = processImages
+                .map((sourceImage) => {
+                    const targetFrame = finalFrameByFile.get(getFileName(sourceImage.currentSrc || sourceImage.src));
+                    if (!targetFrame) return null;
+                    const sourceRect = sourceImage.getBoundingClientRect();
+
+                    return {
+                        image: sourceImage,
+                        sourceParent: sourceImage.parentNode,
+                        sourceNextSibling: sourceImage.nextSibling,
+                        sourceRect,
+                        sourceHeight: sourceRect.height,
+                        placeholder: null,
+                        targetFrame,
+                        state: 'source'
+                    };
+                })
+                .filter(Boolean);
+
+            if (!handoffItems.length) return;
+
+            const viewportRectAtProgress = (item, positionProgress, shapeProgress = positionProgress) => {
+                const sourceRect = item.sourceRect || item.image.getBoundingClientRect();
+                const targetRect = item.targetFrame.getBoundingClientRect();
+
+                return {
+                    left: gsap.utils.interpolate(sourceRect.left, targetRect.left, positionProgress),
+                    top: gsap.utils.interpolate(sourceRect.top, targetRect.top, positionProgress),
+                    width: gsap.utils.interpolate(sourceRect.width, targetRect.width, shapeProgress),
+                    height: gsap.utils.interpolate(sourceRect.height, targetRect.height, shapeProgress)
+                };
+            };
+
+            const ensurePlaceholder = (item) => {
+                if (item.placeholder) return;
+
+                item.placeholder = document.createElement('span');
+                item.placeholder.className = 'webdev-process-image-placeholder';
+                item.placeholder.style.height = `${item.sourceHeight}px`;
+
+                const referenceNode = item.sourceNextSibling && item.sourceNextSibling.parentNode === item.sourceParent
+                    ? item.sourceNextSibling
+                    : null;
+
+                item.sourceParent.insertBefore(item.placeholder, referenceNode);
+            };
+
+            const moveToBody = (item, positionProgress = 0, shapeProgress = positionProgress) => {
+                ensurePlaceholder(item);
+                if (item.image.parentNode !== document.body) {
+                    document.body.appendChild(item.image);
+                }
+
+                const rect = viewportRectAtProgress(item, positionProgress, shapeProgress);
+
+                item.image.classList.add('webdev-process-to-final-image');
+                gsap.set(item.image, {
+                    position: 'fixed',
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: rect.height,
+                    margin: 0,
+                    autoAlpha: 1,
+                    clearProps: 'transform'
+                });
+                item.state = 'body';
+            };
+
+            const moveToSource = (item) => {
+                if (item.image.parentNode !== item.sourceParent) {
+                    const referenceNode = item.placeholder && item.placeholder.parentNode === item.sourceParent
+                        ? item.placeholder
+                        : item.sourceNextSibling && item.sourceNextSibling.parentNode === item.sourceParent
+                        ? item.sourceNextSibling
+                        : null;
+
+                    item.sourceParent.insertBefore(item.image, referenceNode);
+                }
+                item.image.classList.remove('webdev-process-to-final-image');
+                gsap.set(item.image, { clearProps: 'all' });
+                item.sourceRect = item.image.getBoundingClientRect();
+                item.sourceHeight = item.sourceRect.height;
+                if (item.placeholder) {
+                    item.placeholder.remove();
+                    item.placeholder = null;
+                }
+                item.state = 'source';
+            };
+
+            const moveToFinal = (item) => {
+                if (item.image.parentNode !== item.targetFrame) {
+                    item.targetFrame.appendChild(item.image);
+                }
+                item.image.classList.remove('webdev-process-to-final-image');
+                gsap.set(item.image, { clearProps: 'all' });
+                if (item.placeholder) {
+                    item.placeholder.remove();
+                    item.placeholder = null;
+                }
+                item.state = 'final';
+            };
+
+            const easeHandoff = gsap.parseEase('power2.inOut');
+            const easeShapeHandoff = gsap.parseEase('power3.inOut');
+
+            ScrollTrigger.create({
+                trigger: webdevFinalSection,
+                start: 'top bottom',
+                endTrigger: webdevFinalSection,
+                end: 'top top',
+                scrub: 1.15,
+                invalidateOnRefresh: true,
+                onUpdate: (self) => {
+                    if (self.progress <= 0.001) {
+                        handoffItems.forEach(moveToSource);
+                        return;
+                    }
+
+                    if (self.progress >= 0.999) {
+                        handoffItems.forEach(moveToFinal);
+                        return;
+                    }
+
+                    const delay = 0.08;
+                    const travel = 1 - (delay * (handoffItems.length - 1));
+
+                    handoffItems.forEach((item, index) => {
+                        const rawProgress = gsap.utils.clamp(0, 1, (self.progress - (index * delay)) / travel);
+                        const positionProgress = easeHandoff(rawProgress);
+                        const shapeProgress = easeShapeHandoff(gsap.utils.clamp(0, 1, (rawProgress - 0.18) / 0.82));
+                        moveToBody(item, positionProgress, shapeProgress);
+                    });
+                },
+                onLeave: () => handoffItems.forEach(moveToFinal),
+                onLeaveBack: () => {
+                    handoffItems.forEach(moveToSource);
+                }
+            });
+        };
+
+        if (webdevFinalSection && webdevFinalSection.classList.contains('is-process-ready')) {
+            window.blueprintSetupWebdevProcessImageHandoff();
+        }
     </script>
 </body>
 </html>
+

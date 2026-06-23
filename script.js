@@ -350,22 +350,28 @@ const isAboutPage = currentPageName === "about.html";
 const linkLoaderStorageKey = "blueprintUseLinkLoader";
 const serviceDirectNavigationStorageKey = "blueprintServiceDirectNavigation";
 const webDevReverseReturnStorageKey = "blueprintWebDevReverseReturn";
+const webDevCardLandingStorageKey = "blueprintWebDevCardLanding";
 let shouldLandOnWebDevCard = isIndexPage && window.location.hash === "#webdev-card";
 let shouldUseLinkLoader = false;
 let shouldSkipIncomingLoader = false;
+let shouldUseWebDevCardLanding = false;
 let shouldPlayWebDevReverseReturn = false;
 let webDevReverseReturnStarted = false;
 
 try {
     shouldUseLinkLoader = sessionStorage.getItem(linkLoaderStorageKey) === "true";
     shouldSkipIncomingLoader = sessionStorage.getItem(serviceDirectNavigationStorageKey) === "true";
-    shouldPlayWebDevReverseReturn = isIndexPage && window.location.hash === "#webdev-card" && sessionStorage.getItem(webDevReverseReturnStorageKey) === "true";
+    shouldUseWebDevCardLanding = sessionStorage.getItem(webDevCardLandingStorageKey) === "true";
+    shouldLandOnWebDevCard = isIndexPage && (window.location.hash === "#webdev-card" || shouldUseWebDevCardLanding);
+    shouldPlayWebDevReverseReturn = shouldLandOnWebDevCard && sessionStorage.getItem(webDevReverseReturnStorageKey) === "true";
     sessionStorage.removeItem(linkLoaderStorageKey);
     sessionStorage.removeItem(serviceDirectNavigationStorageKey);
+    sessionStorage.removeItem(webDevCardLandingStorageKey);
     sessionStorage.removeItem(webDevReverseReturnStorageKey);
 } catch (error) {
     shouldUseLinkLoader = false;
     shouldSkipIncomingLoader = false;
+    shouldUseWebDevCardLanding = false;
     shouldPlayWebDevReverseReturn = false;
 }
 
@@ -489,7 +495,7 @@ function prepareBlueprintTransitionFrames(frameState, loader) {
 
     if (currentFrame && currentFrame !== incomingFrame) {
         gsap.set(currentFrame, {
-            y: 0,
+            yPercent: 0,
             zIndex: 1,
             opacity: 1,
             visibility: "visible",
@@ -501,7 +507,7 @@ function prepareBlueprintTransitionFrames(frameState, loader) {
 
     if (incomingFrame) {
         gsap.set(incomingFrame, {
-            y: viewportHeight,
+            yPercent: 100,
             zIndex: 0,
             opacity: 1,
             visibility: "visible",
@@ -513,7 +519,7 @@ function prepareBlueprintTransitionFrames(frameState, loader) {
 
     if (outgoingTargets.length) {
         gsap.set(outgoingTargets, {
-            y: 0,
+            yPercent: 0,
             willChange: "transform",
             force3D: true
         });
@@ -540,7 +546,7 @@ function cleanupBlueprintPanelTransition(context, loader) {
 
     if (clearTargets.length) {
         gsap.set(clearTargets, {
-            clearProps: "transform,y,zIndex,pointerEvents,willChange,opacity,visibility"
+            clearProps: "transform,y,yPercent,zIndex,pointerEvents,willChange,opacity,visibility"
         });
     }
 
@@ -607,13 +613,17 @@ function activateBlueprintSamePageFrame(url, context, frameState) {
 
 function playBlueprintPanelTransition(url, frameState, loader, options = {}) {
     if (!frameState || !frameState.readyPromise) {
+        blueprintPageTransitionRunning = false;
         window.location.href = url;
         return;
     }
 
     const context = prepareBlueprintTransitionFrames(frameState, loader);
-    const halfDistance = context.viewportHeight * 0.52;
     const transitionEase = "power4.inOut";
+    const maskCoverDuration = 1.38;
+    const maskHoldDuration = 0.34;
+    const pageRevealDuration = 1.12;
+    const revealStartTime = maskCoverDuration + maskHoldDuration;
     const readyPromise = frameState.readyPromise;
 
     gsap.killTweensOf([
@@ -635,70 +645,75 @@ function playBlueprintPanelTransition(url, frameState, loader, options = {}) {
     gsap.set(".loader-logo .char", { y: "140%" });
     gsap.set(".loader-progress, .loader-progress-bar", { opacity: 0 });
 
-    gsap.timeline({
-        defaults: { ease: transitionEase },
-        onComplete: () => {
-            readyPromise
-                .then(() => {
-                    if (context.incomingFrame) {
-                        suppressBlueprintFrameLoader(context.incomingFrame);
-                    }
-
-                    gsap.timeline({
-                        defaults: { ease: transitionEase },
-                        onComplete: () => {
-                            const activation = options.samePage
-                                ? activateBlueprintSamePageFrame(url, context, frameState)
-                                : showPreloadedBlueprintFrame(url, { skipLoaderExit: true });
-
-                            activation
-                                .then(() => {
-                                    cleanupBlueprintPanelTransition(context, loader);
-                                })
-                                .catch(() => {
-                                    window.location.href = url;
-                                });
-                        }
-                    })
-                        .to(loader, {
-                            yPercent: -100,
-                            duration: 0.78
-                        }, 0)
-                        .to(context.outgoingTargets, {
-                            y: -context.viewportHeight,
-                            duration: 0.78
-                        }, 0)
-                        .to([context.incomingFrame].filter(Boolean), {
-                            y: 0,
-                            duration: 0.78
-                        }, 0);
-                })
-                .catch(() => {
-                    window.location.href = url;
+    readyPromise
+        .then(() => {
+            if (context.incomingFrame) {
+                suppressBlueprintFrameLoader(context.incomingFrame);
+                gsap.set(context.incomingFrame, {
+                    yPercent: 100,
+                    opacity: 1,
+                    visibility: "visible",
+                    pointerEvents: "none",
+                    willChange: "transform",
+                    force3D: true
                 });
-        }
-    })
-        .to(loader, {
-            yPercent: 0,
-            duration: 0.72
-        }, 0)
-        .to(context.outgoingTargets, {
-            y: -halfDistance,
-            duration: 0.72
-        }, 0)
-        .to([context.incomingFrame].filter(Boolean), {
-            y: context.viewportHeight - halfDistance,
-            duration: 0.72
-        }, 0)
-        .to(".loader-logo .char", {
-            y: 0,
-            stagger: 0.03,
-            duration: 0.58,
-            ease: "power4.out"
-        }, 0.22);
+            }
+
+            gsap.timeline({
+                defaults: {
+                    ease: transitionEase
+                },
+                onComplete: () => {
+                    const activation = options.samePage
+                        ? activateBlueprintSamePageFrame(url, context, frameState)
+                        : showPreloadedBlueprintFrame(url, { skipLoaderExit: true });
+
+                    activation
+                        .then(() => {
+                            cleanupBlueprintPanelTransition(context, loader);
+                            blueprintPageTransitionRunning = false;
+                        })
+                        .catch(() => {
+                            blueprintPageTransitionRunning = false;
+                            window.location.href = url;
+                        });
+                }
+            })
+                .to(loader, {
+                    yPercent: 0,
+                    duration: maskCoverDuration
+                }, 0)
+                .to(context.outgoingTargets, {
+                    yPercent: -100,
+                    duration: maskCoverDuration
+                }, 0)
+                .to({}, {
+                    duration: maskHoldDuration
+                }, maskCoverDuration)
+                .to(loader, {
+                    yPercent: -100,
+                    duration: pageRevealDuration
+                }, revealStartTime)
+                .to([context.incomingFrame].filter(Boolean), {
+                    yPercent: 0,
+                    duration: pageRevealDuration
+                }, revealStartTime)
+                .to(".loader-logo .char", {
+                    y: 0,
+                    stagger: 0.03,
+                    duration: 0.72,
+                    ease: "power4.out"
+                }, 0.28);
+        })
+        .catch(() => {
+            blueprintPageTransitionRunning = false;
+            window.location.href = url;
+        });
 }
 
 function navigateWithLinkLoader(url) {
+    if (blueprintPageTransitionRunning) return;
+
     const loader = document.getElementById('loader');
     const isSameTarget = isSameBlueprintNavigationTarget(url);
     const frameState = isInsideBlueprintFrame
@@ -725,7 +740,13 @@ function navigateWithLinkLoader(url) {
         return;
     }
 
+    blueprintPageTransitionRunning = true;
     loader.classList.add("is-link-loader");
+    gsap.set(loader, {
+        yPercent: 100,
+        opacity: 1,
+        force3D: true
+    });
     loader.style.display = "flex";
 
     playBlueprintPanelTransition(url, frameState, loader, { samePage: isSameTarget });
@@ -742,6 +763,7 @@ const blueprintPreloadPageList = [
     "service-marketing.html",
     "service-architecture.html"
 ];
+const blueprintServicePageList = blueprintPreloadPageList.filter((pageName) => pageName.startsWith("service-"));
 const blueprintPrefetchedPages = new Set();
 const blueprintPageHtmlCache = new Map();
 const blueprintPagePreloadPromises = new Map();
@@ -750,6 +772,7 @@ const blueprintPageFrames = new Map();
 let blueprintAllFramesPreloadStarted = false;
 let blueprintFrameLayer = null;
 let blueprintActiveFrameUrl = null;
+let blueprintPageTransitionRunning = false;
 
 function normalizeBlueprintPageUrl(rawUrl) {
     if (!rawUrl) return null;
@@ -768,6 +791,32 @@ function normalizeBlueprintPageUrl(rawUrl) {
     targetUrl.hash = "";
 
     return targetUrl.href;
+}
+
+function isBlueprintWebDevCardLandingUrl(rawUrl) {
+    try {
+        const targetUrl = new URL(rawUrl, window.location.href);
+        const pageName = targetUrl.pathname.split("/").pop().toLowerCase();
+        const isHomePage = pageName === "" || pageName === "index.html";
+
+        return targetUrl.origin === window.location.origin && isHomePage && targetUrl.hash === "#webdev-card";
+    } catch (error) {
+        return false;
+    }
+}
+
+function resetBlueprintPageFrame(rawUrl) {
+    const url = normalizeBlueprintPageUrl(rawUrl);
+    const frameState = url ? blueprintPageFrames.get(url) : null;
+    const frame = frameState && frameState.frame;
+
+    if (!url || !frameState) return;
+
+    if (frame && frame.parentNode) {
+        frame.parentNode.removeChild(frame);
+    }
+
+    blueprintPageFrames.delete(url);
 }
 
 function getBarbaInternalPageUrl(rawUrl) {
@@ -989,7 +1038,7 @@ function primeBlueprintFrame(frame, url) {
 
         const clickedTarget = event && event.currentTarget;
 
-        if (clickedTarget && clickedTarget.closest && clickedTarget.closest(".service-card-web-dev") && isWebDevServiceUrl(targetUrl)) {
+        if (clickedTarget && clickedTarget.closest && clickedTarget.closest(".panel") && isBlueprintServiceUrl(targetUrl)) {
             playWebDevServiceCardImageTransition(clickedTarget, targetUrl);
             return;
         }
@@ -998,15 +1047,16 @@ function primeBlueprintFrame(frame, url) {
     };
 
     frameDocument.addEventListener("click", (event) => {
-        const panel = event.target.closest && event.target.closest(".service-card-web-dev");
+        const panel = event.target.closest && event.target.closest(".panel");
+        const panelTargetUrl = getServicePanelTargetUrl(panel);
 
-        if (!panel || event.defaultPrevented || event.target.closest("button, a, input, textarea, select")) {
+        if (!panel || !isBlueprintServiceUrl(panelTargetUrl) || event.defaultPrevented || event.target.closest("button, a, input, textarea, select")) {
             return;
         }
 
         event.preventDefault();
         event.stopPropagation();
-        playWebDevServiceCardImageTransition(panel, "service-webdev.html");
+        playWebDevServiceCardImageTransition(panel, panelTargetUrl);
     }, true);
 
     frameDocument.addEventListener("click", (event) => {
@@ -1189,16 +1239,30 @@ function showPreloadedBlueprintFrame(rawUrl, options = {}) {
             document.documentElement.classList.remove("is-link-transition");
             document.documentElement.style.backgroundColor = "";
             setBlueprintShellRuntimeActive(false);
+            if (isBlueprintServiceUrl(url) && !options.deferWebDevHeroIntro) {
+                playWebDevHeroIntro(url);
+            }
             return Promise.resolve();
         }
 
         return animateBarbaLoaderOut().then(() => {
             setBlueprintShellRuntimeActive(false);
+            if (isBlueprintServiceUrl(url) && !options.deferWebDevHeroIntro) {
+                playWebDevHeroIntro(url);
+            }
         });
     });
 }
 
 window.__blueprintNavigatePreloadedFrame = function(rawUrl) {
+    if (isBlueprintWebDevCardLandingUrl(rawUrl)) {
+        try {
+            sessionStorage.setItem(webDevCardLandingStorageKey, "true");
+        } catch (error) {}
+
+        resetBlueprintPageFrame(rawUrl);
+    }
+
     navigateWithLinkLoader(rawUrl);
 };
 
@@ -1368,15 +1432,36 @@ function isWebDevServiceUrl(url) {
     return Boolean(targetUrl && targetUrl.endsWith("/service-webdev.html"));
 }
 
+function isBlueprintServiceUrl(url) {
+    const targetUrl = normalizeBlueprintPageUrl(url);
+
+    if (!targetUrl) return false;
+
+    const pageName = targetUrl.split("/").pop();
+
+    return blueprintServicePageList.includes(pageName);
+}
+
+function getServicePanelTargetUrl(panel) {
+    if (!panel) return null;
+
+    const targetControl = panel.querySelector("[onclick*='service-'], [onclick*=\"service-\"]");
+    const handler = targetControl && targetControl.getAttribute("onclick");
+    const match = handler && handler.match(/['"](service-[^'"]+\.html)['"]/);
+
+    return match ? match[1] : null;
+}
+
 function getServiceCardTransitionOptions(url) {
     return {
-        skipLoaderExit: isWebDevServiceUrl(url)
+        skipLoaderExit: isBlueprintServiceUrl(url),
+        deferWebDevHeroIntro: isBlueprintServiceUrl(url)
     };
 }
 
 let webDevServiceImageTransitionRunning = false;
 
-function getWebDevHeroMediaTargetRect(url) {
+function readWebDevHeroMediaTargetRect(url) {
     const targetUrl = normalizeBlueprintPageUrl(url);
     const frameState = targetUrl ? blueprintPageFrames.get(targetUrl) : null;
     const frame = frameState && frameState.frame;
@@ -1397,14 +1482,24 @@ function getWebDevHeroMediaTargetRect(url) {
         }
     } catch (error) {}
 
+    return null;
+}
+
+function getWebDevHeroMediaTargetRect(url) {
+    const measuredRect = readWebDevHeroMediaTargetRect(url);
+
+    if (measuredRect) {
+        return measuredRect;
+    }
+
     const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const isMobile = viewportWidth <= 760;
+    const viewportHeight = getViewportHeight();
+    const isMobile = viewportWidth <= 767;
     const width = isMobile
         ? Math.min(viewportWidth * 0.72, 368)
         : gsap.utils.clamp(280, 448, viewportWidth * 0.35);
     const height = width * 9 / 16;
-    const yShift = isMobile ? 0.58 : 0.47;
+    const yShift = 0.5;
 
     return {
         left: (viewportWidth - width) / 2,
@@ -1414,10 +1509,38 @@ function getWebDevHeroMediaTargetRect(url) {
     };
 }
 
+function waitForWebDevHeroMediaTargetRect(url) {
+    const targetUrl = normalizeBlueprintPageUrl(url);
+    const frameState = targetUrl ? blueprintPageFrames.get(targetUrl) : null;
+    const readyPromise = frameState && frameState.readyPromise
+        ? frameState.readyPromise.catch(() => null)
+        : Promise.resolve(null);
+
+    return readyPromise.then(() => new Promise((resolve) => {
+        let attempts = 0;
+
+        const measure = () => {
+            const measuredRect = readWebDevHeroMediaTargetRect(url);
+
+            if (measuredRect || attempts >= 10) {
+                resolve(measuredRect || getWebDevHeroMediaTargetRect(url));
+                return;
+            }
+
+            attempts += 1;
+            requestAnimationFrame(measure);
+        };
+
+        measure();
+    }));
+}
+
 function createWebDevTransitionImage(image) {
     const rect = image.getBoundingClientRect();
     const transitionImage = image.cloneNode(true);
 
+    transitionImage.removeAttribute("class");
+    transitionImage.removeAttribute("data-parallax");
     transitionImage.classList.add("webdev-service-transition-image");
     document.body.appendChild(transitionImage);
     gsap.set(transitionImage, {
@@ -1483,6 +1606,20 @@ function setWebDevHeroMediaHidden(url, isHidden) {
     } catch (error) {}
 }
 
+function playWebDevHeroIntro(url, options = {}) {
+    const targetUrl = normalizeBlueprintPageUrl(url);
+    const frameState = targetUrl ? blueprintPageFrames.get(targetUrl) : null;
+    const frame = frameState && frameState.frame;
+
+    try {
+        const frameWindow = frame && frame.contentWindow;
+
+        if (frameWindow && typeof frameWindow.blueprintPlayWebDevHeroIntro === "function") {
+            frameWindow.blueprintPlayWebDevHeroIntro(options);
+        }
+    } catch (error) {}
+}
+
 function getWebDevReverseTransitionImage(image) {
     const bootImage = document.querySelector(".webdev-reverse-boot-image");
 
@@ -1510,6 +1647,106 @@ function getWebDevReverseTransitionImage(image) {
     return createWebDevTransitionImage(image);
 }
 
+function playMobileWebDevServiceCardImageTransition(clickedBtn, url, frameState, panel, content, image, info) {
+    const transitionImage = createWebDevTransitionImage(image);
+    const targetOptions = getServiceCardTransitionOptions(url);
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = getViewportHeight();
+    const readyPromise = frameState && frameState.readyPromise
+        ? frameState.readyPromise.catch(() => null)
+        : Promise.resolve(null);
+
+    document.body.style.overflow = "hidden";
+    panel.classList.add("is-service-transitioning");
+
+    if (lenis) {
+        lenis.stop();
+    }
+
+    gsap.killTweensOf([panel, content, info, info.children, image, transitionImage, clickedBtn]);
+    gsap.set(transitionImage, {
+        autoAlpha: 1,
+        zIndex: 13000
+    });
+
+    const restoreCurrentPage = () => {
+        transitionImage.remove();
+        setWebDevHeroMediaHidden(url, false);
+        panel.classList.remove("is-service-transitioning");
+        gsap.set(panel, { clearProps: "autoAlpha,opacity,visibility" });
+        gsap.set(info, { clearProps: "y,autoAlpha,opacity,visibility,transform" });
+        gsap.set(info.children, { clearProps: "y,autoAlpha,opacity,visibility,transform" });
+        document.body.style.overflow = "";
+
+        if (lenis) {
+            lenis.start();
+        }
+
+        webDevServiceImageTransitionRunning = false;
+    };
+
+    gsap.timeline({
+        defaults: { ease: "power3.inOut" },
+        onComplete: () => {
+            readyPromise
+                .then(() => {
+                    setWebDevHeroMediaHidden(url, true);
+                    return navigateDirectlyToService(url, targetOptions);
+                })
+                .then(() => waitForWebDevHeroMediaTargetRect(url))
+                .then((targetRect) => {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            gsap.ticker.wake();
+                            setWebDevHeroMediaHidden(url, true);
+                            gsap.to(transitionImage, {
+                                left: targetRect.left,
+                                top: targetRect.top,
+                                width: targetRect.width,
+                                height: targetRect.height,
+                                duration: 0.86,
+                                ease: "power3.inOut",
+                                onComplete: () => {
+                                    setWebDevHeroMediaHidden(url, false);
+                                    transitionImage.remove();
+                                    playWebDevHeroIntro(url, { imageAlreadyPlaced: true });
+                                    webDevServiceImageTransitionRunning = false;
+                                }
+                            });
+                        });
+                    });
+                })
+                .catch(restoreCurrentPage);
+        },
+        onInterrupt: restoreCurrentPage
+    })
+        .to(transitionImage, {
+            left: 0,
+            top: 0,
+            width: viewportWidth,
+            height: viewportHeight,
+            duration: 0.82
+        }, 0)
+        .to(info.children, {
+            y: 30,
+            autoAlpha: 0,
+            stagger: 0.035,
+            duration: 0.36,
+            ease: "power3.in"
+        }, 0.08)
+        .to(info, {
+            y: 28,
+            autoAlpha: 0,
+            duration: 0.42,
+            ease: "power3.in"
+        }, 0.16)
+        .to(panel, {
+            autoAlpha: 0,
+            duration: 0.18,
+            ease: "power2.out"
+        }, 0.72);
+}
+
 function playWebDevServiceCardImageTransition(clickedBtn, url) {
     if (webDevServiceImageTransitionRunning) return;
 
@@ -1523,6 +1760,11 @@ function playWebDevServiceCardImageTransition(clickedBtn, url) {
     if (!panel || !content || !image || !info) {
         webDevServiceImageTransitionRunning = false;
         navigateDirectlyToService(url, getServiceCardTransitionOptions(url));
+        return;
+    }
+
+    if (window.matchMedia("(max-width: 767px)").matches) {
+        playMobileWebDevServiceCardImageTransition(clickedBtn, url, frameState, panel, content, image, info);
         return;
     }
 
@@ -1578,6 +1820,7 @@ function playWebDevServiceCardImageTransition(clickedBtn, url) {
                                 onComplete: () => {
                                     setWebDevHeroMediaHidden(url, false);
                                     transitionImage.remove();
+                                    playWebDevHeroIntro(url, { imageAlreadyPlaced: true });
                                     webDevServiceImageTransitionRunning = false;
                                 }
                             });
@@ -1749,7 +1992,7 @@ window.handlePageTransition = function(e, url) {
         navigateWithLinkLoader(url);
     };
 
-    if (isIndexPage && clickedBtn.closest(".service-card-web-dev") && isWebDevServiceUrl(url)) {
+    if (isIndexPage && clickedBtn.closest(".panel") && isBlueprintServiceUrl(url)) {
         playWebDevServiceCardImageTransition(clickedBtn, url);
         return;
     }
@@ -1764,14 +2007,15 @@ window.handlePageTransition = function(e, url) {
 
 if (isIndexPage) {
     document.addEventListener("click", (event) => {
-        const panel = event.target.closest(".service-card-web-dev");
+        const panel = event.target.closest(".panel");
+        const panelTargetUrl = getServicePanelTargetUrl(panel);
 
-        if (!panel || event.defaultPrevented || event.target.closest("button, a, input, textarea, select")) {
+        if (!panel || !isBlueprintServiceUrl(panelTargetUrl) || event.defaultPrevented || event.target.closest("button, a, input, textarea, select")) {
             return;
         }
 
         event.preventDefault();
-        playWebDevServiceCardImageTransition(panel, "service-webdev.html");
+        playWebDevServiceCardImageTransition(panel, panelTargetUrl);
     });
 }
 
@@ -1809,6 +2053,7 @@ function splitBlueprintText(root = document) {
             textElement.classList.contains('link-project-service-title') ||
             textElement.classList.contains('link-project-item') ||
             textElement.classList.contains('projects-bridge-copy') ||
+            textElement.classList.contains('webdev-text-reveal') ||
             textElement.classList.contains('site-footer-label') ||
             textElement.classList.contains('site-footer-title') ||
             textElement.classList.contains('site-footer-meta-text') ||
