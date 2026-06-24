@@ -1328,6 +1328,7 @@ function refreshBarbaPage(nextContainer) {
 
     splitBlueprintText(nextContainer);
     initRollingLinkHovers();
+    initServiceNextScrollTransition(nextContainer);
     initProjectPreviewImages();
     initStandaloneProjectCursorPreview();
     initPremiumAboutPage();
@@ -1461,6 +1462,217 @@ function getServiceCardTransitionOptions(url) {
 }
 
 let webDevServiceImageTransitionRunning = false;
+
+function setServiceNextProgress(block, progress) {
+    const clampedProgress = gsap.utils.clamp(0, 1, progress);
+    const progressPath = block.querySelector(".service-next-line-progress");
+
+    block.style.setProperty("--service-next-progress", clampedProgress.toFixed(4));
+    block.classList.toggle("is-armed", clampedProgress > 0.03);
+
+    if (progressPath) {
+        progressPath.style.strokeDashoffset = (1 - clampedProgress).toFixed(4);
+    }
+}
+
+function navigateFromServiceNext(block, url) {
+    if (!url || block.dataset.serviceNextNavigating === "true") return;
+    if (!pageIsReady || blueprintPageTransitionRunning || webDevServiceImageTransitionRunning) return;
+
+    block.dataset.serviceNextNavigating = "true";
+    block.classList.add("is-complete");
+    setServiceNextProgress(block, 1);
+
+    if (lenis) {
+        lenis.stop();
+    }
+
+    const transitionEvent = {
+        currentTarget: block,
+        preventDefault() {},
+        stopPropagation() {}
+    };
+
+    if (typeof window.handlePageTransition === "function") {
+        window.handlePageTransition(transitionEvent, url);
+        return;
+    }
+
+    window.location.href = url;
+}
+
+function initServiceNextScrollTransition(root = document) {
+    const blocks = gsap.utils.toArray(".service-next-transition", root);
+
+    blocks.forEach((block) => {
+        if (block.dataset.serviceNextReady === "true") return;
+
+        const nextUrl = block.dataset.nextServiceUrl || block.getAttribute("href");
+        const progressPath = block.querySelector(".service-next-line-progress");
+
+        if (!nextUrl || !progressPath) return;
+
+        block.dataset.serviceNextReady = "true";
+        setServiceNextProgress(block, 0);
+        prefetchBarbaPage(nextUrl);
+
+        let frameRequest = null;
+        let overscrollProgress = 0;
+        let touchLastY = null;
+        let resetTween = null;
+        let resetTimer = null;
+        const getFillThreshold = () => window.matchMedia("(max-width: 767px)").matches ? 360 : 560;
+        const serviceNextCompleteProgress = 0.985;
+
+        const isAtPageEnd = () => {
+            const viewportHeight = getViewportHeight();
+            const maxScroll = Math.max(1, ScrollTrigger.maxScroll(window) || (document.documentElement.scrollHeight - viewportHeight));
+
+            return window.scrollY >= maxScroll - 3;
+        };
+
+        const animateProgressBack = () => {
+            if (block.dataset.serviceNextNavigating === "true") return;
+
+            window.clearTimeout(resetTimer);
+            if (block.dataset.serviceNextNavigating === "true" || overscrollProgress <= 0) return;
+
+            if (resetTween) {
+                resetTween.kill();
+            }
+
+            resetTween = gsap.to({ value: overscrollProgress }, {
+                value: 0,
+                duration: 1.45,
+                ease: "power2.out",
+                onUpdate() {
+                    overscrollProgress = this.targets()[0].value;
+                    setServiceNextProgress(block, overscrollProgress / getFillThreshold());
+                },
+                onComplete() {
+                    overscrollProgress = 0;
+                    setServiceNextProgress(block, 0);
+                    resetTween = null;
+                }
+            });
+        };
+
+        const cancelProgressBack = () => {
+            window.clearTimeout(resetTimer);
+            if (resetTween) {
+                resetTween.kill();
+                resetTween = null;
+            }
+        };
+
+        const resetIfAwayFromEnd = () => {
+            if (block.dataset.serviceNextNavigating === "true") return;
+            if (isAtPageEnd()) return;
+
+            animateProgressBack();
+        };
+
+        const addOverscrollProgress = (delta) => {
+            if (block.dataset.serviceNextNavigating === "true") return;
+
+            if (!isAtPageEnd()) {
+                resetIfAwayFromEnd();
+                return;
+            }
+
+            cancelProgressBack();
+            overscrollProgress = gsap.utils.clamp(0, getFillThreshold(), overscrollProgress + delta);
+            const progress = overscrollProgress / getFillThreshold();
+
+            setServiceNextProgress(block, progress);
+
+            if (progress >= serviceNextCompleteProgress) {
+                overscrollProgress = getFillThreshold();
+                setServiceNextProgress(block, 1);
+                navigateFromServiceNext(block, nextUrl);
+            } else {
+                animateProgressBack();
+            }
+        };
+
+        const syncProgress = () => {
+            frameRequest = null;
+
+            if (block.dataset.serviceNextNavigating === "true") return;
+            resetIfAwayFromEnd();
+        };
+
+        const scheduleSync = () => {
+            if (frameRequest) return;
+
+            frameRequest = requestAnimationFrame(syncProgress);
+        };
+
+        const handleWheel = (event) => {
+            if (event.deltaY <= 0) {
+                cancelProgressBack();
+                overscrollProgress = Math.max(0, overscrollProgress + event.deltaY);
+                setServiceNextProgress(block, overscrollProgress / getFillThreshold());
+                animateProgressBack();
+                return;
+            }
+
+            if (!isAtPageEnd()) return;
+
+            event.preventDefault();
+            addOverscrollProgress(event.deltaY);
+        };
+
+        const handleTouchStart = (event) => {
+            cancelProgressBack();
+            touchLastY = event.touches && event.touches.length ? event.touches[0].clientY : null;
+        };
+
+        const handleTouchMove = (event) => {
+            if (touchLastY === null || !event.touches || !event.touches.length) return;
+
+            const nextY = event.touches[0].clientY;
+            const delta = touchLastY - nextY;
+            touchLastY = nextY;
+
+            if (delta <= 0) {
+                cancelProgressBack();
+                overscrollProgress = Math.max(0, overscrollProgress + delta);
+                setServiceNextProgress(block, overscrollProgress / getFillThreshold());
+                animateProgressBack();
+                return;
+            }
+
+            if (!isAtPageEnd()) return;
+
+            event.preventDefault();
+            addOverscrollProgress(delta * 2.2);
+        };
+
+        const handleTouchEnd = () => {
+            touchLastY = null;
+            animateProgressBack();
+        };
+
+        window.addEventListener("scroll", scheduleSync, { passive: true });
+        window.addEventListener("resize", scheduleSync, { passive: true });
+        window.addEventListener("wheel", handleWheel, { passive: false });
+        window.addEventListener("touchstart", handleTouchStart, { passive: true });
+        window.addEventListener("touchmove", handleTouchMove, { passive: false });
+        window.addEventListener("touchend", handleTouchEnd, { passive: true });
+        window.addEventListener("touchcancel", handleTouchEnd, { passive: true });
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", scheduleSync, { passive: true });
+        }
+
+        if (ScrollTrigger && typeof ScrollTrigger.addEventListener === "function") {
+            ScrollTrigger.addEventListener("refresh", scheduleSync);
+        }
+
+        scheduleSync();
+    });
+}
 
 function readWebDevHeroMediaTargetRect(url) {
     const targetUrl = normalizeBlueprintPageUrl(url);
@@ -2019,6 +2231,8 @@ if (isIndexPage) {
         playWebDevServiceCardImageTransition(panel, panelTargetUrl);
     });
 }
+
+initServiceNextScrollTransition();
 
 // 1. SPLIT TYPE
 function splitBlueprintText(root = document) {
