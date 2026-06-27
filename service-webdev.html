@@ -441,7 +441,7 @@
             width: min(100%, 15.3rem);
             aspect-ratio: 1 / 1.02;
             background-color: #2c2416;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .webdev-included-state.is-dark .webdev-included-state-visual {
@@ -450,12 +450,22 @@
 
         .webdev-included-state-visual img {
             position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
+            inset: -18%;
+            width: 136%;
+            height: 136%;
             max-width: none;
             object-fit: contain;
             display: block;
+        }
+
+        .webdev-included-state-visual img.is-larger-webdev-element {
+            inset: -32%;
+            width: 164%;
+            height: 164%;
+        }
+
+        .webdev-included-state-visual img.is-webdev-element-right {
+            transform: translateX(8%);
         }
 
         .webdev-included-state-copy {
@@ -464,34 +474,34 @@
             justify-self: stretch;
             max-width: none;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto minmax(13rem, 0.72fr) minmax(18rem, 1fr);
+            grid-template-columns: minmax(14rem, 0.95fr) minmax(13rem, 0.72fr) minmax(18rem, 1fr);
             column-gap: clamp(2.4rem, 5vw, 5.5rem);
-            row-gap: clamp(0.7rem, 1.3vw, 1.1rem);
+            row-gap: clamp(0.35rem, 0.8vw, 0.65rem);
             align-items: center;
             padding: 0;
             overflow: visible;
         }
 
         .webdev-included-state-num {
-            grid-column: 2;
-            grid-row: 1 / span 2;
-            justify-self: end;
-            align-self: start;
-            margin: 0.28rem 0 0 clamp(1rem, 2.4vw, 2.8rem);
+            grid-column: 1;
+            grid-row: 1;
+            justify-self: start;
+            align-self: end;
+            margin: 0;
             font-family: 'CabinetGrotesk-Light', sans-serif;
             font-size: clamp(0.82rem, 1vw, 1rem);
             letter-spacing: 0;
             line-height: 1;
-            color: #6e6356;
+            color: currentColor;
         }
 
         .webdev-included-state.is-dark .webdev-included-state-num {
-            color: rgba(247, 240, 223, 0.72);
+            color: currentColor;
         }
 
         .webdev-included-state-title {
             grid-column: 1;
-            grid-row: 1 / span 2;
+            grid-row: 2;
             justify-self: start;
             margin: 0;
             font-family: 'CabinetGrotesk-Light', sans-serif;
@@ -504,7 +514,7 @@
         }
 
         .webdev-included-state-body {
-            grid-column: 4;
+            grid-column: 3;
             grid-row: 1 / span 2;
             justify-self: start;
             max-width: 37.8rem;
@@ -512,11 +522,11 @@
             font-family: 'CabinetGrotesk-Light', sans-serif;
             font-size: clamp(0.9rem, 1.1vw, 1.08rem);
             line-height: 1.12;
-            color: #5f5850;
+            color: currentColor;
         }
 
         .webdev-included-state.is-dark .webdev-included-state-body {
-            color: rgba(247, 240, 223, 0.78);
+            color: currentColor;
         }
 
         .webdev-included-base-mask {
@@ -1337,6 +1347,164 @@
         /* page-enter animation */
         .page-enter { opacity: 0; transform: translateY(30px); }
 
+        @media (min-width: 768px) and (max-width: 1024px) {
+            [data-barba-namespace="service-webdev"] {
+                padding-bottom: 72vh;
+            }
+
+            .webdev-hero-media {
+                --webdev-hero-media-width: clamp(20rem, 48vw, 27rem);
+            }
+
+            .webdev-hero-title {
+                --webdev-title-frame-height: calc(clamp(20rem, 48vw, 27rem) * 0.5625);
+                font-size: clamp(4.6rem, 10.2vw, 7rem);
+            }
+
+            .webdev-hero-copy {
+                left: clamp(2rem, 4vw, 3rem);
+                bottom: clamp(2rem, 5vh, 3.4rem);
+                width: min(38ch, 36vw);
+                font-size: clamp(0.84rem, 1.12vw, 0.95rem);
+            }
+
+            .service-section {
+                padding: clamp(6rem, 10vw, 8rem) clamp(2.25rem, 4vw, 3rem) clamp(7rem, 11vw, 9rem);
+            }
+
+            .service-section-label {
+                font-size: clamp(4rem, 10vw, 7rem);
+                margin-bottom: clamp(4rem, 8vw, 6rem);
+            }
+
+            .service-features-grid {
+                column-gap: clamp(2rem, 4vw, 3.2rem);
+                row-gap: clamp(3rem, 6vw, 5rem);
+            }
+
+            .webdev-included-state,
+            .webdev-included-base-mask,
+            .webdev-included-text-mask {
+                padding: clamp(4.5rem, 7.4vw, 5.4rem) clamp(2.25rem, 4vw, 3rem) clamp(3rem, 5.4vw, 4rem);
+            }
+
+            .webdev-included-state-heading,
+            .webdev-included-title,
+            .webdev-included-base-title,
+            .webdev-included-mask-title {
+                font-size: clamp(3.5rem, 7vw, 5.2rem);
+            }
+
+            .webdev-included-state-grid,
+            .webdev-included-grid,
+            .webdev-included-base-grid,
+            .webdev-included-mask-grid,
+            .webdev-included-grid.service-features-grid {
+                grid-template-columns: minmax(0, 0.88fr) minmax(10rem, 0.48fr) minmax(15rem, 0.9fr);
+                column-gap: clamp(1.5rem, 3vw, 2.3rem);
+                margin-top: clamp(3rem, 6vw, 4.2rem);
+            }
+
+            .webdev-included-state-copy {
+                grid-template-columns: minmax(0, 0.88fr) minmax(10rem, 0.48fr) minmax(15rem, 0.9fr);
+                column-gap: clamp(1.5rem, 3vw, 2.3rem);
+            }
+
+            .webdev-included-state-visual,
+            .webdev-included-visual,
+            .webdev-included-base-visual,
+            .webdev-included-mask-visual {
+                width: min(100%, 12.4rem);
+            }
+
+            .webdev-included-state-title,
+            .webdev-included .service-feature-title,
+            .webdev-included-base-feature-title,
+            .webdev-included-mask-feature-title {
+                font-size: clamp(2.5rem, 5.4vw, 4.2rem);
+            }
+
+            .webdev-included-state-body,
+            .webdev-included .service-feature-body,
+            .webdev-included-base-body,
+            .webdev-included-mask-body {
+                max-width: 28rem;
+                font-size: clamp(0.84rem, 1.2vw, 0.96rem);
+            }
+
+            .webdev-responsive-mask {
+                padding: clamp(3.5rem, 6vw, 4.8rem) clamp(2.25rem, 4vw, 3rem);
+                grid-template-columns: minmax(0, 0.92fr) minmax(14rem, 0.66fr);
+                column-gap: clamp(2rem, 4vw, 3rem);
+            }
+
+            .webdev-responsive-title {
+                font-size: clamp(2.7rem, 5.2vw, 4.2rem);
+            }
+
+            .webdev-responsive-visual {
+                width: min(100%, 16rem);
+            }
+
+            .webdev-process-title {
+                font-size: clamp(4.6rem, 9vw, 7rem);
+            }
+
+            .webdev-process-card {
+                width: clamp(10.5rem, 26vw, 17rem);
+            }
+
+            .webdev-process-top-left {
+                left: 8%;
+                top: 9%;
+            }
+
+            .webdev-process-top-right {
+                right: 6%;
+                top: 12%;
+            }
+
+            .webdev-process-bottom-left {
+                left: 7%;
+                bottom: 8%;
+            }
+
+            .webdev-process-bottom-right {
+                right: 12%;
+                bottom: 7%;
+                width: clamp(9rem, 20vw, 13rem);
+            }
+
+            .webdev-final {
+                grid-template-columns: 40% 60%;
+            }
+
+            .webdev-final-media {
+                padding: clamp(2rem, 3.5vw, 2.75rem);
+            }
+
+            .webdev-final-image-cluster {
+                width: min(76%, 19rem);
+            }
+
+            .webdev-final-copy {
+                padding: clamp(2rem, 3.5vw, 2.6rem) clamp(2.4rem, 4.8vw, 3.6rem) clamp(2rem, 3.8vw, 2.8rem) clamp(1.4rem, 2.4vw, 1.8rem);
+            }
+
+            .webdev-final-title {
+                font-size: clamp(1.45rem, 2.6vw, 2rem);
+            }
+
+            .webdev-final-text {
+                font-size: clamp(0.76rem, 1.12vw, 0.88rem);
+                line-height: 1.18;
+            }
+
+            .webdev-final-step + .webdev-final-step {
+                margin-top: clamp(1.1rem, 2vw, 1.5rem);
+            }
+        }
+
         @media (max-width: 767px) {
             [data-barba-namespace="service-webdev"] {
                 padding-bottom: 0;
@@ -1529,8 +1697,8 @@
             .webdev-included-state-copy {
                 grid-column: 1;
                 grid-row: auto;
-                grid-template-columns: minmax(0, 1fr) auto;
-                row-gap: clamp(0.75rem, 2.2svh, 1.25rem);
+                grid-template-columns: minmax(0, 1fr);
+                row-gap: clamp(0.35rem, 1.2svh, 0.75rem);
                 transform: none;
             }
             .webdev-included-item-title {
@@ -1542,7 +1710,7 @@
             .webdev-included-mask-feature-title,
             .webdev-included-state-title {
                 grid-column: 1;
-                grid-row: 1;
+                grid-row: 2;
                 justify-self: start;
                 font-size: clamp(2.1rem, 9.6vw, 3.35rem);
                 line-height: 0.9;
@@ -1554,10 +1722,11 @@
             .webdev-included-base-num,
             .webdev-included-mask-num,
             .webdev-included-state-num {
-                grid-column: 2;
+                grid-column: 1;
                 grid-row: 1;
+                justify-self: start;
                 align-self: start;
-                margin-left: 1rem;
+                margin: 0;
                 font-size: 0.78rem;
             }
             .webdev-included-copy {
@@ -1571,11 +1740,70 @@
             .webdev-included-mask-body,
             .webdev-included-state-body {
                 grid-column: 1 / -1;
-                grid-row: 2;
+                grid-row: 3;
                 justify-self: start;
                 max-width: 100%;
                 font-size: clamp(0.78rem, 3.6vw, 0.9rem);
                 line-height: 1.12;
+            }
+            .webdev-included-state {
+                padding: clamp(5.1rem, 9svh, 6.6rem) clamp(1.45rem, 6vw, 3.75rem) clamp(1.9rem, 4.8svh, 3rem);
+                grid-template-rows: auto minmax(0, 1fr);
+            }
+            .webdev-included-state-heading {
+                justify-self: center;
+                width: min(82vw, 36rem);
+                max-width: 100%;
+                text-align: left;
+                font-size: clamp(3.35rem, 14.8vw, 5.8rem);
+                line-height: 0.95;
+            }
+            .webdev-included-state-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                gap: clamp(1.65rem, 3.8svh, 2.7rem);
+                margin-top: clamp(0.9rem, 2.6svh, 1.8rem);
+                padding: clamp(1.9rem, 4svh, 3rem) 0 clamp(1.6rem, 3.8svh, 2.7rem);
+                border-top: 0;
+                border-bottom: 0;
+                position: relative;
+                align-content: start;
+            }
+            .webdev-included-state.is-dark .webdev-included-state-grid {
+                border-color: transparent;
+            }
+            .webdev-included-state-visual {
+                grid-column: 1;
+                grid-row: 1;
+                justify-self: center;
+                align-self: center;
+                width: min(58vw, 18.5rem, 23svh);
+            }
+            .webdev-included-state-copy {
+                grid-column: 1;
+                grid-row: 2;
+                justify-self: center;
+                align-self: end;
+                width: min(82vw, 32rem);
+                row-gap: clamp(0.6rem, 1.4svh, 1rem);
+            }
+            .webdev-included-state-num {
+                position: absolute;
+                top: clamp(1.1rem, 2.5svh, 1.9rem);
+                left: 0;
+                z-index: 3;
+                font-size: clamp(0.95rem, 4vw, 1.25rem);
+            }
+            .webdev-included-state-title {
+                grid-row: 1;
+                font-size: clamp(2.35rem, 10.8vw, 4.2rem);
+                line-height: 0.94;
+            }
+            .webdev-included-state-body {
+                grid-row: 2;
+                max-width: 100%;
+                font-size: clamp(0.94rem, 3.9vw, 1.2rem);
+                line-height: 1.18;
             }
             .webdev-responsive-mask {
                 height: 100vh;
@@ -1800,7 +2028,7 @@
                     <h2 class="webdev-included-state-heading">What's included</h2>
                     <div class="webdev-included-state-grid">
                         <div class="webdev-included-state-visual" aria-hidden="true">
-                            <img loading="lazy" decoding="async" src="./web_img/web_elements_1 (2).png" alt="">
+                            <img loading="lazy" decoding="async" src="./web_img/web_elements_1.png" alt="">
                         </div>
                         <div class="webdev-included-state-copy">
                             <div class="webdev-included-state-num">01</div>
@@ -1813,7 +2041,7 @@
                     <h2 class="webdev-included-state-heading">What's included</h2>
                     <div class="webdev-included-state-grid">
                         <div class="webdev-included-state-visual" aria-hidden="true">
-                            <img loading="lazy" decoding="async" src="./web_img/web_elements_2 (2).png" alt="">
+                            <img loading="lazy" decoding="async" src="./web_img/web_elements_2.png" alt="">
                         </div>
                         <div class="webdev-included-state-copy">
                             <div class="webdev-included-state-num">02</div>
@@ -1825,7 +2053,9 @@
                 <article class="webdev-included-state">
                     <h2 class="webdev-included-state-heading">What's included</h2>
                     <div class="webdev-included-state-grid">
-                        <div class="webdev-included-state-visual" aria-hidden="true"></div>
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" class="is-larger-webdev-element" src="./web_img/web_elements_3.png" alt="">
+                        </div>
                         <div class="webdev-included-state-copy">
                             <div class="webdev-included-state-num">03</div>
                             <h3 class="webdev-included-state-title">Performance</h3>
@@ -1836,7 +2066,9 @@
                 <article class="webdev-included-state is-dark">
                     <h2 class="webdev-included-state-heading">What's included</h2>
                     <div class="webdev-included-state-grid">
-                        <div class="webdev-included-state-visual" aria-hidden="true"></div>
+                        <div class="webdev-included-state-visual" aria-hidden="true">
+                            <img loading="lazy" decoding="async" class="is-larger-webdev-element is-webdev-element-right" src="./web_img/web_elements_4.png" alt="">
+                        </div>
                         <div class="webdev-included-state-copy">
                             <div class="webdev-included-state-num">04</div>
                             <h3 class="webdev-included-state-title">CMS Setup</h3>
